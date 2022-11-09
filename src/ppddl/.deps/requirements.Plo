@@ -1,0 +1,8 @@
+requirements.lo: requirements.cc /usr/include/stdc-predef.h \
+ requirements.h ../../config.h
+
+/usr/include/stdc-predef.h:
+
+requirements.h:
+
+../../config.h:
