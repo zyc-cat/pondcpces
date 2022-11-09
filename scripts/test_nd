@@ -1,0 +1,28 @@
+#!/bin/bash
+ulimit -v 1048576
+ulimit -m 1048576
+ulimit -s 1048576
+ulimit -t 1200
+
+NUM_REPS=10
+
+for ((k=0;k<NUM_REPS;k++)); do {
+	for j in  ring cubec  rovers \
+	    rovers-cond logistics logistics-cond \
+	    bt bts btcs btc; do {
+#	for j in  ring ; do {
+#	for w in "1" "2" "4" "8"; do {
+#		for p in "0.0" "0.1" "0.3" "0.5" "0.7" "0.9" ; do {  
+	      for p in "1.0" "0.1" "0.3" "0.5" "0.7" "0.9"  ; do {  
+#			for i in "lugrp" ; do {
+		      for i in "mgrpu" "lugrp" ; do {
+			      
+				      
+#				      ./test $j -h $i -pmg $p -llw $w $k   
+			      
+			      ./test $j -h $i -pmg $p $k   
+			  }; done
+		  }; done			
+	  }; done
+#	    }; done
+    }; done

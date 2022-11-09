@@ -1,0 +1,166 @@
+#!/bin/sh
+ALTALT_HOME=/home/dan/planners/caltalt/July21
+
+DOMAIN_HOME=$ALTALT_HOME/test_probs
+
+ROVERS_HOME=$DOMAIN_HOME/rovers
+LOGISTICS_HOME=$DOMAIN_HOME/logistics
+BT_HOME=$DOMAIN_HOME/bt
+BTC_HOME=$DOMAIN_HOME/btc
+CUBE_HOME=$DOMAIN_HOME/cube
+CUBEC_HOME=$DOMAIN_HOME/cubec
+CUBEF_HOME=$DOMAIN_HOME/cubef
+RING_HOME=$DOMAIN_HOME/ring_easy
+
+SUMMARY_HOME=$ALTALT_HOME/summaries
+
+ALTALT=$ALTALT_HOME/altalt
+
+#for j in HMAX HSUM HSUMK HLEVELK HRPMAX HRPUNION; do {
+
+
+for h in  $BT_HOME $BTC_HOME $ROVERS_HOME $LOGISTICS_HOME  ; do {
+ cd $h
+      if [ -f "$h"/out/summary/summary ]; then
+          rm "$h"/out/summary/summary
+      fi
+
+for i in ""ls p*""; do {
+#for i in 3 4 5 6 7 8; do {
+for j in HRPUNION HRPL; do {
+
+# for j in HRPUNION HLEVELK HRPMAX HSUMK HMAX HSUM; do {
+  for k in  "" "-nmux -NOBOACS"  ; do {
+# for k in "-noinduced -wcsame"  ; do {
+
+#"-nmux" "-smux" "" "-wcsame" "-wcintersect"; do {
+#      if [ -f "$h"/out/summary/"$i"_"$k"_"$l".summary ]; then
+        #  rm "$h"/out/summary/"$i"_"$k"_"$l".summary
+#      fi#
+    for l in "5"; do {
+#      if [ -f "$h"/out/summary/"$i"_"$k"_"$l".summary ]; then
+	#  rm "$h"/out/summary/"$i"_"$k"_"$l".summary
+#      fi#
+#      if [ -f "$h"/out/summary/"$j"_"$k"_"$l".summary.length ]; then
+#	  rm "$h"/out/summary/"$j"_"$k"_"$l".summary.length
+#      fi
+#      for i in ""ls p*""; do {
+
+      if [ "$i" != "ls" ]; then 
+     if [ -f "$h"/out/"$i"_"$j"_"$k"_"$l".out ]; then
+     gtime=$(fgrep "Graph construction time elapsed:" "$h"/out/"$i"_"$j"_"$k"_"$l".out | cut -f5 -d" " - )
+      time=$(fgrep "Total time" "$h"/out/"$i"_"$j"_"$k"_"$l".out | cut -f4 -d" " - )
+     length=$(fgrep "length" "$h"/out/"$i"_"$j"_"$k"_"$l".out | cut -f6 -d" " -  | cut -f1 -d ")" )
+ #     length=$(fgrep "PG Levels" "$h"/out/"$i"_"$j"_"$k"_"$l".out | cut -f3 -d" " -  | cut -f1 -d ")" )                                                          
+
+ 
+
+#      stime='expr $time-$gtime'
+      
+
+      if [ -z $time ]; then
+	  echo "- &" >> "$h"/out/summary/summary
+#	  echo "0/0&" >> "$h"/out/summary/summary.card
+
+ 
+     else
+	  stime=$(expr $time - $gtime)
+#	  echo  $i $gtime"/"$stime"/"$length" &"
+#	  echo  $gtime"/"$stime"/"$length"&" >> "$h"/out/summary/summary
+          echo $i $time"&" #/"$length" &"                              
+          echo $time"/"$length"&" >> "$h"/out/summary/summary   
+
+      fi
+
+    fi
+      #if [ -z $length ]; then
+	#  echo "0" >> "$h"/out/summary/"$j"_"$k"_"$l".summary.length	
+      #else
+#	  echo $length >> "$h"/out/summary/"$j"_"$k"_"$l".summary.length
+      fi
+      
+    };done 
+   };done 
+  };done 
+echo "\\\\" >> "$h"/out/summary/summary
+
+ };done
+cp "$h"/out/summary/summary $SUMMARY_HOME
+};done
+
+
+for h in  $RING_HOME $CUBE_HOME $CUBEC_HOME $CUBEF_HOME  ; do {
+ cd $h
+      if [ -f "$h"/out/summary/summary ]; then
+          rm "$h"/out/summary/summary
+      fi
+
+#for i in ""ls p*""; do {
+for i in  3 4 5 6 7 8 9 10 15 20 25 30 35 40 45 50; do {
+
+for j in HRPUNION HRPL; do {
+
+# for j in HRPUNION HLEVELK HRPMAX HSUMK HMAX HSUM; do {
+#for k in "" ; do {
+for k in  "" "-nmux -NOBOACS"; do {
+#  for k in  "-noinduced -wcsame" "-noinduced -wcsame -ehc" "-noinduced -wcsame -ehc -ha"; do {
+# for k in "-noinduced -wcsame"  ; do {  
+
+#  for k in  "-noinduced" "" "-noinduced -wcintersect" "-wcintersect"; do {
+#"-nmux" "-smux" "" "-wcsame" "-wcintersect"; do {
+#      if [ -f "$h"/out/summary/"$i"_"$k"_"$l".summary ]; then
+        #  rm "$h"/out/summary/"$i"_"$k"_"$l".summary
+#      fi#
+    for l in "5"; do {
+#      if [ -f "$h"/out/summary/"$i"_"$k"_"$l".summary ]; then
+	#  rm "$h"/out/summary/"$i"_"$k"_"$l".summary
+#      fi#
+#      if [ -f "$h"/out/summary/"$j"_"$k"_"$l".summary.length ]; then
+#	  rm "$h"/out/summary/"$j"_"$k"_"$l".summary.length
+#      fi
+#      for i in ""ls p*""; do {
+
+#      if [ "$i" != "ls" ]; then 
+     if [ -f "$h"/out/"$i"_"$j"_"$k"_"$l".out ]; then
+      gtime=$(fgrep "Graph construction time elapsed:" "$h"/out/"$i"_"$j"_"$k"_"$l".out | cut -f5 -d" " - )
+
+      time=$(fgrep "Total time" "$h"/out/"$i"_"$j"_"$k"_"$l".out | cut -f4 -d" " - )
+
+      length=$(fgrep "length" "$h"/out/"$i"_"$j"_"$k"_"$l".out | cut -f6 -d" " -  | cut -f1 -d ")" )
+
+#     length=$(fgrep "length" "$h"/out/"$i"_"$j"_"$k"_"$l".out | cut -f6 -d" " - | cut -f1 -d ")" )
+
+
+   # length=$(fgrep "PG Levels" "$h"/out/"$i"_"$j"_"$k"_"$l".out | cut -f3 -d" " -  | cut -f1 -d ")" )     
+
+      if [ -z $time ]; then
+	  echo "- &" >> "$h"/out/summary/summary
+#	  echo "0/0&" >> "$h"/out/summary/summary.card
+
+ 
+     else
+	  stime=$(expr $time - $gtime)
+#	  echo $i $gtime"/"$stime"/"$length" &"
+#	  echo $gtime"/"$stime"/"$length"&" >> "$h"/out/summary/summary
+
+          echo $i $time"&" #"/"$length" &"
+         echo $time"/"$length"&" >> "$h"/out/summary/summary
+
+
+       fi
+
+    fi
+      #if [ -z $length ]; then
+	#  echo "0" >> "$h"/out/summary/"$j"_"$k"_"$l".summary.length	
+      #else
+#	  echo $length >> "$h"/out/summary/"$j"_"$k"_"$l".summary.length
+##      fi
+      
+    };done 
+   };done 
+  };done 
+echo "\\\\" >> "$h"/out/summary/summary
+
+ };done
+cp "$h"/out/summary/summary $SUMMARY_HOME
+};done

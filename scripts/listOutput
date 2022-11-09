@@ -1,0 +1,3 @@
+#!/bin/bash
+
+for i in ""ls test_probs/$1/out/summary/*""; do echo $i && cat $i 2>&1 ; done

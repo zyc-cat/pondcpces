@@ -1,0 +1,205 @@
+#!/bin/bash
+
+############################
+#DOMAIN=toggleS
+#PROBLEM="$DOMAIN/pfile1"
+############################
+#DOMAIN=btc_10t
+#PROBLEM="$DOMAIN/pfile020"
+############################
+#DOMAIN=btc
+#PROBLEM="$DOMAIN/pfile002"
+############################
+#DOMAIN=cost-btcs
+#PROBLEM="$DOMAIN/pfile020"
+############################
+DOMAIN=bts
+PROBLEM="$DOMAIN/pfile010"
+############################
+#DOMAIN=logistics
+#PROBLEM="$DOMAIN/pfile5"
+############################
+#DOMAIN=cost-logistics
+#PROBLEM="$DOMAIN/pfile4"
+############################
+#DOMAIN=cost-logistics-cond
+#PROBLEM="$DOMAIN/pfile5"
+############################
+#DOMAIN=logisticsND
+#PROBLEM="$DOMAIN/pfile1"
+###########################
+#DOMAIN=logistics-cond
+#PROBLEM="$DOMAIN/pfile3"                               
+#############################   
+#DOMAIN=logistics-cond-pre
+#PROBLEM="$DOMAIN/pfile1"                                
+#############################   
+#DOMAIN=logistics-condND
+#PROBLEM="$DOMAIN/pfile1"
+############################
+#DOMAIN=cost-rovers
+#PROBLEM="$DOMAIN/pfile10"
+#############################
+#DOMAIN=cost-rovers-cond1
+#PROBLEM="$DOMAIN/pfile04"
+#############################
+#DOMAIN=rovers-cond
+#PROBLEM="$DOMAIN/pfile04"
+#############################
+#DOMAIN=rovers
+#PROBLEM="$DOMAIN/pfile01"
+#############################
+#DOMAIN=rovers-condo0
+#PROBLEM="$DOMAIN/pfile6"
+#############################
+#DOMAIN=rovers-tester
+#PROBLEM="$DOMAIN/pfile2"
+#############################
+#DOMAIN=rovers-condND
+#PROBLEM="$DOMAIN/pfile2"
+#############################
+#DOMAIN=rovND
+#PROBLEM="$DOMAIN/pfile2"
+#############################
+#DOMAIN=omlette
+#PROBLEM="$DOMAIN/pfile003"
+#############################
+#DOMAIN=medical
+#PROBLEM="$DOMAIN/pfile001"
+############################
+#DOMAIN=cost-medical1
+#PROBLEM="$DOMAIN/pfile003"
+############################
+#DOMAIN=toy_loop
+#PROBLEM="$DOMAIN/pfile1"
+############################
+#DOMAIN=prog_test
+#PROBLEM="$DOMAIN/pfile1"
+############################
+#DOMAIN=toy_cost
+#PROBLEM="$DOMAIN/pfile1"
+############################
+#DOMAIN=logNDtest
+#PROBLEM="$DOMAIN/pfile1"
+############################
+CASE="test_probs/$DOMAIN/domain.pddl test_probs/$PROBLEM -cwa "
+
+
+############################
+#DOMAIN=mine_sweep/d5.pddl
+#PROBLEM="mine_sweep/p5.pddl"
+############################
+#DOMAIN=cubec/d3.pddl
+#PROBLEM="cubec/p3.pddl"
+############################
+#DOMAIN=cube-cond/d9.pddl
+#PROBLEM="cube-cond/p9.pddl"
+############################
+#DOMAIN=line/d3.pddl
+#PROBLEM="line/p3.pddl"
+############################
+DOMAIN=ring/d3.pddl
+PROBLEM="ring/p3.pddl"
+############################
+#DOMAIN=ring/d17.pddl
+#PROBLEM="ring/p17.pddl"
+############################
+#DOMAIN=ring-cond/d5.pddl
+#PROBLEM="ring-cond/p5.pddl"
+############################
+#DOMAIN=medicalPKS/d16.pddl
+#PROBLEM="medicalPKS/p16.pddl"
+#############################
+#DOMAIN=medicalPOND/d14.pddl
+#PROBLEM=medicalPOND/p14.pddl
+#############################
+#DOMAIN=uts/d4.pddl
+#PROBLEM="uts/p4.pddl"
+############################
+#DOMAIN=forest/domain2.pddl
+#PROBLEM="forest/pfile_m4_n2"
+############################
+CASE="test_probs/$DOMAIN test_probs/$PROBLEM "
+
+
+############################
+DOMAIN=logistics/domain
+PROBLEM="logistics/p4-3-3.pddl"
+############################
+#CASE="test_probs/cff-tests/$DOMAIN test_probs/cff-tests/$PROBLEM -cwa"
+
+
+#CASE="btcs/mailman.pddl btcs/mailman_pfile24"
+#CASE="btcs/mvlogistics.pddl btcs/mvlogistics_pfile5"
+#CASE="btcs/btcs80sa.pddl btcs/btcs_pfile80sa"
+#CASE="btcs/ms51.pddl btcs/ms51_pfile1"
+#CASE="btcs/ms52.pddl btcs/ms52_pfile1"
+#CASE="btcs/ms53.pddl btcs/ms53_pfile1"
+#CASE="btcs/ms101.pddl btcs/ms101_pfile1"
+#CASE="btcs/ms102.pddl btcs/ms102_pfile1"
+#CASE="btcs/ms103.pddl btcs/ms103_pfile1"
+#CASE="btcs/ms104.pddl btcs/ms104_pfile1"
+#CASE="btcs/ms105.pddl btcs/ms105_pfile1"
+
+
+#HEURISTIC="-h minslugrp"  
+#HEURISTIC="-h slugrp "  
+
+#HEURISTIC="-h luglevel"
+HEURISTIC="-h lugrp -pg node"
+#HEURISTIC="-h slugrp "
+#HEURISTIC="-h lugsum"
+#HEURISTIC="-h lugmax"
+
+#HEURISTIC="-h mgrpm"
+#HEURISTIC="-h mgrps"
+HEURISTIC="-h mgrpu"
+
+#HEURISTIC="-h sgrp"
+#HEURISTIC="-h sglevel"
+#HEURISTIC="-h sgsum"
+#HEURISTIC="-h sgmax"
+
+#HEURISTIC="-h card"
+#HEURISTIC=""
+
+WEIGHT=5
+
+#PROPTECH="enter"
+PROPTECH="groups"
+
+LCOSTPROP="sum"
+#LCOSTPROP="max"
+
+WCOSTPROP="sum"
+#WCOSTPROP="max"
+
+#SELECTION="cost"
+SELECTION="coverage"
+#SELECTION="ratio"
+
+#SINS=greedy
+#SINS=reduce
+#SINS=mutex
+SINS=reduce-mutex
+
+#PMG=0
+#PMG=0.1
+#PMG=0.3
+#PMG=0.5
+#PMG=0.7
+PMG=0.9
+#PMG=1.0
+
+LLW=0
+
+###################################################################################
+#-h lugrp  -rpcost cost -c sum -cp enter
+ulimit -v 1048576
+ulimit -m 1048576
+ulimit -s 1048576
+ulimit -t 1200
+
+CMD="/usr/bin/time ./pond $CASE $HEURISTIC -rpcost $SELECTION -cl $LCOSTPROP -cw $WCOSTPROP -cp $PROPTECH -sins $SINS -w $WEIGHT -pmg $PMG -llw $LLW"
+echo $CMD
+exec $CMD

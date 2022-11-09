@@ -1,0 +1,168 @@
+#!/bin/bash
+
+############################
+#DOMAIN=toggleS
+#PROBLEM="$DOMAIN/pfile1"
+############################
+#DOMAIN=bt
+#PROBLEM="$DOMAIN/pfile020"
+############################
+#DOMAIN=btc
+#PROBLEM="$DOMAIN/pfile070"
+############################
+#DOMAIN=btcs
+#PROBLEM="$DOMAIN/pfile050"
+############################
+#DOMAIN=logistics
+#PROBLEM="$DOMAIN/pfile2"
+############################
+#DOMAIN=cost-logistics
+#PROBLEM="$DOMAIN/pfile5"
+############################
+#DOMAIN=cost-logistics-cond
+#PROBLEM="$DOMAIN/pfile5"
+############################
+#DOMAIN=logisticsND
+#PROBLEM="$DOMAIN/pfile1"
+############################
+#DOMAIN=logistics-cond
+#PROBLEM="$DOMAIN/pfile2"                                
+#############################   
+#DOMAIN=logistics-condND
+#PROBLEM="$DOMAIN/pfile2"
+############################
+#DOMAIN=cost-rovers
+#PROBLEM="$DOMAIN/pfile09"
+#############################
+#DOMAIN=cost-rovers-cond
+#PROBLEM="$DOMAIN/tmp-pfile09"
+#############################
+DOMAIN=rovers
+PROBLEM="$DOMAIN/pfile9"
+#############################
+#DOMAIN=rovers-cond
+#PROBLEM="$DOMAIN/pfile9"
+#############################
+#DOMAIN=rovers-condo5
+#PROBLEM="$DOMAIN/pfile2"
+#############################
+#DOMAIN=rovers-tester
+#PROBLEM="$DOMAIN/pfile2"
+#############################
+#DOMAIN=rovers-condND
+#PROBLEM="$DOMAIN/pfile2"
+#############################
+#DOMAIN=rovND
+#PROBLEM="$DOMAIN/pfile2"
+#############################
+#DOMAIN=omlette
+#PROBLEM="$DOMAIN/pfile003"
+#############################
+#DOMAIN=medical
+#PROBLEM="$DOMAIN/pfile003"
+############################
+#DOMAIN=toy_loop
+#PROBLEM="$DOMAIN/pfile1"
+############################
+#DOMAIN=prog_test
+#PROBLEM="$DOMAIN/pfile1"
+############################
+
+#CASE="test_probs/$DOMAIN/domain.pddl test_probs/$PROBLEM "
+#OUT="test_probs/$DOMAIN/out/${PROBLEM##*/}"
+
+############################
+#DOMAIN=mine_sweep/d5.pddl
+#PROBLEM="mine_sweep/p5.pddl"
+############################
+DOMAIN=cubec/d15.pddl
+PROBLEM="cubec/p15.pddl"
+############################
+#DOMAIN=line/d20.pddl
+#PROBLEM="line/p20.pddl"
+############################
+#DOMAIN=ring/d10.pddl
+#PROBLEM="ring/p10.pddl"
+############################
+#DOMAIN=ring/d8.pddl
+#PROBLEM="ring/p8.pddl"
+############################
+#DOMAIN=medicalPKS/d60.pddl
+#PROBLEM="medicalPKS/p60.pddl"
+#############################
+#DOMAIN=uts/d4.pddl
+#PROBLEM="uts/p4.pddl"
+############################
+#DOMAIN=forest/domain2.pddl
+#PROBLEM="forest/pfile_m4_n2"
+############################
+
+CASE="test_probs/$DOMAIN test_probs/$PROBLEM"
+OUT="test_probs/$DOMAIN/out/${PROBLEM##*/}"
+
+
+############################
+DOMAIN=logistics/domain
+PROBLEM="logistics/p4-3-3.pddl"
+############################
+#CASE="test_probs/cff-tests/$DOMAIN test_probs/cff-tests/$PROBLEM -cwa"
+#OUT="test_probs/cff-tests/out/${PROBLEM##*/}"
+
+
+#CASE="btcs/mailman.pddl btcs/mailman_pfile24"
+#CASE="btcs/mvlogistics.pddl btcs/mvlogistics_pfile5"
+#CASE="btcs/btcs80sa.pddl btcs/btcs_pfile80sa"
+#CASE="btcs/ms51.pddl btcs/ms51_pfile1"
+#CASE="btcs/ms52.pddl btcs/ms52_pfile1"
+#CASE="btcs/ms53.pddl btcs/ms53_pfile1"
+#CASE="btcs/ms101.pddl btcs/ms101_pfile1"
+#CASE="btcs/ms102.pddl btcs/ms102_pfile1"
+#CASE="btcs/ms103.pddl btcs/ms103_pfile1"
+#CASE="btcs/ms104.pddl btcs/ms104_pfile1"
+#CASE="btcs/ms105.pddl btcs/ms105_pfile1"
+
+
+#HEURISTIC="-h minslugrp"  
+#HEURISTIC="-h slugrp -levoff"  
+#HEURISTIC="-h slugrp"  
+#HEURISTIC="-h lugrp"
+HEURISTIC="-h lugrp"
+#HEURISTIC="-h luglevel"
+#HEURISTIC="-h lugsum"
+#HEURISTIC="-h lugmax"
+
+#HEURISTIC="-h sgrp"
+#HEURISTIC="-h sglevel"
+#HEURISTIC="-h sgsum"
+#HEURISTIC="-h sgmax"
+
+#HEURISTIC="-h card"
+#HEURISTIC=""
+
+WEIGHT="-w 5"
+
+PROPTECH="-cp enter"
+#PROPTECH="-cp groups"
+
+COSTPROP="-c sum"
+#COSTPROP="-c max"
+
+SELECTION="-rpcost cost"
+#SELECTION="-rpcost coverage"
+#SELECTION="-rpcost ratio"
+
+PG="-pg global"
+#PG="-pg children"
+#PG="-pg node"
+
+HOST="-host localhost"
+PORT="-port ${1:-1500}"
+
+###################################################################################
+#-h lugrp  -rpcost cost -c sum -cp enter
+
+echo "~/pond/sim ${CASE} $PORT > ${OUT}.sim 2>&1 &"
+~/pond/sim ${CASE} $PORT 2>&1 & # | tee ${OUT}.sim &
+echo "~/pond/mon ${CASE} $HOST $PORT $HEURISTIC $WEIGHT $PG $SELECTION $COSTPROP $PROPTECH > ${OUT}.mon 2>&1"
+/usr/bin/time ~/pond/mon ${CASE} $HOST $PORT $HEURISTIC $WEIGHT $PG $SELECTION $COSTPROP $PROPTECH 2>&1 | tee ${OUT}.mon 
+

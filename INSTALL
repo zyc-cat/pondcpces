@@ -1,0 +1,15 @@
+1. Download CUDD 2.4.2 by Fabio Somenzi
+
+2. Extract it to a place that has no spaces in the path
+
+3. Build CUDD on your machine -
+   x86_64 Linux machines may need the following in the Makefile (notice 16 instead of 8):
+   XCFLAGS	= -mtune=native -DHAVE_IEEE_754 -DBSD -DSIZEOF_VOID_P=16 -DSIZEOF_LONG=16
+
+4. Run the following commands from the top POND directory:
+
+svn update
+export CUDD_HOME=<absolute path to the top cudd directory>
+./autogen.sh
+./configure
+make

@@ -1,0 +1,56 @@
+#!/bin/bash
+
+MAXTIME=1200000
+MAXNODES=1000000
+
+PROBLEM=$1
+HEURISTIC=$2
+PMG=$3
+ITERATIONS=$4
+LLW=$5
+#echo $PROBLEM
+#echo $HEURISTIC
+#echo $PMG
+#echo $ITERATIONS
+
+SUM=0
+NUM=0
+FOUNDONE=0
+for ((i=0;i<$ITERATIONS;i++)); do 
+    {
+#			
+#	FILE="$PROBLEM"_-h_"$HEURISTIC"_-pmg_"$PMG"_-llw_"$LLW"_"$i"__.out
+#	echo $FILE
+	FILE="$PROBLEM"_-h_"$HEURISTIC"_-pmg_"$PMG"_"$i"____.out
+	if [ -e $FILE ] ; 
+	    then
+	    
+	    NODES=$(grep "f:" $FILE | cut -f 8 -d " ")
+	    HVAL=$(grep "H(I) =" $FILE | cut -f 3 -d " ")
+	    TIME=$(grep "Time =" $FILE | cut -f 5 -d " ")
+	    if [ $TIME ] ;
+		then
+
+		tf=$(echo $TIME | cut -f1 -d".")
+		tt=$(echo $TIME | cut -f2 -d"." | cut -c -3)
+		TIME=$(echo $tf$tt)
+		
+		SUM=`expr $SUM + $TIME`
+		NUM=`expr $NUM + 1`
+		FOUNDONE=1
+	    fi
+	fi	
+    }; 
+done
+
+#echo SUM: $SUM
+if [ $NUM -gt 0 ] ; 
+    then
+    AVG=`expr $SUM / $NUM`
+    echo $AVG #$NUM $FOUNDONE
+#   echo $HVAL
+#    echo $NODES
+else
+    echo $MAXTIME #0 $FOUNDONE
+#    echo $MAXNODES
+fi

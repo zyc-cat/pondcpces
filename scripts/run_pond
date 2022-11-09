@@ -1,0 +1,18 @@
+#/bin/bash
+# logfile domain options problems
+LOG="$1"; shift;
+NAME=${LOG##*/};
+NAME=${NAME%%.*};
+DOMAIN="$1"; shift;
+OPTION="";
+while  [ -n "$1" ] && [ ! -e "$1" ]; do
+	OPTION="$OPTION $1"; shift;
+done
+
+PWD=`pwd`;
+
+for f in "$@"; do
+	echo `date` $OPTION ${PWD}/${f};
+	/usr/bin/time -a -o${LOG} -f"$PWD/$f %U %S" pond ${DOMAIN} $f ${OPTION} > $f.${NAME}.out 2>&1;
+#	/usr/bin/time -a -o${LOG} -f"$PWD/$f %U %S" pond ${DOMAIN} $f ${OPTION} > /dev/null 2>&1;
+done

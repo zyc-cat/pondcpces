@@ -1,0 +1,92 @@
+#!/bin/bash
+
+ITERATIONS=30
+
+#domains
+#for j in ; do
+for j in rovers-cond logistics-cond bts btcs bt btc rovers logistics ; do 
+    {
+	echo $j
+        
+        #problems
+			cd test_probs/$j
+			PROBS=`ls p*`
+			cd ../..
+		#	echo $PROBS
+			for i in $PROBS; do
+			    {
+LINE=$i
+			#	echo PROB: $i
+#	for k in "mgrpu" "mgrpm" "mgrps"; do 
+#		for k in "mgrpu" ; do 
+		for k in "mgrpu" "lugrp" ; do 
+	    {
+#		echo HEUR: $k
+			#proportion of mgs
+		
+#		for p in "0.0" "0.1" "0.3" "0.5" "0.7" "0.9" "1.0"; do {
+		for p in "1.0" "0.1" "0.3" "0.5" "0.7" "0.9" "0.0"; do {
+#			for p in "1.0"; do
+		
+			#echo NUMG: $p
+#			for LLW in "1" "2" "4" "8"; do {
+		#heuristic
+#			TEST=`./parseAvg test_probs/$j/out/$i $k $p $ITERATIONS $LLW`
+			TEST=`./parseAvg test_probs/$j/out/$i $k $p $ITERATIONS`
+	#		echo $TEST
+			LINE="$LINE $TEST"
+#	    };	    done
+			
+	    };
+			    done		
+		    };
+		done
+	echo $LINE
+	    };
+	    done
+    };
+done
+
+
+for j in  cubec ring; do
+    {
+        echo $j
+        #problems 
+			cd test_probs/$j
+			PROBS=`ls p*`
+			cd ../..
+#			echo $PROBS
+			for i in $PROBS; do
+			    {
+				#echo PROB: $i
+				PR=`echo $i | cut -f 1 -d . | cut -c 2-3`
+LINE=$PR
+                #heuristic
+#	for k in "mgrpu" "mgrpm" "mgrps"; do
+                
+#                for k in "mgrpu" ; do
+                for k in "mgrpu" "lugrp" ; do
+	    {
+		#echo HEUR: $k
+                        #proportion of mgs
+#		for p in "0.0" "0.1" "0.3" "0.5" "0.7" "0.9" "1.0"; do   
+		for p in "1.0" "0.1" "0.3" "0.5" "0.7" "0.9" "0.0"; do   
+                        #for p in "1.0"; do
+		    {
+		#	echo $NUMG: $p
+	#		for LLW in "1" "2" "4" "8"; do {
+
+#		TEST=`./parseAvg test_probs/$j/out/$PR $k $p $ITERATIONS $LLW`
+		TEST=`./parseAvg test_probs/$j/out/$PR $k $p $ITERATIONS`
+			LINE="$LINE $TEST"
+			
+         #                   };                            done
+                            };
+                            done
+                    };
+                done
+ 	echo $LINE
+           };
+            done
+    };
+done

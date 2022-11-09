@@ -1,0 +1,15 @@
+#!/bin/bash
+DOMAIN=$1
+HEURISTIC="$2 $3"
+
+
+cd test_probs/$DOMAIN
+CMD="./parse $HEURISTIC"
+
+echo $CMD
+exec $CMD
+
+
+ }; done
+
+}; done

@@ -1,0 +1,70 @@
+#!/bin/bash
+
+if [ -f graph.tex ]; then
+ rm graph.tex
+fi
+
+
+
+echo "\documentclass[]{article}" >> graph.tex
+echo "\usepackage{graphics}" >> graph.tex
+#echo "\topmargin -1.5in" >> graph.tex
+#echo "\evensidemargin .1in" >> graph.tex
+#echo "\oddsidemargin .1in" >> graph.tex
+echo "\begin{document}" >> graph.tex
+echo "\center{\scalebox{.61}{\begin{tabular}{|c||c|c|}" >> graph.tex
+echo "\hline" >> graph.tex
+echo "&" >> graph.tex
+
+#for i in "" "-h minslugrp -levoff" "-h slugrp -levoff" "-h lugrp" ; do {
+for i in "" "-h lugrp -ls" "-h lugrp" ; do {
+#for i in "" "-h card" "-h lug" "-h lug -ha"; do {
+#for i in "_" "-h_card" "-h_sgmax" "-h_sgsum" "-h_sglevel" "-h_sgrp" "-h_lugmax" "-h_lugsum" "-h_luglevel" "-h_lugrp" "-h_lugrp-ha" ; do {
+  if [ "$i" != "-h lugrp" ]; then
+    echo "$i &" >> graph.tex
+  else
+    echo "$i \\\\" >> graph.tex
+  fi
+}; done
+
+echo "\hline" >> graph.tex
+
+#for i in medical  ; do {
+#for i in rovers-cond logistics-cond bts btcs ; do {
+for i in medical medicalPKS rovers-cond logistics-cond bts btcs rovers logistics bt btc cube cubec ring ; do {
+#for i in  cube cubec cubef ring ; do {
+#for i in  rovers-condo0 rovers-condo1 rovers-condo2  rovers-condo3 rovers-condo4 rovers-condo5  ; do {
+#for i in  rovers-condo0 rovers-condo1 rovers-condo2  rovers-condo3 rovers-condo4 rovers-condo5 rovers-condb0 rovers-condb1 rovers-condb2  rovers-condb3 rovers-condb4 rovers-condb5  ; do {
+
+  cat test_probs/"$i"/out/summary/summary >> graph.tex
+  echo "\hline" >> graph.tex
+}; done
+
+echo "\end{tabular}}}" >> graph.tex
+
+#echo "\center{\scalebox{.61}{\begin{tabular}{|c|c|c|c|c|c|}" >> graph.tex
+#echo "\hline" >> graph.tex
+#echo "&" >> graph.tex
+
+#for i in "" "-h card" "-h sg" "-h lug" "-h lug -ha"; do {
+#  if [ "$i" != "-h lug -ha" ]; then
+#    echo "$i &" >> graph.tex
+#  else
+#    echo "$i \\\\" >> graph.tex
+#  fi
+#}; done
+#echo "\hline" >> graph.tex
+#for i in ring medicalPKS cubec cubef; do {
+#  cat test_probs/"$i"/out/summary/summary >> graph.tex
+#  echo "\hline" >> graph.tex
+#}; done
+#echo "\end{tabular}}}" >> graph.tex
+echo "\end{document}" >> graph.tex
+
+latex graph.tex
+sleep 2
+dvips -t letter -o graph.ps graph.dvi
+sleep 2
+ps2pdf graph.ps
+sleep 2
+gsview graph.pdf

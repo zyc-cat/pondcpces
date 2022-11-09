@@ -1,0 +1,338 @@
+#!/bin/bash
+
+#for j in   medical rovers-cond logistics-cond bts btcs  rovers logistics bt btc ; do {
+#for j in  rovers-cond logistics-cond; do {
+#for j in  rovers-condo0 rovers-condo1 rovers-condo2 rovers-condo3 rovers-condo4 rovers-condo5  ; do {
+#for j in  rovers-condo10 rovers-condo0 rovers-condo1 rovers-condo2 rovers-condo3 rovers-condo4 rovers-condo5 rovers-condb0 rovers-condb1 rovers-condb2 rovers-condb3 rovers-condb4 rovers-condb5  ; do {
+#for j in  rovers-condo10 rovers-cond  rovers-condo5  ; do {
+#for j in  logistics cost-logistics logistics-cond cost-logistics-cond rovers cost-rovers rovers-cond cost-rovers-cond  ; do {
+#for j in  cost-rovers-condo0 cost-rovers-condo5 cost-rovers-condo10 cost-logistics-cond-pre logistics-cond-pre rovers-condo10 rovers-condb10 rovers-condo5 rovers-condb5 rovers-condo0 rovers-condb0  logistics-cond cost-logistics-cond rovers-cond cost-rovers-cond cost1-rovers-cond; do {
+#for j in  cost-logistics-cond cost-logistics-cond-pre logistics-cond-pre; do {
+#for j in  logistics cost-logistics rovers cost-rovers ; do { 
+#for j in  rovers cost-rovers logistics cost-logistics rovers-cond cost-rovers-cond logistics-cond cost-logistics-cond; do {
+#for j in   cost-logistics-cond cost-rovers-cond cost-btcs cost-btcs1 cost-btcs2 ; do {
+#for j in  bt bts btc btcs  ; do {
+#for j in cost-logistics-cond cost-rovers-cond  cost-medical cost-medical1 cost-medical2 ; do {
+#for j in  cost-medical cost-medical1 cost-medical2; do {
+for j in   cost-medical1 cost-medical2 cost-rovers-cond cost-rovers-cond1; do {
+#for j in ; do {
+
+  echo $j
+ cd test_probs/"$j"
+ if [ -d out/summary ] ; then
+     echo Summary Exists     
+ else
+ mkdir out/summary
+ fi
+ 
+
+if [ -f out/summary/summary ]; then
+ rm out/summary/summary
+fi
+
+PROBS=`ls p*`
+  for k in $PROBS; do {
+#echo $k
+#	  echo out/"$k"_"$i".out
+#for i in "@" "_" "-h_card" "-h_sgmax" "-h_sgsum" "-h_sglevel" "-h_sgrp" "-h_lugmax" "-h_lugsum" "-h_luglevel" "-h_lugrp" "-h_lugrp-ha" ; do {
+#for i in "@"  "-h_slugrp_-rpcost_coverage_____" "-h_slugrp_-rpcost_cost_-c_sum_-cp_enter_"  "-h_slugrp_-rpcost_ratio_-c_sum_-cp_enter_" "-h_slugrp_-rpcost_cost_-c_max_-cp_enter_"  "-h_slugrp_-rpcost_ratio_-c_max_-cp_enter_" "-h_slugrp_-rpcost_cost_-c_sum_-cp_groups_"  "-h_slugrp_-rpcost_ratio_-c_sum_-cp_groups_" "-h_slugrp_-rpcost_cost_-c_max_-cp_groups_"  "-h_slugrp_-rpcost_ratio_-c_max_-cp_groups_" "#" ; do {
+#for i in "@"  "-h_slugrp_-rpcost_coverage_____" "-h_slugrp_-rpcost_cost_-c_sum_-cp_enter_"  "-h_slugrp_-rpcost_ratio_-c_sum_-cp_enter_" "-h_slugrp_-rpcost_cost_-c_max_-cp_enter_"  "-h_slugrp_-rpcost_ratio_-c_max_-cp_enter_" "-h_slugrp_-rpcost_cost_-c_sum_-cp_groups_"  "-h_slugrp_-rpcost_ratio_-c_sum_-cp_groups_" "-h_slugrp_-rpcost_cost_-c_max_-cp_groups_"  "-h_slugrp_-rpcost_ratio_-c_max_-cp_groups_" "#" ; do {
+#for i in "@" "-h_slugrp_-sins_reduce_____" "-h_slugrp_-sins_greedy_____" "-h_lugrp_______" "#"; do {
+
+#for i in "@" "-h_lugrp_-rpcost_coverage_____" "-h_lugrp_-rpcost_cost_____"  "-h_lugrp_-rpcost_ratio_____" "-h_slugrp_-sins_mutex_-rpcost_coverage___" "-h_slugrp_-sins_mutex_-rpcost_cost___" "-h_slugrp_-sins_mutex_-rpcost_ratio___" "-h_slugrp_-sins_reduce-mutex_-rpcost_coverage___" "-h_slugrp_-sins_reduce-mutex_-rpcost_cost___" "-h_slugrp_-sins_reduce-mutex_-rpcost_ratio___" "-h_slugrp_-sins_reduce_-rpcost_coverage___" "-h_slugrp_-sins_reduce_-rpcost_cost___" "-h_slugrp_-sins_reduce_-rpcost_ratio___" "-h_slugrp_-sins_greedy_-rpcost_coverage___" "-h_slugrp_-sins_greedy_-rpcost_cost___" "-h_slugrp_-sins_greedy_-rpcost_ratio___" "#"; do {
+
+for i in "@" "-h_lugrp_-pg_node_-rpcost_coverage___" "-h_lugrp_-pg_node_-rpcost_cost___" "-h_lugrp_-pg_node_-rpcost_ratio___" "-h_slugrp_-sins_mutex_-pg_node_-rpcost_coverage_" "-h_slugrp_-sins_reduce-mutex_-pg_node_-rpcost_coverage_" "-h_slugrp_-sins_mutex_-pg_node_-rpcost_cost_" "-h_slugrp_-sins_reduce-mutex_-pg_node_-rpcost_cost_" "-h_slugrp_-sins_mutex_-pg_node_-rpcost_ratio_" "-h_slugrp_-sins_reduce-mutex_-pg_node_-rpcost_ratio_"  "#"; do {
+
+#contingent comparisons
+#for i in "@"    "-h_lugrp_-rpcost_ratio_____"   "-h_slugrp_-sins_mutex_-rpcost_ratio___"   "-h_slugrp_-sins_reduce-mutex_-rpcost_ratio___"   "-h_slugrp_-sins_reduce_-rpcost_ratio___"   "-h_slugrp_-sins_greedy_-rpcost_ratio___" "#"; do {
+#for i in "@"    "-h_lugrp_-rpcost_cost_____"   "-h_slugrp_-sins_mutex_-rpcost_cost___"   "-h_slugrp_-sins_reduce-mutex_-rpcost_cost___"   "-h_slugrp_-sins_reduce_-rpcost_cost___"   "-h_slugrp_-sins_greedy_-rpcost_cost___" "#"; do {
+
+#for i in "@" "-h_slugrp_-sins_reduce_-rpcost_coverage___" "-h_slugrp_-sins_reduce_-rpcost_cost_-c_sum_" "-h_slugrp_-sins_reduce_-rpcost_ratio_-c_sum_" "-h_slugrp_-sins_reduce_-rpcost_cost_-c_max_" "-h_slugrp_-sins_reduce_-rpcost_ratio_-c_max_" "-h_slugrp_-sins_greedy_-rpcost_coverage___" "-h_slugrp_-sins_greedy_-rpcost_cost_-c_sum_" "-h_slugrp_-sins_greedy_-rpcost_ratio_-c_sum_" "-h_slugrp_-sins_greedy_-rpcost_cost_-c_max_" "-h_slugrp_-sins_greedy_-rpcost_ratio_-c_max_" "#"; do {
+
+#conformant comparisons
+#for i in "@"  "-h_lugrp_-rpcost_coverage_____" "-h_lugrp_-rpcost_cost_-cl_sum_-cw_sum_"  "-h_lugrp_-rpcost_ratio_-cl_sum_-cw_sum_" "-h_lugrp_-rpcost_cost_-cl_max_-cw_sum_"  "-h_lugrp_-rpcost_ratio_-cl_max_-cw_sum_" "-h_lugrp_-rpcost_cost_-cl_sum_-cw_max_"  "-h_lugrp_-rpcost_ratio_-cl_sum_-cw_max_" "-h_lugrp_-rpcost_cost_-cl_max_-cw_max_"  "-h_lugrp_-rpcost_ratio_-cl_max_-cw_max_"  "#" ; do {
+#for i in "@"  "-h_lugrp_-rpcost_coverage_____" "-h_lugrp_-rpcost_cost_-c_sum_-cp_enter_"  "-h_lugrp_-rpcost_ratio_-c_sum_-cp_enter_" "-h_lugrp_-rpcost_cost_-c_max_-cp_enter_"  "-h_lugrp_-rpcost_ratio_-c_max_-cp_enter_" "-h_lugrp_-rpcost_cost_-c_sum_-cp_groups_"  "-h_lugrp_-rpcost_ratio_-c_sum_-cp_groups_" "-h_lugrp_-rpcost_cost_-c_max_-cp_groups_"  "-h_lugrp_-rpcost_ratio_-c_max_-cp_groups_" "#" ; do {
+#for i in "@" "-h_lugrp" "-h_lugrp-ls" ; do {
+# for i in "@" "_" "-h_card"  "-h_lug" "-h_lug-ha"; do {
+#echo $i
+   if [ "$i" == "@" ]; then
+    echo "$k" | cut -c 6- > out/summary/line
+    #echo "&" >> out/summary/summary
+   else
+    if [ -f out/"$k"_"$i".out ]; then
+     time=$(fgrep "Total User Time" out/"$k"_"$i".out | cut -f5 -d" " - )
+#echo $time
+     if [ $time ]; then
+      tf=$(echo $time | cut -f1 -d".")
+      tt=$(echo $time | cut -f2 -d"." | cut -c -3)
+      time=$(echo $tf$tt)
+     fi
+     sensory=$(fgrep "IF" out/"$k"_"$i".out) 
+   #  echo $sensory
+     generate=$(fgrep "NumStatesGenerated" out/"$k"_"$i".out | cut -f3 -d" " - )
+     expand=$(fgrep "NumExpandedStates:" out/"$k"_"$i".out | cut -f8 -d" " - )
+     length=$(fgrep "NumExpandedStates:" out/"$k"_"$i".out | cut -f2 -d" " - | cut -f1 -d"." - )
+     max=$(fgrep "Max Plan" out/"$k"_"$i".out | cut -f4 -d" " - )
+     min=$(fgrep "Min Plan" out/"$k"_"$i".out | cut -f4 -d" " - )
+     avg=$(fgrep "NumSolutionStates:" out/"$k"_"$i".out | cut -f2 -d" " -)
+     exp=$(fgrep "Expected Cost" out/"$k"_"$i".out | cut -f4 -d" " -)
+     nump=$(fgrep "Num Plans" out/"$k"_"$i".out | cut -f4 -d" " -)
+    # echo $avg
+     #echo "$j"/out/"$k"_"$i".out
+     plans=$(fgrep "Num Plans" out/"$k"_"$i".out | cut -f4 -d" " -)
+     if [ $avg ]; then
+      ff=$(echo $avg | cut -f1 -d".")
+      ft=$(echo $avg | cut -f2 -d"." | cut -c -2)
+      avg=$(echo $ff"."$ft)
+     fi
+
+     #echo $expand
+     if [ -z $time ]; then
+      if [ "$i" != "#" ]; then 
+        LN=`cat out/summary/line`
+        echo $LN "? " > out/summary/line
+      else
+       echo  "" #>> out/summary/summary
+      fi
+     else
+      #echo "$i".out $time #/"$length" &"     
+
+        if [ "$i" != "#" ]; then 
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min " & "  >> out/summary/summary
+	    LN=`cat out/summary/line`
+  	   echo $LN" "$exp  > out/summary/line
+	 # cat out/summary/line
+        else
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min >> out/summary/summary 
+	  echo "" #>> out/summary/summary
+        fi    
+    
+
+     fi
+  else
+     if [ "$i" != "#" ]; then 
+        LN=`cat out/summary/line`
+        echo $LN "? " > out/summary/line
+#	 echo  "0 " | out/summary/line
+     else
+      echo  "" #>> out/summary/summary
+     fi
+    fi
+   fi
+  }; done
+  cat out/summary/line >> out/summary/summary
+  cat out/summary/line
+  rm out/summary/line
+  # echo "\\\\"  >> out/summary/summary
+   
+ }; done
+cd ../..
+}; done
+
+#for j in  ring ring-cond cube cube-cond cubec cubec-cond cost-ring cost-ring-cond cost-cube cost-cube-cond cost-cubec cost-cubec-cond; do {
+#for j in medicalPOND; do {
+for j in  ; do {
+#for j in medicalPOND ring-cond cube-cond cubec-cond ; do {
+#for j in  cube cubec cubef ring; do {
+#for j in  uts; do {
+ cd test_probs/"$j"
+ if [ -d out/summary ] ; then
+     echo Summary Exists
+ else
+ mkdir out/summary
+ fi
+ 
+
+ if [ -f out/summary/summary ]; then
+  rm out/summary/summary
+ fi
+
+#for k in   ; do {
+#for k in 01 02 03 11 12 13 14 15  ; do {
+#for k in 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20  ; do {
+for k in   5  7  9  11  13  15  17  19   ; do {
+#echo $k
+#	  echo out/"$k"_"$i".out
+#for i in "@" "_" "-h_card" "-h_sgmax" "-h_sgsum" "-h_sglevel" "-h_sgrp" "-h_lugmax" "-h_lugsum" "-h_luglevel" "-h_lugrp" "-h_lugrp-ha" ; do {
+#for i in "@"  "-h_slugrp_-rpcost_coverage_____" "-h_slugrp_-rpcost_cost_-c_sum_-cp_enter_"  "-h_slugrp_-rpcost_ratio_-c_sum_-cp_enter_" "-h_slugrp_-rpcost_cost_-c_max_-cp_enter_"  "-h_slugrp_-rpcost_ratio_-c_max_-cp_enter_" "-h_slugrp_-rpcost_cost_-c_sum_-cp_groups_"  "-h_slugrp_-rpcost_ratio_-c_sum_-cp_groups_" "-h_slugrp_-rpcost_cost_-c_max_-cp_groups_"  "-h_slugrp_-rpcost_ratio_-c_max_-cp_groups_" "#" ; do {
+#for i in "@"  "-h_slugrp_-rpcost_coverage_____" "-h_slugrp_-rpcost_cost_-c_sum_-cp_enter_"  "-h_slugrp_-rpcost_ratio_-c_sum_-cp_enter_" "-h_slugrp_-rpcost_cost_-c_max_-cp_enter_"  "-h_slugrp_-rpcost_ratio_-c_max_-cp_enter_" "-h_slugrp_-rpcost_cost_-c_sum_-cp_groups_"  "-h_slugrp_-rpcost_ratio_-c_sum_-cp_groups_" "-h_slugrp_-rpcost_cost_-c_max_-cp_groups_"  "-h_slugrp_-rpcost_ratio_-c_max_-cp_groups_" "#" ; do {
+#for i in "@" "-h_slugrp_-sins_reduce_____" "-h_slugrp_-sins_greedy_____" "-h_lugrp_______" "#"; do {
+
+
+
+
+#contingent comparisons
+#for i in "@"    "-h_lugrp_-rpcost_ratio_____"   "-h_slugrp_-sins_mutex_-rpcost_ratio___"   "-h_slugrp_-sins_reduce-mutex_-rpcost_ratio___"   "-h_slugrp_-sins_reduce_-rpcost_ratio___"   "-h_slugrp_-sins_greedy_-rpcost_ratio___" "#"; do {
+#for i in "@"    "-h_lugrp_-rpcost_cost_____"   "-h_slugrp_-sins_mutex_-rpcost_cost___"   "-h_slugrp_-sins_reduce-mutex_-rpcost_cost___"   "-h_slugrp_-sins_reduce_-rpcost_cost___"   "-h_slugrp_-sins_greedy_-rpcost_cost___" "#"; do {
+
+#for i in "@" "-h_lugrp_-rpcost_coverage_____" "-h_lugrp_-rpcost_cost_____"  "-h_lugrp_-rpcost_ratio_____" "-h_slugrp_-sins_mutex_-rpcost_coverage___" "-h_slugrp_-sins_mutex_-rpcost_cost___" "-h_slugrp_-sins_mutex_-rpcost_ratio___" "-h_slugrp_-sins_reduce-mutex_-rpcost_coverage___" "-h_slugrp_-sins_reduce-mutex_-rpcost_cost___" "-h_slugrp_-sins_reduce-mutex_-rpcost_ratio___" "-h_slugrp_-sins_reduce_-rpcost_coverage___" "-h_slugrp_-sins_reduce_-rpcost_cost___" "-h_slugrp_-sins_reduce_-rpcost_ratio___" "-h_slugrp_-sins_greedy_-rpcost_coverage___" "-h_slugrp_-sins_greedy_-rpcost_cost___" "-h_slugrp_-sins_greedy_-rpcost_ratio___" "#"; do {
+
+#for i in "@" "-h_slugrp_-sins_reduce_-rpcost_coverage___" "-h_slugrp_-sins_reduce_-rpcost_cost_-c_sum_" "-h_slugrp_-sins_reduce_-rpcost_ratio_-c_sum_" "-h_slugrp_-sins_reduce_-rpcost_cost_-c_max_" "-h_slugrp_-sins_reduce_-rpcost_ratio_-c_max_" "-h_slugrp_-sins_greedy_-rpcost_coverage___" "-h_slugrp_-sins_greedy_-rpcost_cost_-c_sum_" "-h_slugrp_-sins_greedy_-rpcost_ratio_-c_sum_" "-h_slugrp_-sins_greedy_-rpcost_cost_-c_max_" "-h_slugrp_-sins_greedy_-rpcost_ratio_-c_max_" "#"; do {
+
+#conformant comparisons
+for i in "@"  "-h_lugrp_-rpcost_coverage_____" "-h_lugrp_-rpcost_cost_-cl_sum_-cw_sum_"  "-h_lugrp_-rpcost_ratio_-cl_sum_-cw_sum_" "-h_lugrp_-rpcost_cost_-cl_max_-cw_sum_"  "-h_lugrp_-rpcost_ratio_-cl_max_-cw_sum_" "-h_lugrp_-rpcost_cost_-cl_sum_-cw_max_"  "-h_lugrp_-rpcost_ratio_-cl_sum_-cw_max_" "-h_lugrp_-rpcost_cost_-cl_max_-cw_max_"  "-h_lugrp_-rpcost_ratio_-cl_max_-cw_max_"  "#" ; do {
+#for i in "@"  "-h_lugrp_-rpcost_coverage_____" "-h_lugrp_-rpcost_cost_-c_sum_-cp_enter_"  "-h_lugrp_-rpcost_ratio_-c_sum_-cp_enter_" "-h_lugrp_-rpcost_cost_-c_max_-cp_enter_"  "-h_lugrp_-rpcost_ratio_-c_max_-cp_enter_" "-h_lugrp_-rpcost_cost_-c_sum_-cp_groups_"  "-h_lugrp_-rpcost_ratio_-c_sum_-cp_groups_" "-h_lugrp_-rpcost_cost_-c_max_-cp_groups_"  "-h_lugrp_-rpcost_ratio_-c_max_-cp_groups_" "#" ; do {
+#for i in "@" "-h_lugrp" "-h_lugrp-ls" ; do {
+# for i in "@" "_" "-h_card"  "-h_lug" "-h_lug-ha"; do {
+#echo $i
+   if [ "$i" == "@" ]; then
+    echo "$k"  > out/summary/line
+    #echo "&" >> out/summary/summary
+   else
+    if [ -f out/"$k"_"$i".out ]; then
+     time=$(fgrep "Total User Time" out/"$k"_"$i".out | cut -f5 -d" " - )
+#echo $time
+     if [ $time ]; then
+      tf=$(echo $time | cut -f1 -d".")
+      tt=$(echo $time | cut -f2 -d"." | cut -c -3)
+      time=$(echo $tf$tt)
+     fi
+     sensory=$(fgrep "IF" out/"$k"_"$i".out) 
+   #  echo $sensory
+     generate=$(fgrep "NumStatesGenerated" out/"$k"_"$i".out | cut -f3 -d" " - )
+     expand=$(fgrep "NumExpandedStates:" out/"$k"_"$i".out | cut -f8 -d" " - )
+     length=$(fgrep "NumExpandedStates:" out/"$k"_"$i".out | cut -f2 -d" " - | cut -f1 -d"." - )
+     max=$(fgrep "Max Plan" out/"$k"_"$i".out | cut -f4 -d" " - )
+     min=$(fgrep "Min Plan" out/"$k"_"$i".out | cut -f4 -d" " - )
+     avg=$(fgrep "NumSolutionStates:" out/"$k"_"$i".out | cut -f2 -d" " -)
+    # echo $avg
+     #echo "$j"/out/"$k"_"$i".out
+     plans=$(fgrep "Num Plans" out/"$k"_"$i".out | cut -f4 -d" " -)
+     if [ $avg ]; then
+      ff=$(echo $avg | cut -f1 -d".")
+      ft=$(echo $avg | cut -f2 -d"." | cut -c -2)
+      avg=$(echo $ff"."$ft)
+     fi
+
+     #echo $expand
+     if [ -z $time ]; then
+      if [ "$i" != "#" ]; then 
+        LN=`cat out/summary/line`
+        echo $LN "? " > out/summary/line
+      else
+       echo  "" #>> out/summary/summary
+      fi
+     else
+      #echo "$i".out $time #/"$length" &"     
+
+        if [ "$i" != "#" ]; then 
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min " & "  >> out/summary/summary
+	    LN=`cat out/summary/line`
+  	   echo $LN" "$time > out/summary/line
+	 # cat out/summary/line
+        else
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min >> out/summary/summary 
+	  echo "" #>> out/summary/summary
+        fi    
+    
+
+     fi
+  else
+     if [ "$i" != "#" ]; then 
+        LN=`cat out/summary/line`
+        echo $LN "? " > out/summary/line
+#	 echo  "0 " | out/summary/line
+     else
+      echo  "" #>> out/summary/summary
+     fi
+    fi
+   fi
+  }; done
+  cat out/summary/line >> out/summary/summary
+  cat out/summary/line
+  rm out/summary/line
+  # echo "\\\\"  >> out/summary/summary
+   
+ 
+
+ 
+ 
+}; done
+cd ../..
+}; done
+
+for j in ; do {
+#for j in  medicalPKS; do {
+ cd test_probs/"$j"
+ if [ -d out/summary ] ; then
+     echo Summary Exists
+ else
+ mkdir out/summary
+ fi
+ 
+
+ if [ -f out/summary/summary ]; then
+  rm out/summary/summary
+ fi
+
+#for k in   ; do {
+for k in 10 20 30 40 50 60 70 80 90 100; do {
+#for i in "@" "_" "-h_card" "-h_sgmax" "-h_sgsum"  "-h_sglevel" "-h_sgrp" "-h_lugmax" "-h_lugsum" "-h_luglevel" "-h_lugrp" "-h_lugrp-ha" ; do {
+for i in "@" "-h_lugrp" "-h_lugrp-ls" ; do {
+# for i in "@" "_" "-h_card" "-h_sgrp" "-h_lug" "-h_lug-ha"; do {
+  if [ "$i" == "@" ]; then
+   echo "$k &" >> out/summary/summary
+  else
+   if [ -f out/"$k"_"$i".out ]; then
+    time=$(fgrep "Total User Time" out/"$k"_"$i".out | cut -f5 -d" " - )
+     if [ $time ]; then
+      tf=$(echo $time | cut -f1 -d".")
+      tt=$(echo $time | cut -f2 -d"." | cut -c -3)
+      time=$(echo $tf"."$tt)
+     fi
+    generate=$(fgrep "NumStatesGenerated" out/"$k"_"$i".out | cut -f3 -d" " - )
+    expand=$(fgrep "NumExpandedStates:" out/"$k"_"$i".out | cut -f8 -d" " - )
+    max=$(fgrep "Max Plan" out/"$k"_"$i".out | cut -f4 -d" " - )
+    min=$(fgrep "Min Plan" out/"$k"_"$i".out | cut -f4 -d" " - )
+     avg=$(fgrep "NumSolutionStates:" out/"$k"_"$i".out | cut -f2 -d" " -)
+      if [ $avg ]; then
+      ff=$(echo $avg | cut -f1 -d".")
+      ft=$(echo $avg | cut -f2 -d"." | cut -c -2)
+      avg=$(echo $ff"."$ft)
+     fi
+   if [ -z $time ]; then
+     if [ "$i" != "-h_lugrp-ls" ]; then 
+      echo  "- &" >> out/summary/summary
+     else
+      echo  "-" >> out/summary/summary
+     fi
+    else
+     echo "$i".out $time #/"$length" &"     
+
+
+     if [ "$sensory" != "" ]; then
+        if [ "$i" != "-h_lugrp-ls" ]; then 
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min " & "  >> out/summary/summary
+  	  echo $time"/"$max"  &  "  >> out/summary/summary
+        else
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min >> out/summary/summary 
+	  echo $time"/"$max"  "  >> out/summary/summary
+        fi
+      else
+        if [ "$i" != "-h_lugrp" ]; then 
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min " & "  >> out/summary/summary
+  	  echo $time"/"$max" &  "  >> out/summary/summary
+        else
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min >> out/summary/summary 
+	  echo $time"/"$max >> out/summary/summary
+        fi    
+      fi
+
+
+
+
+    fi
+   else
+     if [ "$i" != "-h_lugrp-ls" ]; then 
+      echo  "- &" >> out/summary/summary
+     else
+      echo  "-" >> out/summary/summary
+     fi
+   fi
+  fi
+ }; done
+   echo "\\\\"  >> out/summary/summary
+}; done
+cd ../..
+}; done
+

@@ -1,0 +1,289 @@
+#!/bin/bash
+
+#for j in   medical rovers-cond logistics-cond bts btcs  rovers logistics bt btc ; do {
+for j in   ; do {
+#for j in  rovers-condo0 rovers-condo1 rovers-condo2 rovers-condo3 rovers-condo4 rovers-condo5  ; do {
+#for j in  bt btc bts btcs rovers rovers-cond logistics logistics-cond   ; do {
+#for j in  rovers   ; do {
+#for j in  rovers-condo10 rovers-cond  rovers-condo5  ; do {
+#for j in  logistics-cond-pre btcs ring-cond cube-cond cubec-cond  mines logistics-cond  rovers-cond  medicalPKS  rovers-condo0 rovers-condb0 rovers-condo5 rovers-condb5  rovers-condo10 rovers-condb10  ; do {
+
+
+
+  echo $j
+ cd test_probs/"$j"
+ if [ -d out/summary ] ; then
+     echo Summary Exists
+ else
+ mkdir out/summary
+ fi
+ 
+
+if [ -f out/summary/summary ]; then
+ rm out/summary/summary
+fi
+
+PROBS=`ls p*`
+  for k in $PROBS; do {
+echo $k
+#	  echo out/"$k"_"$i".out
+#for i in "@" "_" "-h_card" "-h_sgmax" "-h_sgsum" "-h_sglevel" "-h_sgrp" "-h_lugmax" "-h_lugsum" "-h_luglevel" "-h_lugrp" "-h_lugrp-ha" ; do {
+#for i in "@" "-h_lugrp_______"   "-h_slugrp_-sins_mutex_____"  "-h_slugrp_-sins_reduce-mutex_____"  "-h_slugrp_-sins_reduce_____"   "-h_slugrp_-sins_greedy_____"  "#"; do {
+for i in "@" "-h_card_______" "-h_sgrp_______" "-h_mgrpm_______" "-h_mgrps_______" "-h_mgrpu_______"    "-h_lugrp_-pg_node_____"    "#"; do {
+#for i in "@" "________" "-h_card_______" "-h_sgrp_______" "-h_mgrpm_______" "-h_mgrps_______" "-h_mgrpu_______"  "-h_lugrp_-pg_node_-rpcost_coverage___"  "#"; do {
+
+#for i in "@"  "-h_lugrp_-rpcost_coverage_____" "-h_lugrp_-rpcost_cost_-c_sum_-cp_enter_"  "-h_lugrp_-rpcost_ratio_-c_sum_-cp_enter_" "-h_lugrp_-rpcost_cost_-c_max_-cp_enter_"  "-h_lugrp_-rpcost_ratio_-c_max_-cp_enter_" "-h_lugrp_-rpcost_cost_-c_sum_-cp_groups_"  "-h_lugrp_-rpcost_ratio_-c_sum_-cp_groups_" "-h_lugrp_-rpcost_cost_-c_max_-cp_groups_"  "-h_lugrp_-rpcost_ratio_-c_max_-cp_groups_" "#" ; do {
+#for i in "@" "-h_lugrp" "-h_lugrp-ls" ; do {
+# for i in "@" "_" "-h_card"  "-h_lug" "-h_lug-ha"; do {
+#echo $i
+   if [ "$i" == "@" ]; then
+    echo "$k" | cut -c 6- >> out/summary/summary
+    echo "&" >> out/summary/summary
+   else
+    if [ -f out/"$k"_"$i".out ]; then
+     time=$(fgrep "Total User Time" out/"$k"_"$i".out | cut -f5 -d" " - )
+echo $time
+     if [ $time ]; then
+      tf=$(echo $time | cut -f1 -d".")
+      tt=$(echo $time | cut -f2 -d"." | cut -c -3)
+      time=$(echo $tf$tt)
+     fi
+     sensory=$(fgrep "IF" out/"$k"_"$i".out) 
+   #  echo $sensory
+     generate=$(fgrep "NumStatesGenerated" out/"$k"_"$i".out | cut -f3 -d" " - )
+     expand=$(fgrep "NumExpandedStates:" out/"$k"_"$i".out | cut -f8 -d" " - )
+     length=$(fgrep "NumExpandedStates:" out/"$k"_"$i".out | cut -f2 -d" " - | cut -f1 -d"." - )
+     max=$(fgrep "Max Plan" out/"$k"_"$i".out | cut -f4 -d" " - )
+     min=$(fgrep "Min Plan" out/"$k"_"$i".out | cut -f4 -d" " - )
+     avg=$(fgrep "NumSolutionStates:" out/"$k"_"$i".out | cut -f2 -d" " -)
+     exp=$(fgrep "Expected Cost" out/"$k"_"$i".out | cut -f4 -d" " -)
+     #echo $avg
+     #echo "$j"/out/"$k"_"$i".out
+     plans=$(fgrep "Num Plans" out/"$k"_"$i".out | cut -f4 -d" " -)
+     if [ $avg ]; then
+      ff=$(echo $avg | cut -f1 -d".")
+      ft=$(echo $avg | cut -f2 -d"." | cut -c -2)
+      avg=$(echo $ff"."$ft)
+     fi
+
+     echo $expand
+     if [ -z $time ]; then
+      if [ "$i" != "#" ]; then 
+       echo  "- &" >> out/summary/summary
+      else
+       echo  "-" >> out/summary/summary
+      fi
+     else
+      echo "$i".out $time     
+      if [ "$sensory" != "" ]; then
+        if [ "$i" != "#" ]; then 
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min " & "  >> out/summary/summary
+  	  echo $time"/{\bf "$max"}  &  "  >> out/summary/summary
+        else
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min >> out/summary/summary 
+	  echo "- &"  >> out/summary/summary
+        fi
+      else
+        if [ "$i" != "#" ]; then 
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min " & "  >> out/summary/summary
+  	  echo $time"/{\bf "$max"} & "  >> out/summary/summary
+        else
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min >> out/summary/summary 
+	  echo "- " >> out/summary/summary
+        fi    
+      fi
+
+     fi
+  else
+     if [ "$i" != "#" ]; then 
+      echo  "- &" >> out/summary/summary
+     else
+	 echo  "" #>> out/summary/summary
+     fi
+    fi
+   fi
+  }; done
+   echo "\\\\"  >> out/summary/summary
+   
+ }; done
+cd ../..
+}; done
+
+#for j in  ring ring-cond cube cube-cond cubec cubec-cond; do {
+for j in  cube cubec ring; do {
+#for j in  ; do {
+ cd test_probs/"$j"
+ if [ -d out/summary ] ; then
+     echo Summary Exists
+ else
+ mkdir out/summary
+ fi
+ 
+
+ if [ -f out/summary/summary ]; then
+  rm out/summary/summary
+ fi
+
+#for k in   ; do {
+for k in 2 3 4 5 6 7 8 9 10 11 12 13    ; do {
+#for k in  3 4-2 5-2 6-2 7-2 8-2 9-2 10-2 4 5  ; do {
+#for i in "@" "_" "-h_card" "-h_sgmax" "-h_sgsum"  "-h_sglevel" "-h_sgrp" "-h_lugmax" "-h_lugsum" "-h_luglevel" "-h_lugrp" "-h_lugrp-ha" ; do {
+for i in "@" "________" "-h_card_______" "-h_sgrp_______" "-h_mgrpm_______" "-h_mgrps_______" "-h_mgrpu_______"    "-h_lugrp_-pg_node_____"    "#"; do {
+#for i in "@" "________" "-h_card_______" "-h_sgrp_______" "-h_mgrpm_______" "-h_mgrps_______" "-h_mgrpu_______"  "-h_lugrp_-pg_node_-rpcost_coverage___"  "#"; do {
+#for i in "@"  "-h_lugrp" "-h_lugrp-ls"; do {
+#for i in "@" "_" "-h_card" "-h_lugrp" "-h_lugrp-ha" ; do {
+
+# for i in "@" "_" "-h_card"  "-h_lug" "-h_lug-ha"; do {
+  if [ "$i" == "@" ]; then
+   echo "$k &" >> out/summary/summary
+  else
+   if [ -f out/"$k"_"$i".out ]; then
+    time=$(fgrep "Total User Time" out/"$k"_"$i".out | cut -f5 -d" " - )
+     if [ $time ]; then
+      tf=$(echo $time | cut -f1 -d".")
+      tt=$(echo $time | cut -f2 -d"." | cut -c -3)
+      time=$(echo $tf$tt)
+     fi
+    generate=$(fgrep "NumStatesGenerated" out/"$k"_"$i".out | cut -f3 -d" " - )
+    expand=$(fgrep "NumExpandedStates:" out/"$k"_"$i".out | cut -f8 -d" " - )
+    max=$(fgrep "Max Plan" out/"$k"_"$i".out | cut -f4 -d" " - )
+    min=$(fgrep "Min Plan" out/"$k"_"$i".out | cut -f4 -d" " - )
+     avg=$(fgrep "NumSolutionStates:" out/"$k"_"$i".out | cut -f2 -d" " -)
+     plans=$(fgrep "Num Plans" out/"$k"_"$i".out | cut -f4 -d" " -)
+     if [ $avg ]; then
+      ff=$(echo $avg | cut -f1 -d".")
+      ft=$(echo $avg | cut -f2 -d"." | cut -c -2)
+      avg=$(echo $ff"."$ft)
+     fi
+    if [ -z $time ]; then
+       if [ "$i" != "#" ]; then 
+       echo  "- &" >> out/summary/summary
+      else
+       echo  "" >> out/summary/summary
+      fi
+     else
+      echo "$i".out $time #/"$length" &"     
+
+   
+
+
+      if [ "$sensory" != "" ]; then
+        if [ "$i" != "#" ]; then 
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min " & "  >> out/summary/summary
+  	  echo $time"/"$expand"  &  "  >> out/summary/summary
+        else
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min >> out/summary/summary 
+	  echo $time"/"$expand"  "  >> out/summary/summary
+        fi
+      else
+        if [ "$i" != "#" ]; then 
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min " & "  >> out/summary/summary
+  	  echo $time"/"$expand" &  "  >> out/summary/summary
+        else
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min >> out/summary/summary 
+	  echo $time"/"$expand >> out/summary/summary
+        fi    
+      fi
+
+    fi
+   else
+     if [ "$i" != "#" ]; then 
+      echo  "- &" >> out/summary/summary
+     else
+      echo  "" >> out/summary/summary
+     fi
+   fi
+  fi
+ }; done
+   echo "\\\\"  >> out/summary/summary
+}; done
+cd ../..
+}; done
+
+#for j in ; do {
+for j in  medicalPKS; do {
+ cd test_probs/"$j"
+ if [ -d out/summary ] ; then
+     echo Summary Exists
+ else
+ mkdir out/summary
+ fi
+ 
+
+ if [ -f out/summary/summary ]; then
+  rm out/summary/summary
+ fi
+
+#for k in   ; do {
+for k in 20 40 60 80 100; do {
+#for i in "@" "_" "-h_card" "-h_sgmax" "-h_sgsum"  "-h_sglevel" "-h_sgrp" "-h_lugmax" "-h_lugsum" "-h_luglevel" "-h_lugrp" "-h_lugrp-ha" ; do {
+#for i in "@" "-h_mgrpu_______" "-h_lugrp_-pg_node_____" "-h_lugrp_______"    "-h_slugrp_-sins_mutex_____"    "#"; do {
+for i in "@" "-h_mgrpu_______" "-h_lugrp_-pg_node_-rpcost_coverage___"  "-h_lugrp_-rpcost_coverage_____"    "#"; do {
+#for i in "@" "-h_lugrp" "-h_lugrp-ls" ; do {
+# for i in "@" "_" "-h_card" "-h_sgrp" "-h_lug" "-h_lug-ha"; do {
+  if [ "$i" == "@" ]; then
+   echo "$k &" >> out/summary/summary
+  else
+   if [ -f out/"$k"_"$i".out ]; then
+    time=$(fgrep "Total User Time" out/"$k"_"$i".out | cut -f5 -d" " - )
+     if [ $time ]; then
+      tf=$(echo $time | cut -f1 -d".")
+      tt=$(echo $time | cut -f2 -d"." | cut -c -3)
+      time=$(echo $tf"."$tt)
+     fi
+    generate=$(fgrep "NumStatesGenerated" out/"$k"_"$i".out | cut -f3 -d" " - )
+    expand=$(fgrep "NumExpandedStates:" out/"$k"_"$i".out | cut -f8 -d" " - )
+    max=$(fgrep "Max Plan" out/"$k"_"$i".out | cut -f4 -d" " - )
+    min=$(fgrep "Min Plan" out/"$k"_"$i".out | cut -f4 -d" " - )
+     avg=$(fgrep "NumSolutionStates:" out/"$k"_"$i".out | cut -f2 -d" " -)
+      if [ $avg ]; then
+      ff=$(echo $avg | cut -f1 -d".")
+      ft=$(echo $avg | cut -f2 -d"." | cut -c -2)
+      avg=$(echo $ff"."$ft)
+     fi
+   if [ -z $time ]; then
+     if [ "$i" != "#" ]; then 
+      echo  "- &" >> out/summary/summary
+     else
+      echo  "-" >> out/summary/summary
+     fi
+    else
+     echo "$i".out $time #/"$length" &"     
+
+
+     if [ "$sensory" != "" ]; then
+        if [ "$i" != "#" ]; then 
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min " & "  >> out/summary/summary
+  	  echo $time"/"$max"  &  "  >> out/summary/summary
+        else
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min >> out/summary/summary 
+	  echo $time"/"$max"  "  >> out/summary/summary
+        fi
+      else
+        if [ "$i" != "#" ]; then 
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min " & "  >> out/summary/summary
+  	  echo $time"/{\bf "$max"} &  "  >> out/summary/summary
+        else
+#        echo $time"/"$expand"/"$generate"/"$max"/"$min >> out/summary/summary 
+	  echo $time"/{\bf "$max "}" >> out/summary/summary
+        fi    
+      fi
+
+
+
+
+    fi
+   else
+     if [ "$i" != "#" ]; then 
+      echo  "- &" >> out/summary/summary
+     else
+      echo  "-" >> out/summary/summary
+     fi
+   fi
+  fi
+ }; done
+   echo "\\\\"  >> out/summary/summary
+}; done
+cd ../..
+}; done
+

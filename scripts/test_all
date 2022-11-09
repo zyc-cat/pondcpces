@@ -1,0 +1,77 @@
+#!/bin/bash
+ulimit -v 1048576
+ulimit -m 1048576
+ulimit -s 1048576
+ulimit -t 1200
+#for i in "-h lugrp" "-h lugrp -ha" "-h luglevel" "-h lugsum" "-h lugmax" "-h sgrp" "-h sglevel" "-h sgsum"  "-h sgmax" "-h card" ""; do {
+#for i in "-h lugrp"  ; do {
+
+#for i in "-h mgrpu" "-h lugrp -pg node -rpcost coverage" "-h lugrp -rpcost coverage" ; do {
+
+#for i in  "-h lugrp -pg node -rpcost coverage" "-h lugrp -pg node -rpcost cost"    "-h slugrp -sins mutex -pg node -rpcost cost"   ; do {
+#for i in  "-h lugrp -pg node -rpcost coverage" "-h lugrp -pg node -rpcost cost" "-h lugrp -pg node -rpcost ratio" "-h slugrp -sins mutex -pg node -rpcost coverage" "-h slugrp -sins reduce-mutex -pg node -rpcost coverage" "-h slugrp -sins mutex -pg node -rpcost cost" "-h slugrp -sins reduce-mutex -pg node -rpcost cost" "-h slugrp -sins mutex -pg node -rpcost ratio" "-h slugrp -sins reduce-mutex -pg node -rpcost ratio"; do {
+
+#conformant comparisons
+#for i in "-h lugrp -rpcost coverage" "-h lugrp -rpcost cost -cl sum -cw sum"  "-h lugrp -rpcost ratio -cl sum -cw sum" "-h lugrp -rpcost cost -cl max -cw sum"  "-h lugrp -rpcost ratio -cl max -cw sum" "-h lugrp -rpcost cost -cl sum -cw max"  "-h lugrp -rpcost ratio -cl sum -cw max" "-h lugrp -rpcost cost -cl max -cw max"  "-h lugrp -rpcost ratio -cl max -cw max"; do {
+#for i in "-h lugrp -rpcost coverage" "-h lugrp -rpcost cost -cl sum -cw sum"   "-h lugrp -rpcost cost -cl max -cw sum"   "-h lugrp -rpcost cost -cl sum -cw max"   "-h lugrp -rpcost cost -cl max -cw max"  ; do {
+#for i in "-h lugrp -rpcost coverage" "-h lugrp -rpcost cost -cl sum -cw sum"     ; do {
+
+#contingent comparisons
+#for i in    "-h lugrp  -rpcost ratio  "   "-h slugrp -sins mutex -rpcost ratio  "  "-h slugrp -sins reduce-mutex -rpcost ratio"  "-h slugrp -sins reduce -rpcost ratio"   "-h slugrp -sins greedy -rpcost ratio  " ; do {
+#for i in    "-h lugrp"   "-h slugrp -sins mutex"  "-h slugrp -sins reduce-mutex"  "-h slugrp -sins reduce"   "-h slugrp -sins greedy" ; do {
+#for i in    "-h lugrp -pg node -rpcost coverage"  "-h mgrpu" "-h mgrpm" "-h mgrps" "-h sgrp" "-h card" ""   ; do {
+
+
+#for i in "-h lugrp  -rpcost coverage" "-h lugrp  -rpcost cost -c sum -cp groups"  "-h lugrp  -rpcost ratio -c sum -cp groups" "-h lugrp  -rpcost cost -c max -cp groups"  "-h lugrp  -rpcost ratio -c max -cp groups"; do {
+
+for i in \
+"-h mgrpu -pmg 0.1" "-h mgrpu -pmg 0.2" "-h mgrpu -pmg 0.3" \
+"-h mgrpu -pmg 0.4" "-h mgrpu -pmg 0.5" "-h mgrpu -pmg 0.6" \
+"-h mgrpu -pmg 0.7" "-h mgrpu -pmg 0.8" "-h mgrpu -pmg 0.9" \
+"-h mgrpu -pmg 1.0"    \
+"-h mgrpm -pmg 0.1" "-h mgrpm -pmg 0.2" "-h mgrpm -pmg 0.3" \
+"-h mgrpm -pmg 0.4" "-h mgrpm -pmg 0.5" "-h mgrpm -pmg 0.6" \
+"-h mgrpm -pmg 0.7" "-h mgrpm -pmg 0.8" "-h mgrpm -pmg 0.9" \
+"-h mgrpm -pmg 1.0"    \
+"-h mgrps -pmg 0.1" "-h mgrps -pmg 0.2" "-h mgrps -pmg 0.3" \
+"-h mgrps -pmg 0.4" "-h mgrps -pmg 0.5" "-h mgrps -pmg 0.6" \
+"-h mgrps -pmg 0.7" "-h mgrps -pmg 0.8" "-h mgrps -pmg 0.9" \
+"-h mgrps -pmg 1.0"    \
+; do {
+
+#for i in "-h lugrp -rpcost coverage -pg node" "-h lugrp -rpcost cost -pg node" "-h slugrp -pg node -rpcost coverage" "-h slugrp -rpcost cost -pg node"  ; do {
+
+
+#for i in "-h lugrp  -rpcost coverage" "-h lugrp  -rpcost cost  "  "-h lugrp  -rpcost ratio  "  "-h slugrp -sins mutex -rpcost coverage" "-h slugrp -sins mutex -rpcost cost  " "-h slugrp -sins mutex -rpcost ratio  " "-h slugrp -sins reduce-mutex -rpcost coverage" "-h slugrp -sins reduce-mutex -rpcost cost  " "-h slugrp -sins reduce-mutex -rpcost ratio" "-h slugrp -sins reduce -rpcost coverage" "-h slugrp -sins reduce -rpcost cost" "-h slugrp -sins reduce -rpcost ratio"  "-h slugrp -sins greedy -rpcost coverage" "-h slugrp -sins greedy -rpcost cost  " "-h slugrp -sins greedy -rpcost ratio  " ; do {
+
+#for i in  "" "-h lugrp -pg node" "-h mgrpu" "-h mgrps" "-h mgrpm" "-h sgrp" "-h card"; do {
+#for i in "-h lugrp -ls" "-h lugrp"; do {
+
+#for j in logistics cost-logistics logistics-cond cost-logistics-cond rovers cost-rovers rovers-cond cost-rovers-cond; do { 
+
+#for j in  cost1-rovers-cond logistics-cond cost-logistics-cond rovers-cond cost-rovers-cond ; do { 
+
+#conformant comparisons
+#for j in medicalPKS; do { 
+#for j in cost-btcs cost-ring cost-cube cost-cubec cost-ring-cond cost-cube-cond cost-cubec-cond ring ring-cond cube cube-cond cubec cubec-cond rovers cost-rovers logistics cost-logistics rovers-cond cost-rovers-cond logistics-cond cost-logistics-cond ; do { 
+#for j in cost-medical cost-medical1 cost-medical2  cost-btcs cost-btcs1 cost-btcs2   cost-rovers-cond  cost-logistics-cond ; do { 
+#for j in cost-medical1 cost-medical2    cost-rovers-cond cost-rovers-cond1   ; do { 
+#ring ring-cond cube cube-cond cubec cubec-cond medicalPKS medicalPOND mines mines_keys
+
+
+
+#for j in  cost-medical1 cost-medical2  cost-rovers-cond cost-rovers-cond1 ; do {
+#for j in medicalPOND; do {       
+for j in  cubec  bt btc bts btcs rovers rovers-cond logistics logistics-cond ring; do {
+
+#contingent comparisons
+#for j in rovers-condo0 rovers-condb0 rovers-condo5 rovers-condb5  rovers-condo10 rovers-condb10; do {
+#for j in btcs  logistics-cond  rovers-cond  medicalPKS  ; do {
+
+
+./test $j $i
+
+
+ }; done
+
+}; done

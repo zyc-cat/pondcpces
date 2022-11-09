@@ -1,0 +1,12 @@
+#!/bin/bash
+
+
+for j in  medical medicalPKS rovers-cond rovers logistics logistics-cond bt bts btc btcs cube cubec cubef ring; do {
+
+
+rm test_probs/$j/out/*
+
+
+ }; done
+
+

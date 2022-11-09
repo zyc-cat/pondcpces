@@ -1,0 +1,18 @@
+(define (problem cube5)
+(:domain cube)
+(:requirements :strips :equality :typing :conditional-effects :disjunctive-preconditions)
+(:objects p0 p1)
+(:init 
+ (and
+(oneof (x-pos p0)
+(x-pos p1)
+)
+(oneof (y-pos p0)
+(y-pos p1)
+)
+(oneof (z-pos p0)
+(z-pos p1)
+)
+)
+ )
+   (:goal (and (x-pos p1) (y-pos p1) (z-pos p1))))

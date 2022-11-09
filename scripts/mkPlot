@@ -1,0 +1,93 @@
+#!/bin/bash
+echo "plotting "$1
+
+#DOM="test_probs/$1/out/summary/summary"
+
+if [ $2 = "quality" ] ; then
+ echo quality
+ #cp $DOM plots/quality/$1.data
+ DOM="plots/quality/$1.data"
+ PL='"plots/quality/'$1'.eps"'
+ #STY7="set ylabel "'"Expected Cost"'""
+fi
+
+if [ $2 = "time" ] ; then
+ echo time
+ #cp $DOM plots/time/$1.data
+ DOM="plots/time/$1.data"
+ PL='"plots/time/'$1'.eps"'
+ #STY7="set ylabel "'"Total Time (ms)"'""
+fi
+
+if [ $2 = "breadth" ] ; then
+ echo breadth
+ #cp $DOM plots/breadth/$1.data
+ DOM="plots/breadth/$1.data"
+ PL='"plots/breadth/'$1'.eps"'
+# STY7="set ylabel "'"Breadth"'""
+fi
+
+#PL='"plots/'$1'.gif"'
+#STY="set terminal gif" 
+
+cat $DOM
+
+STY="set terminal postscript eps 22" 
+STY1="set data style linespoints" 
+STY2="set output "$PL""
+STY3="set terminal postscript enhanced monochrome"
+STY4="set key left" 
+STY5="set title '"$1"'"
+#STY6="set xlabel "'"Problem"'""
+#STY8="set logscale y"
+STY9="set style line 1 lt 1 lw 5 ps 3 "
+STY10="set style line 2 lt 2  lw 5 ps 3"
+STY11="set style line 3 lt 3 lw 5 ps 3"
+STY12="set style line 4 lt 4 lw 5 ps 3"
+
+
+#CMD='plot "'"$DOM"'" using 1:3 title "cost/sum/enter", "'"$DOM"'" using 1:5 title "cost/max/enter", "'"$DOM"'" using 1:7 title "cost/sum/groups", "'"$DOM"'" using 1:9 title "cost/max/groups"'
+
+#CMD='plot "'"$DOM"'" using 1:2 title "cov/reduce", "'"$DOM"'" using 1:3 title "cost/sum/reduce", "'"$DOM"'" using 1:4 title "ratio/sum/reduce", "'"$DOM"'" using 1:5 title "cost/max/reduce", "'"$DOM"'" using 1:6 title "ratio/max/reduce", "'"$DOM"'" using 1:7 title "cov/greedy", "'"$DOM"'" using 1:8 title "cost/sum/greedy", "'"$DOM"'" using 1:9 title "ratio/sum/greedy", "'"$DOM"'" using 1:10 title "cost/max/greedy", "'"$DOM"'" using 1:11 title "ratio/max/greedy"'
+
+#CMD='plot "'"$DOM"'" using 1:2 title "crp/cov", "'"$DOM"'" using 1:3 title "crp/cost", "'"$DOM"'" using 1:4 title "crp/ratio", "'"$DOM"'" using 1:5 title "srpr/cov", "'"$DOM"'" using 1:6 title "srpr/cost", "'"$DOM"'" using 1:7 title "srpr/ratio", "'"$DOM"'" using 1:8 title "srpg/cov", "'"$DOM"'" using 1:9 title "srpg/cost", "'"$DOM"'" using 1:10 title "srpg/ratio"'
+
+#CMD='plot "'"$DOM"'" using 1:2 title "crp/cov", "'"$DOM"'" using 1:3 title "crp/cost", "'"$DOM"'" using 1:4 title "crp/ratio", "'"$DOM"'" using 1:5 title "srp-m/cov", "'"$DOM"'" using 1:6 title "srp-m/cost", "'"$DOM"'" using 1:7 title "srp-m/ratio", "'"$DOM"'" using 1:8 title "srp-rm/cov", "'"$DOM"'" using 1:9 title "srp-rm/cost", "'"$DOM"'" using 1:10 title "srp-rm/ratio"'
+
+##contingent comparisons
+#CMD='plot "'"$DOM"'" using 1:2 title "crp", "'"$DOM"'" using 1:3 title "srp/mutex", "'"$DOM"'" using 1:4 title "srp/reduce-mutex", "'"$DOM"'" using 1:5 title "srp/reduce", "'"$DOM"'" using 1:6 title "srp/greedy"'
+
+
+##Cost prop comparisons
+#CMD='plot "'"$DOM"'" using 1:2 title "coverage", "'"$DOM"'" using 1:3 title "cost/sum/sum", "'"$DOM"'" using 1:4 title "ratio/sum/sum", "'"$DOM"'" using 1:5 title "cost/max/sum", "'"$DOM"'" using 1:6 title "ratio/max/sum", "'"$DOM"'" using 1:7 title "cost/sum/max", "'"$DOM"'" using 1:8 title "ratio/sum/max", "'"$DOM"'" using 1:9 title "cost/max/max", "'"$DOM"'" using 1:10 title "ratio/max/max", "'"$DOM"'" using 1:11 title "MBP"'
+#CMD='plot "'"$DOM"'" using 1:2 title "coverage", "'"$DOM"'" using 1:3 title "cost/sum/sum", "'"$DOM"'" using 1:4 title "ratio/sum/sum", "'"$DOM"'" using 1:5 title "cost/max/sum", "'"$DOM"'" using 1:6 title "ratio/max/sum", "'"$DOM"'" using 1:7 title "cost/sum/max", "'"$DOM"'" using 1:8 title "ratio/sum/max", "'"$DOM"'" using 1:9 title "cost/max/max", "'"$DOM"'" using 1:10 title "ratio/max/max", "'"$DOM"'" using 1:11 title "GPT", "'"$DOM"'" using 1:12 title "MBP"'
+#CMD='plot "'"$DOM"'" using 1:2 title "coverage", "'"$DOM"'" using 1:3 title "cost/sum/sum",  "'"$DOM"'" using 1:5 title "cost/max/sum",  "'"$DOM"'" using 1:7 title "cost/sum/max",  "'"$DOM"'" using 1:9 title "cost/max/max"'
+CMD='plot "'"$DOM"'" using 1:2 title "coverage" linestyle 1, "'"$DOM"'" using 1:3 title "cost" linestyle 2, "'"$DOM"'" using 1:11 title "MBP" linestyle 3, "'"$DOM"'" using 1:12 title "GPT" linestyle 4'
+#CMD='plot "'"$DOM"'" using 1:2 title "coverage" linestyle 1, "'"$DOM"'" using 1:3 title "cost" linestyle 2'
+
+##Conformant comparisons for propagation and CRP 
+#CMD='plot "'"$DOM"'" using 1:2 title "coverage", "'"$DOM"'" using 1:9 title "cost/max", "'"$DOM"'" using 1:10 title "ratio/max", "'"$DOM"'" using 1:7 title "cost/sum", "'"$DOM"'" using 1:8 title "ratio/sum"'
+
+#CMD='plot "'"$DOM"'" using 1:2 title "coverage", "'"$DOM"'" using 1:3 title "cost/sum/enter", "'"$DOM"'" using 1:4 title "ratio/sum/enter", "'"$DOM"'" using 1:5 title "cost/max/enter", "'"$DOM"'" using 1:6 title "ratio/max/enter", "'"$DOM"'" using 1:7 title "cost/sum/groups", "'"$DOM"'" using 1:8 title "ratio/sum/groups", "'"$DOM"'" using 1:9 title "cost/max/groups", "'"$DOM"'" using 1:10 title "ratio/max/groups"'
+
+#CMD='plot "'"$DOM"'" using 1:2 title "slug/reduce", "'"$DOM"'" using 1:3 title "slug/greedy", "'"$DOM"'" using 1:4 title "lug"'
+
+echo $STY > plot.cmd
+echo $STY1 >> plot.cmd
+echo $STY2 >> plot.cmd
+echo $STY3 >> plot.cmd
+echo $STY4 >> plot.cmd
+echo $STY5 >> plot.cmd
+echo $STY6 >> plot.cmd
+echo $STY7 >> plot.cmd
+echo $STY8 >> plot.cmd
+echo $STY9 >> plot.cmd
+echo $STY10 >> plot.cmd
+echo $STY11 >> plot.cmd
+echo $STY12 >> plot.cmd
+
+echo $CMD >> plot.cmd
+cat plot.cmd
+gnuplot < "plot.cmd" 
+#gsview plots/"$1".eps -scale 4 &
+#eog  plots/"$1".gif 2> /dev/null &

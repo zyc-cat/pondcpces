@@ -1,0 +1,2911 @@
+
+
+
+
+/*********************************************************************
+ * File: exclusions.c
+ * Description: routines for calculating exclusion relations
+ *
+ * Author: Joerg Hoffmann 1998
+ *
+ *********************************************************************/ 
+/*********************************************************************
+ * (C) Copyright 1998 Albert Ludwigs University Freiburg
+ *     Institute of Computer Science
+ *
+ * All rights reserved. Use of this software is permitted for 
+ * non-commercial research purposes, and it may be copied only 
+ * for that use.  All copies must include this copyright message.
+ * This software is made available AS IS, and neither the authors
+ * nor the  Albert Ludwigs University Freiburg make any warranty
+ * about the software or its performance. 
+ *********************************************************************/
+/*********************************************************************
+ *
+ * NOTE: the commentaries in this file, sparse as they are, are all
+ *       in German, cause these are thoughts that I had while working
+ *       on some really tedious parts of the code (potential effects...)
+ * 
+ *       If you have problems understanding the code (like I do when I have
+ *       a look at it now), contact me at:
+ *       
+ *       hoffmann@informatik.uni-freiburg.de
+ *
+ *       and I'll be happy to answer your questions, if I can...
+ *
+ **********************************************************************/
+
+
+
+
+
+
+#include "ipp.h"
+
+#include "output.h"
+#include "utilities.h"
+#include "memory.h"
+
+#include "exclusions.h"
+#include "graph_wrapper.h"
+#include "globals.h"
+
+#include "cudd/dd.h"
+
+extern int WORLD_CHECK;
+#define WC_ALL 500
+#define WC_SAME 501
+#define WC_INTERSECT 502
+
+
+extern int MUTEX_SCHEME;
+#define MS_CROSS 350
+#define MS_REGULAR 351
+#define MS_NONE 352
+#define MS_STATIC 353
+#define INDUCED 99
+extern int DO_INDUCED;
+
+extern num_ft_pair;
+extern num_op_pair;
+
+int isOneOf(FtNode*, FtNode*);
+
+/*************************************
+ * SIMPLE HELPERS, SHOULD BE MACROS. *
+ *************************************/
+
+
+
+//dan
+
+int is_new_cross_mutex(DdNode* l1, DdNode* l2, ExclusionLabelPair *elp) {
+  ExclusionLabelPair *tmpelp = elp;
+  DdNode* elp1;
+    DdNode* elp2;
+    //  printf("seeing if mutex already exists\n");
+  /*   printBDD(l1); */
+/*     printBDD(tmpelp->elp1); */
+/*     printBDD(l2); */
+/*     printBDD(elp2); */
+
+
+
+
+//  if (elp->elp1){
+   
+  while(tmpelp) {
+   
+    elp1 = tmpelp->elp1;
+   
+    elp2 = tmpelp->elp2;   
+
+    Cudd_Ref(elp1);
+    Cudd_Ref(elp2);
+   
+/*   printBDD(l1); */
+/*      printf("OK\n"); */
+/*    printBDD(elp1); */
+/*      printf("OK\n"); */
+/*    printBDD(l2); */
+/*      printf("OK\n"); */
+/*    printBDD(elp2); */
+
+    if((bdd_entailed(manager, l1, elp1) &&
+	bdd_entailed(manager, l2, elp2))/* || */
+       
+       /*        (Cudd_EquivDC(manager, l1, elp1, Cudd_ReadLogicZero(manager)) && */
+       
+       /* 	Cudd_EquivDC(manager, l2, elp2, Cudd_ReadLogicZero(manager))) */){
+      //  printf("Already exists\n");
+      return FALSE;
+    }
+    //  printf("NO NOT HERE\n");
+    
+    tmpelp=tmpelp->next;
+    //printf("HI\n");
+  }
+  // }
+  //printf("nope\n");
+  return TRUE;
+}
+
+//nad
+
+
+ExclusionLabelPair * add_exclusion_label(ExclusionLabelPair *elp, DdNode* label1, DdNode* label2){
+  ExclusionLabelPair* tmp = elp;
+
+
+
+/*   printf("In add exclusion label\n"); */
+/*   printBDD(label1); */
+/*   printBDD(label2); */
+  if(label1 && label2) {
+    //  if(elp){
+/*        printf("There are already some labels\n"); */
+         if(is_new_cross_mutex(label1, label2, elp)) {
+    //printf("adding to list\n");
+	tmp = elp;
+	elp = new_ExclusionLabelPair(label1, label2, FALSE);
+	elp->next = tmp;
+	}
+	//}
+	//else{
+        //printf("CReateing new head\n");
+	////      exit(0);
+	//elp = new_ExclusionLabelPair(label1, label2); 
+	//elp->next = NULL;
+	//}
+  }
+/*   else{ */
+/*     printf("Trying to add a shitty mutex label pair\n"); */
+    
+/*     // exit(0); */
+/*   } */
+
+ /*  tmp = elp; */
+/*   printf("this is the label list for elp\n"); */
+/*   while(tmp && printf("1\n") && tmp->elp1 && printf("2\n") && !bdd_is_one(manager, Cudd_Not(tmp->elp1)) && printf("3\n")){ */
+/*     //    printBDD(tmp->elp1); */
+/*     tmp=tmp->next; */
+/*   } */
+/*   printf("Exit add new mux label\n"); */
+
+  return elp;
+}
+
+void MAKE_EFS_EXCLUSIVE( int time, EfNode *ef1, EfNode *ef2, DdNode* label1, DdNode* label2 ) 
+{
+
+  //  printf("Making ef of %d %s mutex with ef of %d %s at time %d with labels = \n",ef1->index, ef1->op->name, ef2->index, ef2->op->name, time);
+  // printBDD(label1);
+  // printf("YO\n"); 
+  // printBDD(label2);
+  // printf("NO\n"); 
+
+
+
+  if(MUTEX_SCHEME==MS_CROSS && COMPUTE_LABELS==TRUE){
+ set_bit(ef1->info_at[time]->exclusives->exclusives,ef2->index);
+ // print_BitVector(ef1->info_at[time]->exclusives->exclusives, gef_vector_length);
+    set_bit(ef2->info_at[time]->exclusives->exclusives, ef1->index);
+    // print_BitVector(ef2->info_at[time]->exclusives->exclusives, gef_vector_length);
+
+   ef1->info_at[time]->exclusives->exlabels[ef2->index]= add_exclusion_label(ef1->info_at[time]->exclusives->exlabels[ef2->index], label1, label2);
+
+
+     ef2->info_at[time]->exclusives->exlabels[ef1->index]=add_exclusion_label(ef2->info_at[time]->exclusives->exlabels[ef1->index], label2, label1);
+  }
+  else {
+    set_bit(ef1->info_at[time]->exclusives->exclusives,ef2->index);
+    //print_BitVector(ef1->info_at[time]->exclusives->exclusives, gef_vector_length);
+    set_bit(ef2->info_at[time]->exclusives->exclusives, ef1->index);
+    // print_BitVector(ef2->info_at[time]->exclusives->exclusives, gef_vector_length);
+  }
+  //  printf("Exit make ef exclusive\n");
+}
+
+void MAKE_OPS_EXCLUSIVE( int time, 
+			 OpNode *o1, 
+			 OpNode *o2, 
+			 DdNode* label1, 
+			 DdNode* label2 ) 
+{
+  ExclusionLabelPair* tmp = NULL;
+
+  //printf("Making ops %d %s mutex with %d %s at time %d with labels = \n", o1->index, o1->name, o2->index, o2->name, time);
+  /// printBDD(label1); 
+  //    printf("YO o1 uid = %d\n", o1->uid_block); 
+   
+  //  printBDD(label2); 
+  //  printf("NO o2 uid = %d\n", o2->uid_block); 
+
+//   cout << "Making mutex:" <<endl;
+//   if(o1->is_noop){
+//     cout << "Noop " << (o1->preconds->ft->positive ? "pos " : "neg ");
+//     printFact(o1->preconds->ft->index);
+//   }
+//   else
+//     cout << o1->name << endl;
+    
+//   if(o2->is_noop){
+//     cout << "Noop " << (o2->preconds->ft->positive ? "pos " : "neg ");
+//     printFact(o2->preconds->ft->index);
+//   }
+//   else
+//     cout << o2->name << endl;
+
+
+  if(MUTEX_SCHEME==MS_CROSS && COMPUTE_LABELS==TRUE){
+  /*   if(!(o1->info_at[time]->exclusives->exlabels[o2->index]->elp1)) */
+       (o1->info_at[time]->exclusives->exclusives)[o2->uid_block] |= o2->uid_mask;
+
+       (o2->info_at[time]->exclusives->exclusives)[o1->uid_block] |= o1->uid_mask;
+/*        printf("one\n");     */
+       tmp = o1->info_at[time]->exclusives->exlabels[o2->index];
+      
+       o1->info_at[time]->exclusives->exlabels[o2->index]=add_exclusion_label(tmp, label1, label2);
+/*        printf("two\n");       */
+       tmp =o2->info_at[time]->exclusives->exlabels[o1->index];
+       o2->info_at[time]->exclusives->exlabels[o1->index]= add_exclusion_label(tmp, label2, label1);
+       
+  }
+  else{
+    (o1->info_at[time]->exclusives->exclusives)[o2->uid_block] |= o2->uid_mask;
+    
+    (o2->info_at[time]->exclusives->exclusives)[o1->uid_block] |= o1->uid_mask;
+  }
+
+
+  //  print_BitVector(o1->info_at[time]->exclusives->exclusives, gop_vector_length_at[time]);
+  //  print_BitVector(o2->info_at[time]->exclusives->exclusives, gop_vector_length_at[time]);
+
+/*     printf("exit make op ex\n"); */
+}
+
+void MAKE_FTS_EXCLUSIVE( int time, FtNode *f1, FtNode *f2, DdNode* label1, DdNode* label2 )
+
+{
+
+  BitVector *v1, *v2;
+  ExclusionLabelPair* tmp = NULL;
+
+//   if(f1->positive && f2->positive){
+//   printf("Mutex %d ", f1->positive); printFact(f1->index); 
+//   printf(" and %d ", f2->positive); printFact(f2->index);
+//   }
+  //printf(" EXclusive at time %d across:\n", time); 
+/*  printBDD(label1); */
+/*  printBDD(label2); */
+
+  if(MUTEX_SCHEME==MS_CROSS && COMPUTE_LABELS==TRUE){
+
+  v1 = ( ( f2->positive ) ? f1->info_at[time]->exclusives->pos_exclusives :
+	 f1->info_at[time]->exclusives->neg_exclusives );
+    v2 = ( ( f1->positive ) ? f2->info_at[time]->exclusives->pos_exclusives :
+  	 f2->info_at[time]->exclusives->neg_exclusives );
+  v1[f2->uid_block] |= f2->uid_mask;
+   v2[f1->uid_block] |= f1->uid_mask;
+
+    if(f2->positive){
+      f1->info_at[time]->exclusives->p_exlabels[f2->index]= add_exclusion_label(f1->info_at[time]->exclusives->p_exlabels[f2->index], label1, label2);
+    }
+    else{
+     f1->info_at[time]->exclusives->n_exlabels[f2->index]= add_exclusion_label(f1->info_at[time]->exclusives->n_exlabels[f2->index], label1, label2);
+    }
+ 
+    if(f1->positive){
+      f2->info_at[time]->exclusives->p_exlabels[f1->index]=add_exclusion_label(f2->info_at[time]->exclusives->p_exlabels[f1->index], label2, label1);
+    }
+    else{
+      f2->info_at[time]->exclusives->n_exlabels[f1->index]=add_exclusion_label(f2->info_at[time]->exclusives->n_exlabels[f1->index], label2, label1);
+    }
+  }
+  else {
+    //        printf("DID it\n");
+	if(f1->positive){
+	  //	  printf("pos\n");
+	  v1 = ( ( f2->positive ) ? 
+		 gft_table[f1->index]->info_at[time]->exclusives->pos_exclusives :
+		 gft_table[f1->index]->info_at[time]->exclusives->neg_exclusives );
+	}
+	else {
+	  //	  printf("neg\n");
+	  v1 = ( ( f2->positive ) ? 
+		 gft_table[NEG_ADR(f1->index)]->info_at[time]->exclusives->pos_exclusives :
+		 gft_table[NEG_ADR(f1->index)]->info_at[time]->exclusives->neg_exclusives );
+	}
+	if(f2->positive){
+	  //	  printf("pos\n");
+	  
+	  v2 = ( ( f1->positive ) ? 
+		 gft_table[f2->index]->info_at[time]->exclusives->pos_exclusives :
+		 gft_table[f2->index]->info_at[time]->exclusives->neg_exclusives );
+	}
+	else {
+	  //	  printf("neg\n");
+	  v2 = ( ( f1->positive ) ? 
+		 gft_table[NEG_ADR(f2->index)]->info_at[time]->exclusives->pos_exclusives :
+		 gft_table[NEG_ADR(f2->index)]->info_at[time]->exclusives->neg_exclusives );
+	}
+
+  v1[f2->uid_block] |= f2->uid_mask;
+  v2[f1->uid_block] |= f1->uid_mask;
+
+  //  print_BitVector(v1, gft_vector_length);
+  //print_BitVector(v2, gft_vector_length);
+  //printf("\n");
+  }
+}
+
+
+ExclusionLabelPair* remove_exclusion_labels(ExclusionLabelPair* elp1, DdNode* label1, DdNode* label2){
+  ExclusionLabelPair *tmpelp, *prevelp = NULL;
+  int rem = FALSE;
+  tmpelp = elp1;
+  prevelp = NULL;
+  
+
+/*    printf("remove_exclusion_labels corresponding to:\n"); */
+/*    printBDD(label1); */
+/*    printBDD(label2); */
+
+  while(tmpelp){
+    if(Cudd_bddLeq(manager, tmpelp->elp1, label1) && 
+       Cudd_bddLeq(manager, tmpelp->elp2, label2)){
+      if(!prevelp){
+/* 	printf("removing head\n"); */
+	elp1 = tmpelp->next;
+	  free(tmpelp);
+	tmpelp = elp1;
+	rem = TRUE;
+	
+	
+      }
+      else{
+/* 	printf("removing center\n"); */
+	free(prevelp);
+	prevelp->next = tmpelp->next;           
+	rem = FALSE;
+      }
+    }
+/*     printf("next\n"); */
+    if(!rem){
+      prevelp=tmpelp;
+      tmpelp = tmpelp->next;
+    }
+  }	
+  //  printf("done\n");	
+  return elp1;
+}
+							
+void MAKE_OPS_UNEXCLUSIVE( int time, OpNode *o1, OpNode *o2, DdNode* label1, DdNode* label2 )
+
+{
+  //  printf("Making %s and %s UNEXclusive at time %d\n",o1->name, o2->name, time);
+
+
+ 
+  if(MUTEX_SCHEME==MS_CROSS && COMPUTE_LABELS==TRUE){
+/*   (o1->info_at[time]->exclusives->exlabels)[o2->index] = NULL; */
+/*   (o2->info_at[time]->exclusives->exlabels)[o1->index] = NULL;   */
+    remove_exclusion_labels(o1->info_at[time]->exclusives->exlabels[o2->index], label1, label2);
+    if(o1->info_at[time]->exclusives->exlabels[o2->index]==NULL)
+      (o1->info_at[time]->exclusives->exclusives)[o2->uid_block] &= ~(o2->uid_mask);
+    remove_exclusion_labels(o2->info_at[time]->exclusives->exlabels[o1->index], label2, label1);
+    if(o2->info_at[time]->exclusives->exlabels[o1->index]==NULL)
+      (o2->info_at[time]->exclusives->exclusives)[o1->uid_block] &= ~(o1->uid_mask);
+      
+  }
+  else {
+  (o1->info_at[time]->exclusives->exclusives)[o2->uid_block] &= ~(o2->uid_mask);
+  (o2->info_at[time]->exclusives->exclusives)[o1->uid_block] &= ~(o1->uid_mask);  }
+}
+
+void MAKE_FTS_UNEXCLUSIVE( int time, FtNode *f1, FtNode *f2 , DdNode* label1, DdNode* label2)
+
+{
+
+  BitVector *v1, *v2;
+  ExclusionLabelPair *tmpelp, *prevelp = NULL;
+  
+ 
+  //  printf("Making "); printFact(f1->index); printf(" and "); printFact(f2->index); printf(" UNEXclusive at time %d\n", time);
+
+
+  if(MUTEX_SCHEME==MS_CROSS && COMPUTE_LABELS==TRUE){
+
+    //remove all label pairs that are leq to label1, label2
+    //f1
+    if(f2->positive){
+      f1->info_at[time]->exclusives->p_exlabels[f2->index] = remove_exclusion_labels(f1->info_at[time]->exclusives->p_exlabels[f2->index], label1, label2);  
+      if(!f1->info_at[time]->exclusives->p_exlabels[f2->index]){
+	f1->info_at[time]->exclusives->pos_exclusives[f2->uid_block] &= ~(f2->uid_mask);
+      }
+    }
+    else{
+      f1->info_at[time]->exclusives->n_exlabels[f2->index] = remove_exclusion_labels(f1->info_at[time]->exclusives->n_exlabels[f2->index], label1, label2);  
+      if(!f1->info_at[time]->exclusives->n_exlabels[f2->index])
+	f1->info_at[time]->exclusives->neg_exclusives[f2->uid_block] &= ~(f2->uid_mask);
+    }
+
+    //f2
+    if(f1->positive){
+      f2->info_at[time]->exclusives->p_exlabels[f1->index] = remove_exclusion_labels(f2->info_at[time]->exclusives->p_exlabels[f1->index], label2, label1);  
+      if(!f2->info_at[time]->exclusives->p_exlabels[f1->index])
+	f2->info_at[time]->exclusives->pos_exclusives[f1->uid_block] &= ~(f1->uid_mask);
+    }
+    else{
+      f2->info_at[time]->exclusives->n_exlabels[f1->index] = remove_exclusion_labels(f2->info_at[time]->exclusives->n_exlabels[f1->index], label2, label1);  
+      if(!f2->info_at[time]->exclusives->n_exlabels[f1->index])
+	f2->info_at[time]->exclusives->neg_exclusives[f1->uid_block] &= ~(f1->uid_mask);
+    }
+  }
+  else {
+    v1 = ( ( f2->positive ) ? f1->info_at[time]->exclusives->pos_exclusives :
+	   f1->info_at[time]->exclusives->neg_exclusives );
+    v2 = ( ( f1->positive ) ? f2->info_at[time]->exclusives->pos_exclusives :
+	   f2->info_at[time]->exclusives->neg_exclusives );
+    
+    v1[f2->uid_block] &= ~(f2->uid_mask);
+    v2[f1->uid_block] &= ~(f1->uid_mask);
+  }
+  //  print_BitVector(f1->info_at[time]->exclusives->pos_exclusives, gft_vector_length);
+  //  print_BitVector(f2->info_at[time]->exclusives->pos_exclusives, gft_vector_length);
+
+/*     printf("\ndone\n"); */
+}
+
+
+
+int ARE_MUTEX_OPS( int time, OpNode *o1, OpNode *o2, DdNode* label1, DdNode* label2 )
+
+{
+  //  printf("ARE_MUTEX_OPS %s, %s\n", o1->name, o2->name);
+  if ( o1->info_at[time]->exclusives->exclusives[o2->uid_block] & o2->uid_mask ) {
+
+    if((MUTEX_SCHEME==MS_CROSS  && COMPUTE_LABELS==TRUE && 
+	are_ops_mutex(o1, o2, label1, label2,time))||
+       MUTEX_SCHEME!=MS_CROSS){
+
+      return TRUE;
+    }
+  } else {
+    return FALSE;
+  }
+
+}
+int ARE_MUTEX_EFS( int time, EfNode *e1, EfNode *e2, DdNode* label1, DdNode* label2 )
+
+{
+  // printf("are mutex efs %d %s and %d %s\n", e1->index, e1->op->name, e2->index, e2->op->name);
+    //  if(e1->info_at[time]->exclusives->exclusives)
+    //    printf("NOT NULL\n");
+  // print_BitVector(e1->info_at[time]->exclusives->exclusives, gef_vector_length);printf("\n"); printf("%d\n", e2->index);
+       if ( get_bit(e1->info_at[time]->exclusives->exclusives,gef_vector_length, e2->index) ) {
+	 //printf("are mutex efs %d %s and %d %s\n", e1->index, e1->op->name, e2->index, e2->op->name);
+	 // print_BitVector(e1->info_at[time]->exclusives->exclusives, gef_vector_length);printf("\n"); printf("%d\n", e2->index);
+ //	 printf("got bit");
+    if(MUTEX_SCHEME==MS_CROSS  && COMPUTE_LABELS==TRUE && are_efs_mutex( e1, e2, label1, label2, time))
+  
+    return TRUE;
+  } else {
+    //    printf("NO\n");
+    return FALSE;
+  }
+
+}
+
+int ARE_MUTEX_FTS( int time, FtNode *f1, FtNode *f2, DdNode* label1, DdNode* label2 )
+
+{
+
+  BitVector *a;
+  if(f1->info_at[time])
+    a  = ( f2->positive ) ?
+      f1->info_at[time]->exclusives->pos_exclusives :
+      f1->info_at[time]->exclusives->neg_exclusives;
+  else
+    return FALSE;
+  
+ /*  if(a) */
+//  printf("are fts mutex\n");
+/*   print_BitVector(a, gft_vector_length); */
+/*   printf("\n%d, %d, %d\n", f2->index, f2->uid_block, f2->uid_mask); */
+  if ( a[f2->uid_block] & f2->uid_mask ) {
+    //printf("check labels\n");
+    if((MUTEX_SCHEME==MS_CROSS  && COMPUTE_LABELS==TRUE && 
+	are_facts_mutex(f1, f2, label1, label2,time)) ||
+       MUTEX_SCHEME!=MS_CROSS )
+   
+ 
+      return TRUE;
+  } else {
+    //    printf("not mutex fts\n");
+    return FALSE;
+  }
+
+}
+
+
+void SET_ADDERS( int time, FtNode *ft ) 
+
+{
+
+  EfEdge *e;
+
+
+  printf("SET_ADDERS for: %d ", time); printFact(ft->index);printf("\n");
+  ft->info_at[time]->adders = new_excl_bit_vector( gop_vector_length_at[time-1] );
+  if ( ft->noop ) {
+    (ft->info_at[time]->adders)[ft->noop->uid_block] |= ft->noop->uid_mask;
+  }
+  for ( e = ft->adders; e; e = e->next ) {
+    if ( e->ef->info_at[time-1]->is_dummy ) continue;
+    (ft->info_at[time]->adders)[e->ef->op->uid_block] |= e->ef->op->uid_mask;
+  }
+  ft->info_at[time]->adders_pointer = ft->adders;
+  //  printf("Exit set adders\n");
+}
+
+
+
+//dan added these
+int are_facts_mutex(FtNode* ft1, FtNode* ft2, DdNode* l1, DdNode* l2, int time) {
+  ExclusionLabelPair* tmp = NULL;
+  
+  if(ft2->positive && 
+     ((ft1->info_at[time]->exclusives->pos_exclusives)[ft2->index])){
+    tmp = ft1->info_at[time]->exclusives->p_exlabels[ft2->index];
+    while(tmp){
+      if(Cudd_bddLeq(manager, l1, tmp->elp1) && Cudd_bddLeq(manager, l2, tmp->elp2))
+	 return TRUE;
+      tmp = tmp->next;
+    }
+  }
+ if(!ft2->positive && 
+     ((ft1->info_at[time]->exclusives->neg_exclusives)[ft2->index])){
+    tmp = ft1->info_at[time]->exclusives->n_exlabels[ft2->index];
+    while(tmp){
+      if(Cudd_bddLeq(manager, l1, tmp->elp1) && Cudd_bddLeq(manager, l2, tmp->elp2))
+	 return TRUE;
+      tmp = tmp->next;
+    }
+  }
+ return FALSE;
+}
+
+int are_ops_mutex(OpNode* op1, OpNode* op2, DdNode* l1, DdNode* l2, int time) {
+  ExclusionLabelPair* tmp = NULL;
+ if((op1->info_at[time]->exclusives->exclusives)[op2->index]){
+    tmp = op1->info_at[time]->exclusives->exlabels[op2->index];
+    while(tmp){
+      if(Cudd_bddLeq(manager, l1, tmp->elp1) && Cudd_bddLeq(manager, l2, tmp->elp2))
+	 return TRUE;
+      tmp = tmp->next;
+    }
+  }
+ return FALSE;
+}
+
+int are_efs_mutex(EfNode* ef1, EfNode* ef2, DdNode* l1, DdNode* l2, int time) {
+  ExclusionLabelPair* tmp = NULL;
+  //    printf("are efs mutex with labels: \n");
+	 //     printBDD(l1);
+	 //     printBDD(l2);
+  // print_BitVector(ef1->info_at[time]->exclusives->exclusives, gnum_cond_effects_at[time]);
+  //printf("index = %d\n", ef2->index);
+
+  //	 if(!l1 || !l2)
+  //	   return TRUE;
+
+
+  // if(get_bit(ef1->info_at[time]->exclusives->exclusives,gef_vector_length, ef2->index)){
+    //printf("They are exclusive, but I don't know wehre yet\n");
+    tmp = ef1->info_at[time]->exclusives->exlabels[ef2->index];
+    while(tmp){
+      //      printf("checking labels of stored mutexes\n");
+      //      printBDD(tmp->elp1);
+      //      printBDD(tmp->elp2);
+      //        printf("checking labels of stored mutexes\n");
+ 
+      if(tmp->elp1 && 
+	 tmp->elp2 && 
+	 Cudd_bddLeq(manager, l2, tmp->elp2) && 
+	 Cudd_bddLeq(manager, l1, tmp->elp1)){
+	// if(bdd_entailed(manager, l1, tmp->elp2) && bdd_entailed(manager, l2, tmp->elp1)){
+	//printf("Found mutex!!!!!\n"); 
+	 return TRUE;
+       }
+      tmp = tmp->next;
+    }
+    //}
+
+ return FALSE;
+
+}
+
+
+//end dan
+
+
+
+
+
+/*****************************************************************
+ * THE TWO MAIN FUNCIONS, CALLED FROM BUILD_GRAPH_EVOLUTION_STEP *        
+ *****************************************************************/
+
+
+
+
+
+
+
+
+
+
+void find_mutex_ops( int time )
+
+{
+
+  OpNode *i1, *i2;
+  DdNode* label;
+  OpPair *i, *tmp, *prev;
+  DdNode** dda;
+  DdNode** ddb;
+  DdNode* tmpdd;
+  int sizea, sizeb;
+  ExclusionLabelPair* tmpelp, *tmpelp1 = NULL;
+
+  ExclusionLabelPair* tmp1;
+  
+  BitVector *a, *b;
+  int r;
+
+  //  printf("Enter find mutex ops, vec len = %d %d\n",gop_vector_length_at[time], gops_count);
+
+  if(MUTEX_SCHEME!=MS_REGULAR && MUTEX_SCHEME!=MS_NONE  && COMPUTE_LABELS==TRUE ){   
+    
+    for ( i1=gall_ops_pointer; i1 /* != gprev_level_ops_pointer */; i1=i1->next ) {
+      
+      //  printf("new op ex for %s\n", i1->name);
+      i1->info_at[time]->exclusives = new_OpExclusion(gop_vector_length_at[time]);//new_excl_bit_vector( gop_vector_length_at[time] );
+   
+    }
+/*     printf("DONE\n"); */
+/*     for ( ; i1; i1=i1->next ) { */
+/*        printf("new op ex for %s\n", i1->name); */
+ 
+/*       i1->info_at[time]->exclusives = new_OpExclusion(gop_vector_length_at[time]);//new_excl_bit_vector( gop_vector_length_at[time] ); */
+/*         if ( time > 0 ) { */
+	
+/* 	a = i1->info_at[time]->exclusives->exclusives; */
+/* 	b = i1->info_at[time-1]->exclusives->exclusives; */
+/* 	for ( r = 0; r < gop_vector_length_at[time-1]; r++ ) { */
+/* 	  a[r] |= b[r]; */
+	  
+	  
+/* 	  tmpelp = i1->info_at[time-1]->exclusives->exlabels[r]; */
+/* 	  if(tmpelp && tmpelp->elp1 && tmpelp->elp2){ */
+	       
+/* 	    i1->info_at[time]->exclusives->exlabels[r] = add_exclusion_label( i1->info_at[time]->exclusives->exlabels[r], tmpelp->elp1, tmpelp->elp2); */
+/* 	    tmpelp1 = i1->info_at[time]->exclusives->exlabels[r]; */
+/* 	    tmpelp = tmpelp->next; */
+/* 	  } */
+/* 	  while(tmpelp) { */
+/* 	    tmpelp1 = add_exclusion_label(tmpelp1, tmpelp->elp1, tmpelp->elp2); */
+/* 	    //tmpelp1 = tmpelp->next; */
+/* 	    tmpelp = tmpelp->next; */
+/* 	  } */
+/* 	  //  i1->info_at[time]->exclusives->exlabels[r] = tmpelp1; */
+	  
+/* 	} */
+/*       } */
+/*     } */
+    
+/*     printf("BLOCK A\n"); */
+/*     if(time>0){ */
+/*       i = gop_mutex_pairs; */
+/*       while ( i && !competing_needs( time, i->o1, i->o2 , i->o1->info_at[time]->label->label,  i->o2->info_at[time]->label->label) ) { */
+/* 	MAKE_OPS_UNEXCLUSIVE( time, i->o1, i->o2, i->o1->info_at[time]->label->label,  i->o2->info_at[time]->label->label ); */
+/* 	tmp = i; */
+/* 	i = i->next; */
+/* 	free( tmp ); */
+/* #ifdef MEMORY_INFO */
+/* 	gexcl_memory -= sizeof( OpPair ); */
+/* #endif */
+/* 	gops_exclusions_count--; */
+/*       } */
+/*       gop_mutex_pairs = i; */
+/*       prev = i; */
+/*       if ( i ) i = i->next; */
+/*       while ( i && time > 0) { */
+/* 	if ( !competing_needs( time, i->o1, i->o2, i->o1->info_at[time]->label->label,  i->o2->info_at[time]->label->label ) ) { */
+/* 	  MAKE_OPS_UNEXCLUSIVE( time, i->o1, i->o2, i->o1->info_at[time]->label->label,  i->o2->info_at[time]->label->label ); */
+/* 	  prev->next = i->next; */
+/* 	  tmp = i; */
+/* 	  i = i->next; */
+/* 	  free( tmp ); */
+/* #ifdef MEMORY_INFO */
+/* 	  gexcl_memory -= sizeof( OpPair ); */
+/* #endif */
+/* 	  gops_exclusions_count--; */
+/* 	} else { */
+/* 	  prev = prev->next; */
+/* 	  i = i->next; */
+/* 	} */
+/*       } */
+/*     } */
+    
+
+    for ( i1 = gall_ops_pointer; i1 /* != gprev_level_ops_pointer */; i1 = i1->next ) {
+      if(bdd_is_one(manager, i1->info_at[time]->label->label))
+	i2 = i1->next;
+      else 
+	i2 = gall_ops_pointer;
+      for ( /*i2  gall_ops_pointer */; i2/* != gprev_level_ops_pointer */; i2 = i2->next ) {
+	
+	//			printf("checking op mutexes between %d  %s and  %d %s\n", i1->index, i1->name, i2->index, i2->name);
+	
+	if(/* i1->is_noop ||   */
+	   /* 	 i2->is_noop || */
+	   
+	   ((i1 == i2) && 
+	    bdd_is_one(manager, i1->info_at[time]->label->label)) ||
+	   bdd_is_one(manager, bdd_not(manager,i1->info_at[time]->label->label)) || 
+	   bdd_is_one(manager, bdd_not(manager,i2->info_at[time]->label->label)))
+	  continue;
+	
+	//printf("checking interfere\n");
+	if ( interfere( i1, i2 ) ) {
+	  // 	  printf("Interfere\n");
+	  //	  printBDD(i1->info_at[time]->label->label);
+	  //	  printBDD(i2->info_at[time]->label->label);
+	  tmpdd = bdd_and(manager, 
+			  i1->info_at[time]->label->label, 
+			  i2->info_at[time]->label->label);
+	  Cudd_Ref(tmpdd);
+
+
+	  
+	  MAKE_OPS_EXCLUSIVE( time, i1, i2, tmpdd, tmpdd);
+	  gops_exclusions_count++;
+	  continue;
+	}
+	
+	//      printf("checking noop exclusive\n");
+	
+	if ( noop_exclusive( i1, i2 ) ) {
+	  //	    printf("NOOP EX\n");
+	  tmpdd = bdd_and(manager, 
+			  i1->info_at[time]->label->label, 
+			  i2->info_at[time]->label->label);
+	  
+	  MAKE_OPS_EXCLUSIVE( time, i1, i2, tmpdd, tmpdd);
+	  gops_exclusions_count++;
+	  continue;
+	}	
+	
+	   
+	   if(time > 0 && MUTEX_SCHEME == MS_CROSS){     
+	     // 	     printf("CHECKING CROSS WORLD Competing needs for %s and %s\n", i1->name, i2->name);
+
+
+	     if(WORLD_CHECK == WC_INTERSECT){
+	       tmpdd = bdd_and(manager, 
+			       i1->info_at[time]->label->label, 
+			       i2->info_at[time]->label->label);
+	       Cudd_Ref(tmpdd);
+	     }
+	       
+	     
+	     if(bdd_is_one(manager, i1->info_at[time]->label->label)){
+	       dda = (DdNode**)calloc(2,sizeof(DdNode*));
+	       dda[0] = Cudd_ReadOne(manager);
+	       dda[1] = NULL;
+	     }
+	     else{
+	       dda =  extractDNFfromBDD(i1->info_at[time]->label->label);
+	     }
+	     
+	     if(bdd_is_one(manager, i2->info_at[time]->label->label)){
+	       ddb = (DdNode**)calloc(2,sizeof(DdNode*));
+	       ddb[0] = Cudd_ReadOne(manager);
+	       ddb[1] = NULL;
+	     }
+	     else {
+	       ddb = extractDNFfromBDD(i2->info_at[time]->label->label);
+	     }
+	     
+
+
+
+	       
+
+
+	     sizea = 0;
+	     
+	     while(dda[sizea++]){
+	       sizeb = 0;
+	       Cudd_Ref(dda[sizea-1]);
+   
+	       while(ddb[sizeb++]){
+		 Cudd_Ref(ddb[sizeb-1]);
+		 //	    printf("Chccking competeing needs across worlds\n" );
+		 //    printBDD(dda[sizea-1]);
+		 //printBDD(ddb[sizeb-1]);
+
+
+		 //if checking same worlds only, don't check pair of worlds if they are different
+		 if(WORLD_CHECK == WC_SAME &&
+		    !Cudd_EquivDC(manager, 
+				  dda[sizea-1], 
+				  ddb[sizeb-1], 
+				  Cudd_ReadLogicZero(manager)))
+		   continue;
+
+		 //if checking only intersection of worlds, then don't check if either world is not in intersection
+		 if(WORLD_CHECK == WC_INTERSECT && 
+		    ( !bdd_entailed(manager, dda[sizea-1], tmpdd) ||
+		      !bdd_entailed(manager, ddb[sizeb-1], tmpdd)))
+		   continue;
+		    
+
+		   
+		 if ( /*don't have support in worlds || */ competing_needs( time, i1, i2, dda[sizea-1], ddb[sizeb-1] ) ) {
+		   //		   printf("COMPETE NEEDS\n");
+		   
+		   MAKE_OPS_EXCLUSIVE( time, i1, i2, dda[sizea-1], ddb[sizeb-1]);
+		   gops_exclusions_count++;
+		   tmp = new_op_pair( i1, i2 );
+		   tmp->next = gop_mutex_pairs;
+		   gop_mutex_pairs = tmp; 
+		   //continue;
+		 }
+	       }
+	     }
+	   }      
+	 }
+	 
+       }
+     }
+     else{
+       //       for ( i1=gall_ops_pointer; i1 != gprev_level_ops_pointer; i1=i1->next ) {
+// 	 //printf("New OpExclusion\n");
+// 	 //	 printf("New OpExclusion for %s\n",i1->name);
+// 	 i1->info_at[time]->exclusives = new_OpExclusion(gop_vector_length_at[time]);//new_excl_bit_vector( gop_vector_length_at[time] );
+//        }
+       for (i1=gprev_level_ops_pointer ; i1; i1=i1->next ) {
+	 //printf("New OpExclusion for %s\n",i1->name);
+	 // i1->info_at[time]->exclusives = new_OpExclusion(gop_vector_length_at[time]);// new_excl_bit_vector( gop_vector_length_at[time] );
+	 if ( time > 0 && i1->info_at[time-1] ) {
+	   a = i1->info_at[time]->exclusives->exclusives;
+	   b = i1->info_at[time-1]->exclusives->exclusives;
+	   for ( r = 0; r < gop_vector_length_at[time-1]; r++ ) {
+	     a[r] |= b[r];
+	   }
+	 }
+       }
+       if(time > 0) {
+  
+	 i = gop_mutex_pairs;
+	 while ( i && !competing_needs( time, i->o1, i->o2, NULL, NULL  ) ) {
+	   MAKE_OPS_UNEXCLUSIVE( time, i->o1, i->o2, NULL, NULL );
+	   tmp = i;
+	   i = i->next;
+	   free( tmp );
+	   num_op_pair--;
+#ifdef MEMORY_INFO
+	   gexcl_memory -= sizeof( OpPair );
+#endif
+	   gops_exclusions_count--;
+	 }
+	 gop_mutex_pairs = i;
+	 prev = i;
+	 if ( i ) i = i->next;
+	 while ( i ) {
+	   if ( !competing_needs( time, i->o1, i->o2, NULL, NULL ) ) {
+	     MAKE_OPS_UNEXCLUSIVE( time, i->o1, i->o2 , NULL, NULL);
+	     prev->next = i->next;
+	     tmp = i;
+	     i = i->next;
+	     free( tmp );
+	     num_op_pair--;
+#ifdef MEMORY_INFO
+	     gexcl_memory -= sizeof( OpPair );
+#endif
+	     gops_exclusions_count--;
+	   } else {
+	     prev = prev->next;
+	     i = i->next;
+	   }
+	 }
+       }
+       for ( i1 = gall_ops_pointer; i1 != gprev_level_ops_pointer; i1 = i1->next ) {
+	 for ( i2 = i1->next; i2; i2 = i2->next ) {
+	   if ( interfere( i1, i2 ) ) {
+	     //printf("interfere\n");
+	     MAKE_OPS_EXCLUSIVE( time, i1, i2, NULL, NULL );
+	     gops_exclusions_count++;
+	     continue;
+	   }
+	   if ( noop_exclusive( i1, i2 ) ) {
+	     // printf("noop exclusive\n");
+	     MAKE_OPS_EXCLUSIVE( time, i1, i2 , NULL, NULL);
+	     gops_exclusions_count++;
+	     continue;
+	   }	
+	   if (time == 0 || !competing_needs( time, i1, i2, NULL, NULL ) ) {
+	     continue;
+	   }
+	   //printf("compete\n");
+	   MAKE_OPS_EXCLUSIVE( time, i1, i2, NULL, NULL );
+	   gops_exclusions_count++;
+	   tmp = new_op_pair( i1, i2 );
+	   tmp->next = gop_mutex_pairs;
+	   gop_mutex_pairs = tmp;
+	 }
+       }
+     }
+     
+  
+  // printf("Exit find mutex ops\n");
+
+}
+
+
+
+
+void find_mutex_facts( int time )
+
+{
+
+  FtNode *i1, *i2;
+  EfEdge *e;
+  FtPair *i, *prev, *tmp;
+  BitVector *a, *b;
+  int r, j;
+  ExclusionLabelPair *tmpPair1, *tmpPair2 = NULL;
+  DdNode** dda;
+  DdNode** ddb;
+
+  DdNode* tmpdd;
+  int sizea, sizeb;
+  //          printf("Enter find mutex facts %d\n", time);
+
+  //  if(MUTEX_SCHEME==MS_CROSS && COMPUTE_LABELS==TRUE)// {
+//     cout << "FIX CROSS WORLD MUTEXES" <<endl;
+//     exit(0);
+//   //for all facts find out what adds them
+//     for ( i1=gall_fts_pointer;/* ( */ i1 && i1->info_at[time] /* && (i1 != gprev_level_fts_pointer)) */; i1=i1->next ) {
+//       //        printFact(i1->index);printf("\n");
+      
+//       if ( i1->info_at[time]->is_dummy ) {
+// 	printf( "\nein dummy in der liste ??\n\n" );
+// 	exit( 1 );
+//       }
+
+//       i1->info_at[time]->adders = new_excl_bit_vector( gop_vector_length_at[time-1] );
+
+//       if ( i1->noop ) {
+// 	(i1->info_at[time]->adders)[i1->noop->uid_block] |= i1->noop->uid_mask;
+//       }
+      
+//       for ( e = i1->adders; e && e->ef->first_occurence == time-1; e = e->next ) {
+// 	if ( e->ef->info_at[time-1]->is_dummy ) continue;
+// 	(i1->info_at[time]->adders)[e->ef->op->uid_block] |= e->ef->op->uid_mask;
+//       }
+      
+//       i1->info_at[time]->adders_pointer = i1->adders;
+
+//     }
+    
+//     //printf("Creating new level infomation\n");
+//     //make new level info for facts
+//     for ( ; i1; i1=i1->next ) {
+//       if(!(i1->info_at[time])) {
+// 	// printf("GOT NULL\n");
+// 	i1->info_at[time]= new_ft_level_info( i1 );
+//       }
+//       if ( i1->info_at[time]->is_dummy ) {
+// 	printf( "\nein dummy in der alten liste ??\n\n" );
+// 	exit( 1 );
+//       }
+//       if ( i1->info_at[time-1]->is_dummy ) {
+// 	printf( "\nein ex-dummy in der alten liste ??\n\n" );
+// 	exit( 1 );
+//       }
+      
+      
+//       i1->info_at[time]->adders = new_excl_bit_vector( gop_vector_length_at[time-1] );
+      
+//       /*     //copy last levels mutexes */
+//       /*     // printf("Propagating previous level\n"); */
+//       /*     if ( time > 0 ) { */
+//       /*       /\* */
+//       /*        * achtung! evtl. bei time > 0 die exclusives bereits kopieren; */
+//       /*        * wegen contradicting facts... im augenblick egal, da diese bits */
+//       /*        * bereits in new_ft_level_info gesetzt werden. */
+//       /*        *\/ */
+//       /*       a = i1->info_at[time]->exclusives->pos_exclusives; */
+//       /*       b = i1->info_at[time-1]->exclusives->pos_exclusives; */
+//       /*       for ( r = 0; r < gft_vector_length; r++ ) { */
+//       /* 	a[r] |= b[r]; */
+//       /*       } */
+//       /*       a = i1->info_at[time]->exclusives->neg_exclusives; */
+//       /*       b = i1->info_at[time-1]->exclusives->neg_exclusives; */
+//       /*       for ( r = 0; r < gft_vector_length; r++ ) { */
+//       /* 	a[r] |= b[r]; */
+//       /*       } */
+//       /*       a = i1->info_at[time]->adders; */
+//       /*       b = i1->info_at[time-1]->adders; */
+//       /*       for ( r = 0; r < gop_vector_length_at[time-2]; r++ ) { */
+//       /* 	a[r] |= b[r]; */
+//       /*       } */
+      
+//       /*       //	printf("copying cross world mutexes p\n"); */
+//       /*       for ( r = 0; r < gnum_relevant_facts; r++ ) { */
+//       /* 	//printf("r = %d\n", r); */
+      
+//       /* 	tmpPair1 = i1->info_at[time-1]->exclusives->p_exlabels[r]; */
+//       /* 	if(tmpPair1){ */
+//       /* 	  i1->info_at[time]->exclusives->p_exlabels[r] = add_exclusion_label( i1->info_at[time]->exclusives->p_exlabels[r], tmpPair1->elp1, tmpPair1->elp2); */
+//       /* 	  tmpPair2 = i1->info_at[time]->exclusives->p_exlabels[r]; */
+//       /* 	  tmpPair1 = tmpPair1->next; */
+//       /* 	} */
+//       /* 	while(tmpPair1) { */
+//       /* 	   tmpPair2 = add_exclusion_label( tmpPair2, tmpPair1->elp1, tmpPair1->elp2); */
+//       /* 	  //	    tmpPair2 = tmpPair2->next; */
+//       /* 	  tmpPair1 = tmpPair1->next; */
+//       /* 	} */
+//       /* 	//  i1->info_at[time]->exclusives->p_exlabels[r] = tmpPair2; */
+      
+//       /*       } */
+//       /*       //printf("copying cross world mutexes n\n"); */
+//       /*       for ( r = 0; r < gnum_relevant_facts; r++ ) { */
+//       /* 	//printFact(r); */
+//       /* 	//printf("\n"); */
+//       /* 	tmpPair1 = i1->info_at[time-1]->exclusives->n_exlabels[r]; */
+//       /* 	if(tmpPair1){ */
+//       /* 	  i1->info_at[time]->exclusives->n_exlabels[r] = add_exclusion_label( i1->info_at[time]->exclusives->n_exlabels[r], tmpPair1->elp1, tmpPair1->elp2); */
+//       /* 	    tmpPair2 = i1->info_at[time]->exclusives->n_exlabels[r]; */
+//       /* 	    tmpPair1 = tmpPair1->next; */
+//       /* 	} */
+//       /* 	while(tmpPair1) { */
+//       /* 	  tmpPair2 = add_exclusion_label( tmpPair2, tmpPair1->elp1, tmpPair1->elp2); */
+//       /* 	  //tmpPair2 = tmpPair2->next; */
+//       /* 	  tmpPair1 = tmpPair1->next; */
+//       /* 	} */
+//       /* 	/// i1->info_at[time]->exclusives->n_exlabels[r] = tmpPair2; */
+//       /*       } */
+      
+      
+//       /*     } */
+    
+//       if ( i1->noop ) {
+// 	(i1->info_at[time]->adders)[i1->noop->uid_block] |= i1->noop->uid_mask;
+//       }
+      
+      
+//       for ( e = i1->adders; e && e->ef->first_occurence == time-1; e = e->next ) {
+// 	if ( e->ef->info_at[time-1]->is_dummy ) continue;
+// 	(i1->info_at[time]->adders)[e->ef->op->uid_block] |= e->ef->op->uid_mask;
+//       }
+//       i1->info_at[time]->adders_pointer = i1->adders;
+//     }
+    
+//     /*         printf("undoing mutexes\n");  */
+//     /*   //undo mutexes that don't persist */
+//     /*   i = gft_mutex_pairs; */
+
+    
+//     /* /\*   if(time > 1){ *\/ */
+//     /* /\*     printFact(i->f1->index); *\/ */
+//     /* /\*     printf("\n"); *\/ */
+//     /* /\*     printFact(i->f2->index); *\/ */
+//     /* /\*     printf("\n"); *\/ */
+//     /* /\*   } *\/ */
+    
+//     /*   while ( i &&  */
+//     /* 	  !facts_are_exclusive( time, i->f1, i->f2, i->f1->info_at[time]->label->label, i->f2->info_at[time]->label->label  ) ) { */
+//     /*     printf("OK\n"); */
+//     /*     MAKE_FTS_UNEXCLUSIVE( time, i->f1, i->f2, i->f1->info_at[time]->label->label, i->f2->info_at[time]->label->label ); */
+    
+//     /*     gexclusions_count--; */
+//     /*     if ( i->f1->positive && i->f2->positive ) { */
+//     /*       gprint_exnum--; */
+//     /*     } */
+//     /*     tmp = i; */
+//     /*     i = i->next; */
+    
+    
+//     /*     free( tmp ); */
+    
+//     /* #ifdef MEMORY_INFO */
+//     /*     gexcl_memory -= sizeof( FtPair ); */
+//     /* #endif */
+//     /*   } */
+//     /*   printf("done undoing mutexes\n");  */
+    
+    
+    
+//     /*   gft_mutex_pairs = i; */
+//     /*   prev = i; */
+//     /*   if ( i ) i = i->next; */
+    
+//     /*   while ( i ) { */
+//     /*     if ( !facts_are_exclusive( time, i->f1, i->f2, i->f1->info_at[time]->label->label, i->f2->info_at[time]->label->label ) ) { */
+//     /*       MAKE_FTS_UNEXCLUSIVE( time, i->f1, i->f2, i->f1->info_at[time]->label->label, i->f2->info_at[time]->label->label ); */
+//     /*       gexclusions_count--; */
+//     /*       if ( i->f1->positive && i->f2->positive ) { */
+//     /* 	gprint_exnum--; */
+//     /*       } */
+//     /*       prev->next = i->next; */
+//     /*       tmp = i; */
+//     /*       i = i->next; */
+//     /*       free( tmp ); */
+//     /* #ifdef MEMORY_INFO */
+//     /*       gexcl_memory -= sizeof( FtPair ); */
+//     /* #endif */
+//     /*     } else { */
+//     /*       prev = prev->next; */
+//     /*       i = i->next; */
+//     /*     } */
+//     /*   } */
+    
+    
+//     //look for inconsistent support
+    
+//     for ( i1 = gall_fts_pointer; i1  /* != gprev_level_fts_pointer */ ; i1 = i1->next ) {
+//       //                              printf("Finding mutexes for : %d", i1->positive); printFact(i1->index); printf("\n");
+//       for ( i2 = /* gall_fts_pointer */ i1; /*i2*/i2  /* != gprev_level_fts_pointer */; i2 = i2->next ) {
+// 	//printf("With %d: ",i2->positive ); printFact(i2->index); printf("\n");
+
+
+// 	//oneof constraints
+
+// 	//if the pair is in the list, then make them mutex.
+// 	if(i1!=i2 && isOneOf(i1, i2)){
+
+// 	  printf("MULTI VAL MUX\n");
+// 	  MAKE_FTS_EXCLUSIVE( time, i1, i2, Cudd_ReadOne(manager), Cudd_ReadOne(manager) );
+// 	  if ( i1->positive && i2->positive ) {
+// 	    gprint_exnum++;
+// 	  }
+// 	  gexclusions_count++;
+// 	  tmp = new_ft_pair( i1, i2 );
+// 	  tmp->next = gft_mutex_pairs;
+// 	  gft_mutex_pairs = tmp;
+// 	  continue;
+// 	}
+	  
+
+
+
+// 	/* siehe oben
+// 	 */
+// 	if ( i2->info_at[time]->is_dummy ) continue;
+// 	/*   if ( i1->index == i2->index ) { */
+// 	/* 	/\* ==> contradicting facts! */
+// 	/* 	 * */
+// 	/* 	 * in dieser implemetierung WICHTIG: ft s muessen verschieden sein! */
+// 	/* 	 *\/ */
+// 	/* 	continue; */
+// 	/*       } */
+
+	
+// 	if(WORLD_CHECK == WC_INTERSECT){
+// 	  tmpdd = bdd_and(manager, 
+// 			  i1->info_at[time]->label->label, 
+// 			  i2->info_at[time]->label->label);
+// 	  Cudd_Ref(tmpdd);
+// 	}
+	
+// 	if((i1->index==i2->index) && 
+// 	   bdd_is_one(manager, i1->info_at[time]->label->label) &&
+// 	   bdd_is_one(manager, i2->info_at[time]->label->label) )
+// 	  continue;
+
+// 	if(bdd_is_one(manager, i1->info_at[time]->label->label) ||
+// 	   (i1->index == i2->index &&
+// 	    i1->positive != i2->positive)){
+// 	  dda = (DdNode**)malloc(2*sizeof(DdNode*));
+// 	  dda[0] = Cudd_ReadOne(manager);
+// 	  dda[1] = NULL;
+// 	}
+// 	else{
+// 	  dda =  extractDNFfromBDD(i1->info_at[time]->label->label);
+// 	}
+	
+// 	if(bdd_is_one(manager, i2->info_at[time]->label->label) ||
+//            (i1->index == i2->index &&
+//             i1->positive != i2->positive)){
+// 	  ddb = (DdNode**)malloc(2*sizeof(DdNode*));
+// 	  ddb[0] = Cudd_ReadOne(manager);
+// 	  ddb[1] = NULL;
+// 	}
+// 	else {
+// 	  ddb = extractDNFfromBDD(i2->info_at[time]->label->label);
+// 	}
+// 	sizea = 0;
+	
+// 	while(dda[sizea++]){
+// 	  sizeb = 0;
+// 	  while(ddb[sizeb++]){
+// 	    //	    printf("Chccking inconsistent support for %s and %s across worlds\n", getFactName(i1->index), getFactName(i2->index) );
+// 	    //	    printBDD(dda[sizea-1]);
+// 	    //	    printBDD(ddb[sizeb-1]);
+	    
+	    
+
+// 	    //	    printf("ABOUT TO DIE\n");
+
+// 	 //if checking same worlds only, don't check pair of worlds if they are different
+// 	    if(WORLD_CHECK == WC_SAME &&
+// 	       !Cudd_EquivDC(manager, 
+// 			     dda[sizea-1], 
+// 			     ddb[sizeb-1], 
+// 			     Cudd_ReadLogicZero(manager)))
+// 	      continue;
+	    
+// 	    //if checking only intersection of worlds, then don't check if either world is not in intersection
+// 	    if(WORLD_CHECK == WC_INTERSECT && 
+// 	       ( !bdd_entailed(manager, dda[sizea-1], tmpdd) ||
+// 		 !bdd_entailed(manager, ddb[sizeb-1], tmpdd)))
+// 	      continue;
+
+
+// 	    //both not T, the same world, and not mutex
+// 	    if (  (!bdd_is_one(manager, dda[sizea-1]) && 
+// 		   !bdd_is_one(manager, ddb[sizeb-1]) && 
+// 		   Cudd_EquivDC(manager, 
+// 				dda[sizea-1], 
+// 				ddb[sizeb-1], 
+// 				Cudd_ReadLogicZero(manager))) ||  //can't have fact mutex with itself in same world
+// 		  !facts_are_exclusive( time, i1, i2, dda[sizea-1], ddb[sizeb-1] ) ) {
+// 	      /* 	      printf("SUCK\n"); */
+
+// 	      continue;
+// 	    }
+
+
+
+
+
+
+
+
+
+// 	    //	    printf("YO EX HERE\n"); 
+// 	    MAKE_FTS_EXCLUSIVE( time, i1, i2, dda[sizea-1], ddb[sizeb-1] );
+// 	    if ( i1->positive && i2->positive ) {
+// 	      gprint_exnum++;
+// 	    }
+// 	    gexclusions_count++;
+// 	    tmp = new_ft_pair( i1, i2 );
+// 	    tmp->next = gft_mutex_pairs;
+// 	    gft_mutex_pairs = tmp;
+// 	  }
+	  
+// 	  /* nun sind alle exclusions von i1 berechnet.
+// 	   *
+// 	   * falls i1 ein dummy war, der gerade erst richtig eingetragen wurde,
+// 	   * exclusions runterkopieren auf alle levels, wo i1 noch dummy war!
+// 	   */
+// 	  if ( i1->info_at[time-1] && 
+// 	       i1->info_at[time-1]->is_dummy ) {
+// 	    SET_ADDERS( time, i1 );
+// 	    for ( j=time-1; j>0; j-- ) {
+// 	      if ( !i1->info_at[j] ) break;
+	      
+// 	      if ( !i1->info_at[j]->is_dummy ) {/* NUR ZUR VORSICHT... */
+// 		printf("des kann aber net soi!");
+// 		exit( 1 );
+// 	      }
+	      
+// 	      //free( i1->info_at[j]->exclusives->pos_exclusives );
+// 	      //free( i1->info_at[j]->exclusives->neg_exclusives );
+// 	      i1->info_at[j]->exclusives->pos_exclusives = i1->info_at[time]->exclusives->pos_exclusives;  
+// 	      i1->info_at[j]->exclusives->neg_exclusives = i1->info_at[time]->exclusives->neg_exclusives;
+// 	    }
+// 	  }
+	  
+// 	}/* for i1 ... */
+//       }
+//     }
+    
+//   }
+//  else
+ if(MUTEX_SCHEME!=MS_NONE){
+   
+//     for ( i1=gall_fts_pointer; i1 != gprev_level_fts_pointer; i1=i1->next ) {
+//       if ( i1->info_at[time]->is_dummy ) {
+// 	printf( "\nein dummy in der liste ??\n\n" );
+// 	exit( 1 );
+//       }
+//       //      cout << "set adders " << (time) << endl; printFact(i1->index);
+//       i1->info_at[time]->adders = new_excl_bit_vector( gop_vector_length_at[time-1] );
+//       if ( i1->noop ) {
+// 	(i1->info_at[time]->adders)[i1->noop->uid_block] |= i1->noop->uid_mask;
+//       }
+//       for ( e = i1->adders; e && e->ef->first_occurence == time-1; e = e->next ) {
+// 	if ( e->ef->info_at[time-1]->is_dummy ) continue;
+// 	(i1->info_at[time]->adders)[e->ef->op->uid_block] |= e->ef->op->uid_mask;
+//       }
+//       i1->info_at[time]->adders_pointer = i1->adders;
+//     }
+  
+
+  for ( i1 = gprev_level_fts_pointer; i1; i1=i1->next ) {
+    
+    if(!(i1->info_at[time])) i1->info_at[time]= new_ft_level_info( i1 );//printf("GOT NULL\n");
+    if ( i1->info_at[time]->is_dummy ) {
+      printf( "\nein dummy in der alten liste ??\n\n" );
+      exit( 1 );
+    }
+    if ( i1->info_at[time-1]->is_dummy ) {
+      printf( "\nein ex-dummy in der alten liste ??\n\n" );
+      exit( 1 );
+    }
+   
+   
+    // cout << "set adders " << (time) << endl; printFact(i1->index);
+    //   i1->info_at[time]->adders = new_excl_bit_vector( gop_vector_length_at[time-1] );
+  
+    if ( time > 0 && MUTEX_SCHEME!=MS_STATIC) {
+      /*
+       * achtung! evtl. bei time > 0 die exclusives bereits kopieren;
+       * wegen contradicting facts... im augenblick egal, da diese bits
+       * bereits in new_ft_level_info gesetzt werden.
+       */
+      a = i1->info_at[time]->exclusives->pos_exclusives;
+      b = i1->info_at[time-1]->exclusives->pos_exclusives;
+      for ( r = 0; r < gft_vector_length; r++ ) {
+	a[r] |= b[r];
+      }
+      a = i1->info_at[time]->exclusives->neg_exclusives;
+      b = i1->info_at[time-1]->exclusives->neg_exclusives;
+      for ( r = 0; r < gft_vector_length; r++ ) {
+	a[r] |= b[r];
+      }
+//       a = i1->info_at[time]->adders;
+//       b = i1->info_at[time-1]->adders;
+//       for ( r = 0; r < gop_vector_length_at[time-2]; r++ ) {
+// 	a[r] |= b[r];
+//       }
+    }
+
+  
+//     if ( i1->noop ) {
+//       (i1->info_at[time]->adders)[i1->noop->uid_block] |= i1->noop->uid_mask;
+//     }
+   
+
+//     for ( e = i1->adders; e && e->ef->first_occurence == time-1; e = e->next ) {
+//       if ( e->ef->info_at[time-1]->is_dummy ) continue;
+      
+//       (i1->info_at[time]->adders)[e->ef->op->uid_block] |= e->ef->op->uid_mask;
+      
+
+//     }
+//     i1->info_at[time]->adders_pointer = i1->adders;
+  }
+
+  i = gft_mutex_pairs;
+  while ( i && !facts_are_exclusive( time, i->f1, i->f2, NULL, NULL ) ) {
+    MAKE_FTS_UNEXCLUSIVE( time, i->f1, i->f2, NULL, NULL );
+    gexclusions_count--;
+    if ( i->f1->positive && i->f2->positive ) {
+      gprint_exnum--;
+    }
+    tmp = i;
+    i = i->next;
+    free( tmp );
+    num_ft_pair--;
+#ifdef MEMORY_INFO
+    gexcl_memory -= sizeof( FtPair );
+#endif
+  }
+  
+
+  gft_mutex_pairs = i;
+  prev = i;
+  if ( i ) i = i->next;
+  while ( i ) {
+    if ( !facts_are_exclusive( time, i->f1, i->f2, NULL, NULL ) ) {
+      MAKE_FTS_UNEXCLUSIVE( time, i->f1, i->f2, NULL, NULL );
+      gexclusions_count--;
+      if ( i->f1->positive && i->f2->positive ) {
+	gprint_exnum--;
+      }
+      prev->next = i->next;
+      tmp = i;
+      i = i->next;
+      free( tmp );
+      num_ft_pair--;
+#ifdef MEMORY_INFO
+      gexcl_memory -= sizeof( FtPair );
+#endif
+    } else {
+      prev = prev->next;
+      i = i->next;
+    }
+  }
+
+  if(MUTEX_SCHEME==MS_REGULAR){
+
+  for ( i1 = gall_fts_pointer; i1 != gprev_level_fts_pointer; i1 = i1->next ) {
+    for ( i2 = i1->next; i2  // != gprev_level_fts_pointer
+	    ; i2 = i2->next ) {
+      /* siehe oben
+       */
+      if ( i2->info_at[time]->is_dummy ) continue;
+      if ( i1->index == i2->index ) {
+	/* ==> contradicting facts!
+	 *
+	 * in dieser implemetierung WICHTIG: ft s muessen verschieden sein!
+	 */
+	continue;
+      }
+      if ( !facts_are_exclusive( time, i1, i2, NULL, NULL ) ) {
+	continue;
+      }
+      MAKE_FTS_EXCLUSIVE( time, i1, i2, NULL, NULL );
+      if ( i1->positive && i2->positive ) {
+	gprint_exnum++;
+      }
+      gexclusions_count++;
+      tmp = new_ft_pair( i1, i2 );
+      tmp->next = gft_mutex_pairs;
+      gft_mutex_pairs = tmp;
+    }
+  }
+    /* nun sind alle exclusions von i1 berechnet.
+     *
+     * falls i1 ein dummy war, der gerade erst richtig eingetragen wurde,
+     * exclusions runterkopieren auf alle levels, wo i1 noch dummy war!
+     */
+//     if ( i1->info_at[time-1] && 
+// 	 i1->info_at[time-1]->is_dummy ) {
+//       SET_ADDERS( time, i1 );
+//       for ( j=time-1; j>0; j-- ) {
+// 	if ( !i1->info_at[j] ) break;
+
+// 	if ( !i1->info_at[j]->is_dummy ) {/* NUR ZUR VORSICHT... */
+// 	  printf("des kann aber net soi!");
+// 	  exit( 1 );
+// 	}
+	
+	
+// 	free_bit_vector( i1->info_at[j]->exclusives->pos_exclusives );
+// 	free_bit_vector( i1->info_at[j]->exclusives->neg_exclusives );
+	
+// 	i1->info_at[j]->exclusives->pos_exclusives = i1->info_at[time]->exclusives->pos_exclusives;
+// 	i1->info_at[j]->exclusives->neg_exclusives = i1->info_at[time]->exclusives->neg_exclusives;
+//       }
+//     }
+
+  }/* for i1 ... */
+}
+ //     printf("Exit find mutex facts\n");
+  
+}
+
+
+
+
+
+
+
+
+/**********************************************
+ * HELPERS ON RELATIONS BETWEEN OPS AND FACTS *
+ **********************************************/
+
+
+
+
+
+
+
+//need to generalize for effects
+int ef_competing_needs( int time, EfNode *e1, EfNode *e2, DdNode* labela, DdNode* labelb ){
+  //Could 1. copy code, 2. wrap effect as an opnode, 3. generalize for effects and ops
+  //copying code would be ugly but fast - so i'll do it
+
+  //  BitVector *p = e1->info_at[time]->exclusives->pos_exclusives;
+  //BitVector *n = e1->info_at[time]->exclusives->neg_exclusives;
+  EfExclusion* ex = e1->info_at[time]->exclusives;
+
+  BitVector *b;
+  int r;
+  FtEdge *i;
+  DdNode* ainter;
+  DdNode* binter;
+  ExclusionLabelPair** exlabels = NULL; 
+  ExclusionLabelPair*  tmpex = NULL;
+  FtEdge* conds1;
+  FtEdge* conds2;
+
+  if(time == 0)
+    return FALSE;
+  if(MUTEX_SCHEME==MS_CROSS && COMPUTE_LABELS==TRUE){     
+  
+    //does there exist a cross world mutex that will prevent these actions from
+    //occuring together
+    
+    //       printf("Checking competing needs for %s and %s across worlds: \n", e1->op->name, e2->op->name);
+    //printBDD(labela);
+    //printBDD(labelb);
+    
+
+    ainter = bdd_and(manager, labela, e1->info_at[time]->label->label);
+    binter = bdd_and(manager, labelb, e2->info_at[time]->label->label);
+
+
+    Cudd_Ref(ainter);
+    Cudd_Ref(binter);
+    
+    //printf("Checking intersections: \n");
+    //printBDD(ainter);
+    //printBDD(binter);
+
+
+
+    if((e1->index == e2->index) && Cudd_EquivDC(manager, ainter, binter, Cudd_ReadLogicZero(manager)))
+      return FALSE;
+
+    
+    //if antecedents are mutex in the worlds
+    //is e1's conditions mutex with e2's conditions or preconds
+    conds1= e1->conditions;
+    //printf("Hi\n");
+    while(conds1) {
+      conds2 = e2->conditions;
+      //      printf("Hi\n");
+      while(conds2){
+	//	printf("Hi\n");
+	//printFact(conds1->ft->index);printf("\n");printFact(conds2->ft->index);printf("\n");
+	if((conds1->ft->index != conds2->ft->index || 
+	    !Cudd_EquivDC(manager, 
+			  ainter, 
+			  binter, 
+			  Cudd_ReadLogicZero(manager)) )   &&
+	   ARE_MUTEX_FTS(time,conds1->ft, conds2->ft, ainter, binter)){
+	  //	  printf("TRUE\n");
+	  return TRUE;}
+	else
+	  //	  printf("FALSE\n");
+	conds2=conds2->next;
+      }
+  
+      conds2 = e2->op->preconds;
+      //           printf("yo\n");
+      while(conds2){
+	
+	//    		printFact(conds1->ft->index);printf("\n");printFact(conds2->ft->index);printf("\n");
+	if((conds1->ft->index != conds2->ft->index || 
+	    !Cudd_EquivDC(manager, 
+			  ainter, 
+			  binter, 
+			  Cudd_ReadLogicZero(manager)) )   &&// printf("DUH\n")&&
+	   ARE_MUTEX_FTS(time,conds1->ft, conds2->ft, ainter, binter)){
+	  //printf("Teuew\n");
+	  return TRUE;
+	}
+	else
+	  // printf("FALSE\n");
+	  conds2=conds2->next;
+      }
+      conds1=conds1->next;
+    }
+    
+
+  }
+  else if (MUTEX_SCHEME != MS_NONE){
+    BitVector *p = e1->info_at[time]->exclusives->pos_exclusives;
+    BitVector *n = e1->info_at[time]->exclusives->neg_exclusives;
+//      if ( !p && !n) {
+   
+//       p = new_excl_bit_vector( gft_vector_length );
+//       n = new_excl_bit_vector( gft_vector_length );
+       for ( i = e1->conditions; i; i = i->next ) {
+ 	b = i->ft->info_at[time]->exclusives->pos_exclusives;
+ 	for ( r = 0; r < gft_vector_length; r++ ) {
+ 	  p[r] |= b[r];
+ 	}
+ 	b = i->ft->info_at[time]->exclusives->neg_exclusives;
+ 	for ( r = 0; r < gft_vector_length; r++ ) {
+ 	  n[r] |= b[r];
+ 	}
+       }
+//       e1->info_at[time]->exclusives->pos_exclusives = p;
+//       e1->info_at[time]->exclusives->neg_exclusives = n;
+//     }
+    
+    //if o2's preconds are in the mutex list for o1 then xor
+    b = e2->effect->ant->p_conds->vector;
+    for ( r = 0; r < gft_vector_length; r++ ) {
+      if ( (p[r] & b[r]) ) {
+	//printf("COMPETE!!!!a\n");
+	return TRUE;
+      }
+    }
+     b = e2->effect->ant->n_conds->vector;
+    for ( r = 0; r < gft_vector_length; r++ ) {
+      if ( n[r] & b[r] ) {
+	//printf("COMPETE!!!!b\n");
+	return TRUE;
+      }
+    }  
+  }
+  //  printf("Exit\n");
+  return FALSE;
+/*     //push all of preconds exclusives to uncond exclusives */
+/*     if ( !p ) { */
+/*       //  ex = new_FtExclusion(); */
+/*       p = new_excl_bit_vector( gft_vector_length ); */
+/*       n = new_excl_bit_vector( gft_vector_length ); */
+/*       for ( i = o1->preconds; i; i = i->next ) { */
+/* 	b = i->ft->info_at[time]->exclusives->pos_exclusives; */
+/* 	//exlabels = i->ft->info_at[time]->exclusives->p_exlabels; */
+/* 	for ( r = 0; r < gft_vector_length; r++ ) { */
+/* 	  if(Cudd_bddLeq(manager, gft_table[r]->info_at[time]->label->label, ainter)/\* label of b[r] is in ainter *\/){ */
+/* 	    p[r] |= b[r]; */
+/* 	  } */
+/* 	} */
+/* 	b = i->ft->info_at[time]->exclusives->neg_exclusives; */
+/* 	for ( r = 0; r < gft_vector_length; r++ ) { */
+/* 	  if(Cudd_bddLeq(manager, gft_table[2*r]->info_at[time]->label->label, ainter)){ */
+/* 	    n[r] |= b[r]; */
+/* 	  } */
+/* 	} */
+/*       } */
+/*       o1->unconditional->info_at[time]->exclusives->pos_exclusives = p; */
+/*       o1->unconditional->info_at[time]->exclusives->neg_exclusives = n; */
+      
+      
+/*     } */
+/*     printf("YO\n"); */
+
+/*     //if o2's preconds are in the mutex list for o1 then xor */
+/*     b = o2->pos_precond_vector; */
+/*     for ( r = 0; r < gft_vector_length; r++ ) { */
+/*         printf("YO1\n"); */
+  
+/*       if ( (p[r] & b[r]) && Cudd_bddLeq(manager, gft_table[r]->info_at[time-1]->label->label, binter) ) { */
+/*  	printf("got here\n"); */
+ 
+/* 	if(!o1->info_at[time]->exclusives) */
+/* 	  o1->info_at[time]->exclusives = new_OpExclusion(gop_vector_length_at[time]); */
+/*  	printf("got here\n"); */
+
+/* 	tmpex = o1->info_at[time]->exclusives->exlabels[r]; */
+/*  	printf("not here\n"); */
+/* 	o1->info_at[time]->exclusives->exlabels[r] = new_ExclusionLabelPair(ainter, binter); */
+/* 	o1->info_at[time]->exclusives->exlabels[r]->next = tmpex; */
+/* 	printf("COMPETE!!!!a\n"); */
+/* 	return TRUE; */
+/*       } */
+/*     } */
+/*     b = o2->neg_precond_vector; */
+/*     for ( r =  0; r < gft_vector_length; r++ ) { */
+/*       if ( (n[r] & b[r]) && Cudd_bddLeq(manager, gft_table[2*r]->info_at[time]->label->label, binter)/\* && b[r] is in binter *\/ ) { */
+/* 	if(!o1->info_at[time]->exclusives) */
+/* 	  o1->info_at[time]->exclusives = new_OpExclusion(gop_vector_length_at[time]); */
+/*  	printf("got here\n"); */
+
+/* 	tmpex = o1->info_at[time]->exclusives->exlabels[r]; */
+/*  	printf("not here\n"); */
+/* 	o1->info_at[time]->exclusives->exlabels[r] = new_ExclusionLabelPair(ainter, binter); */
+/* 	o1->info_at[time]->exclusives->exlabels[r]->next = tmpex; */
+/* 	printf("COMPETE!!!!b\n"); */
+/* 	return TRUE; */
+/*       } */
+/*     } */
+/*     printf("NO COMPETE!!!!\n"); */
+/*     return FALSE; */
+/*   } */
+/*   else { */
+/*     //push all of preconds exclusives to uncond exclusives */
+/*     if ( !p ) { */
+/*       p = new_excl_bit_vector( gft_vector_length ); */
+/*       n = new_excl_bit_vector( gft_vector_length ); */
+/*       for ( i = o1->preconds; i; i = i->next ) { */
+/* 	b = i->ft->info_at[time]->exclusives->pos_exclusives; */
+/* 	for ( r = 0; r < gft_vector_length; r++ ) { */
+/* 	  p[r] |= b[r]; */
+/* 	} */
+/* 	b = i->ft->info_at[time]->exclusives->neg_exclusives; */
+/* 	for ( r = 0; r < gft_vector_length; r++ ) { */
+/* 	  n[r] |= b[r]; */
+/* 	} */
+/*       } */
+/*       o1->unconditional->info_at[time]->exclusives->pos_exclusives = p; */
+/*       o1->unconditional->info_at[time]->exclusives->neg_exclusives = n; */
+/*     } */
+    
+/*     //if o2's preconds are in the mutex list for o1 then xor */
+/*     b = o2->pos_precond_vector; */
+/*     for ( r = 0; r < gft_vector_length; r++ ) { */
+/*       if ( (p[r] & b[r]) ) { */
+/* 	printf("COMPETE!!!!a\n"); */
+/* 	return TRUE; */
+/*       } */
+/*     } */
+/*     b = o2->neg_precond_vector; */
+/*     for ( r = 0; r < gft_vector_length; r++ ) { */
+/*       if ( n[r] & b[r] ) { */
+/* 	printf("COMPETE!!!!b\n"); */
+/* 	return TRUE; */
+/*       } */
+/*     } */
+/*     printf("NO COMPETE!!!!\n"); */
+/*     return FALSE; */
+/*   } */
+  
+  
+}
+
+
+int competing_needs( int time, OpNode *o1, OpNode *o2, DdNode* labela, DdNode* labelb )
+
+{
+
+  BitVector *p = o1->unconditional->info_at[time]->exclusives->pos_exclusives;
+  BitVector *n = o1->unconditional->info_at[time]->exclusives->neg_exclusives;
+  EfExclusion* ex = o1->unconditional->info_at[time]->exclusives;
+
+ BitVector *b;
+  int r;
+  FtEdge *i;
+  DdNode* ainter;
+  DdNode* binter;
+  ExclusionLabelPair** exlabels = NULL; 
+  ExclusionLabelPair*  tmpex = NULL;
+  //    printf("Checking competing needs for %s and %s at %d: \n", o1->name, o2->name, time);
+  
+  if(time == 0)
+    return FALSE;
+
+ 
+  if(MUTEX_SCHEME==MS_CROSS && COMPUTE_LABELS){     
+  
+    //does there exist a cross world mutex that will prevent these actions from
+    //occuring together
+    
+    //    printf("Checking competing needs for %s and %s across worlds: \n", o1->name, o2->name);
+    // printBDD(labela);
+    //   printBDD(labelb);
+    
+
+    ainter = bdd_and(manager, labela, o1->info_at[time]->label->label);
+    binter = bdd_and(manager, labelb, o2->info_at[time]->label->label);
+    
+    Cudd_Ref(ainter);
+    Cudd_Ref(binter);
+    //     printf("Checking intersections: \n");      printBDD(ainter);     printBDD(binter); 
+    
+  
+     //if labels for worlds we want to support indicate that the action will be unsupported, then
+     //there cannot competing needs.
+     
+
+    //push all of preconds exclusives to uncond exclusives
+    if ( !p  ) {
+      //  ex = new_FtExclusion();
+      p = new_excl_bit_vector( gft_vector_length );
+
+      o1->unconditional->info_at[time]->exclusives->pos_exclusives = p;
+
+    }
+    if(!n){
+      n = new_excl_bit_vector( gft_vector_length );
+      o1->unconditional->info_at[time]->exclusives->neg_exclusives = n;
+
+    }
+      for ( i = o1->preconds; i; i = i->next ) {
+	b = i->ft->info_at[time]->exclusives->pos_exclusives;
+	//printf("b = \n");
+	//print_BitVector(b, gft_vector_length);
+	//exlabels = i->ft->info_at[time]->exclusives->p_exlabels;
+	for ( r = 0; r < gft_vector_length; r++ ) {
+	  //if(Cudd_bddLeq(manager, ainter, gft_table[r]->info_at[time]->label->label)/* label of b[r] is in ainter */){
+	    p[r] |= b[r];
+	    //}
+	}
+	b = i->ft->info_at[time]->exclusives->neg_exclusives;
+        //printf("b = \n");
+
+	//	print_BitVector(b, gft_vector_length);
+	for ( r = 0; r < gft_vector_length; r++ ) {
+	  //if(Cudd_bddLeq(manager, ainter, gft_table[NEG_ADR(r)]->info_at[time]->label->label)){
+	    n[r] |= b[r];
+	    // }
+	}
+      }
+      
+      
+      //      o1->unconditional->info_at[time]->exclusives->pos_exclusives = p;
+      //o1->unconditional->info_at[time]->exclusives->neg_exclusives = n;
+      
+      
+      //}
+    //    printf("YO\n");
+
+      //    printf("Are of %s Mutex with  ", o1->name); printFact(r); printf(" %d ", r);
+
+
+
+    //if o2's preconds are in the mutex list for o1 then xor
+    b = o2->pos_precond_vector;
+    // printf("POS\n");
+    // print_BitVector(p, gft_vector_length); printf("\n");
+    //  print_BitVector(b, gft_vector_length); printf("\n");
+
+    //    printf("facts = %d\n", gnum_relevant_facts);
+    for ( r = 0; r < gnum_relevant_facts; r++ ) {
+      
+      //      printf("Are Pos Preconds of %s Mutex with  ", o1->name); printFact(r); printf(" %d ", r);
+      //print_BitVector(p, gft_vector_length); printf("\n");       
+      //      if(gft_table[r] && gft_table[r]->info_at[time-1] &&                                                                                                                                      !gft_table[r]->info_at[time-1]->is_dummy)
+	//	printBDD(gft_table[r]->info_at[time-1]->label->label);printf("\n");
+      if (//gft_table[r] && 
+	  //gft_table[r]->info_at[time-1] && 
+	  //!gft_table[r]->info_at[time-1]->is_dummy &&
+	  get_bit(p, gft_vector_length, r) && 
+	  get_bit(b, gft_vector_length, r) &&
+	  //gft_table[r]->info_at[time-1]->label->label &&	
+	  Cudd_bddLeq(manager, binter, gft_table[r]->info_at[time]->label->label)
+	  ) {
+	//printBDD(binter);
+	//	printBDD(gft_table[r]->info_at[time-1]->label->label);
+	
+	/* 	if(!o1->info_at[time]->exclusives) */
+	/* 	  o1->info_at[time]->exclusives = new_OpExclusion(gops_count); */
+	
+
+	//	tmpex = o1->info_at[time]->exclusives->exlabels[r];
+ 
+	//o1->info_at[time]->exclusives->exlabels[r] = add_exclusion_label(o1->info_at[time]->exclusives->exlabels[r], ainter, binter);
+	//	o1->info_at[time]->exclusives->exlabels[r] = new_ExclusionLabelPair(ainter, binter);
+	
+	//	o1->info_at[time]->exclusives->exlabels[r]->next = tmpex;
+	//				printf("COMPETE!!!!a\n");
+	return TRUE;
+      }
+    }
+ 
+
+    //          printf("NEGS\n");
+    b = o2->neg_precond_vector;
+    //   print_BitVector(n, gft_vector_length); printf("\n"); 
+    //   print_BitVector(b, gft_vector_length); printf("\n"); 
+
+
+    for ( r =  0; r < gnum_relevant_facts; r++ ) {
+      //      printf("Are Neg Preconds of %s Mutex with  ", o1->name); printFact(r); printf("\n");
+
+      if (//gft_table[NEG_ADR(r)] &&  
+	  //gft_table[NEG_ADR(r)]->info_at[time-1] && 
+	  //!gft_table[NEG_ADR(r)]->info_at[time-1]->is_dummy && 
+	  get_bit(n, gft_vector_length,r) && 
+	  get_bit(b, gft_vector_length,r) && 
+	  //gft_table[NEG_ADR(r)]->info_at[time-1]->label->label &&
+	  Cudd_bddLeq(manager, binter, gft_table[NEG_ADR(r)]->info_at[time]->label->label)/* && b[r] is in binter */ ) {
+	//if(!o1->info_at[time]->exclusives)
+	//o1->info_at[time]->exclusives = new_OpExclusion(gops_count);
+ 
+
+	//tmpex = o1->info_at[time]->exclusives->exlabels[r];
+ 
+//	o1->info_at[time]->exclusives->exlabels[r] = add_exclusion_label(o1->info_at[time]->exclusives->exlabels[r], ainter, binter);
+
+    //	o1->info_at[time]->exclusives->exlabels[r] = new_ExclusionLabelPair(ainter, binter);
+	//	o1->info_at[time]->exclusives->exlabels[r]->next = tmpex;
+	//printf("COMPETE!!!!b\n");
+	return TRUE;
+      }
+    }
+    //  printf("NO COMPETE!!!!\n");
+    return FALSE;
+  }
+  else {
+    //push all of preconds exclusives to uncond exclusives
+  
+  //   if ( !p && !n) {
+   
+//       p = new_excl_bit_vector( gft_vector_length );
+//       n = new_excl_bit_vector( gft_vector_length );
+       for ( i = o1->preconds; i; i = i->next ) {
+ 	b = i->ft->info_at[time]->exclusives->pos_exclusives;
+ 	for ( r = 0; r < gft_vector_length; r++ ) {
+ 	  p[r] |= b[r];
+ 	}
+ 	b = i->ft->info_at[time]->exclusives->neg_exclusives;
+ 	for ( r = 0; r < gft_vector_length; r++ ) {
+ 	  n[r] |= b[r];
+ 	}
+       }
+//       o1->unconditional->info_at[time]->exclusives->pos_exclusives = p;
+//       o1->unconditional->info_at[time]->exclusives->neg_exclusives = n;
+//     }
+    
+    //if o2's preconds are in the mutex list for o1 then xor
+    b = o2->pos_precond_vector;
+    for ( r = 0; r < gft_vector_length; r++ ) {
+      if ( (p[r] & b[r]) ) {
+	//printf("COMPETE!!!!a\n");
+	return TRUE;
+      }
+    }
+
+    b = o2->neg_precond_vector;
+    for ( r = 0; r < gft_vector_length; r++ ) {
+      if ( n[r] & b[r] ) {
+	//printf("COMPETE!!!!b\n");
+	return TRUE;
+      }
+    }
+    //printf("NO COMPETE!!!!\n");
+    return FALSE;
+  }
+  
+  
+}
+
+int ef_interfere( EfNode *e1, EfNode *e2 )
+
+{//need to extend for all disj effects not just the first one.
+
+  BitVector *e1p = e1->effect->cons->p_effects->vector;//pos_effect_vector;
+  BitVector *e1n = e1->effect->cons->n_effects->vector;//neg_effect_vector;
+  BitVector *e2p = e2->effect->cons->p_effects->vector;//pos_effect_vector;
+  BitVector *e2n = e2->effect->cons->n_effects->vector;//neg_effect_vector;
+
+  //need to turn cond eff preconds into bit vectors from lists
+  //or can use getbit to see if it is in the effs vector
+  BitVector *p1p = e1->effect->ant->p_conds->vector;
+  BitVector *p1n = e1->effect->ant->n_conds->vector; //this is getting the worng value for some stuff
+  BitVector *p2p = e2->effect->ant->p_conds->vector;
+  BitVector *p2n = e2->effect->ant->n_conds->vector;
+
+  int r;
+
+  //    printf("Enter EF_Interfere\n");fflush(stdout);
+//   print_BitVector(e1p, gft_vector_length); 
+//   print_BitVector(e1n, gft_vector_length);
+//   cout << flush;
+//   print_BitVector(e2p, gft_vector_length);
+//   print_BitVector(e2n, gft_vector_length); 
+//   cout << flush;
+//    print_BitVector(p1p, gft_vector_length); 
+//    print_BitVector(p1n, gft_vector_length); 
+//    cout << flush;
+//   print_BitVector(p2p, gft_vector_length); 
+//   print_BitVector(p2n, gft_vector_length); 
+//   cout << flush;
+
+  for ( r = 0; r < gft_vector_length; r++ ) {
+   if ( (e1p[r] | p1p[r]) & (e2n[r] | p2n[r]) ) {
+     
+     //     printf("Exit do Interfere r = %d \n", r);fflush(stdout);
+      return TRUE;
+    }
+  }
+
+  for ( r = 0; r < gft_vector_length; r++ ) {
+    if ( (e2p[r] | p2p[r]) & (e1n[r] | p1n[r]) ) {
+
+      // printf("1Exit do Interfere r = %d \n", r);fflush(stdout);
+      return TRUE;
+    }
+  }
+
+  //  printf("Exit don't Interfere\n");fflush(stdout);
+
+  return FALSE;
+
+}
+
+
+int interfere( OpNode *i1, OpNode *i2 )
+
+{//need to extend for all disj effects not just the first one.
+
+  BitVector *e1p = i1->unconditional->effect->cons->p_effects->vector;//pos_effect_vector;
+  BitVector *e1n = i1->unconditional->effect->cons->n_effects->vector;//neg_effect_vector;
+  BitVector *e2p = i2->unconditional->effect->cons->p_effects->vector;//pos_effect_vector;
+  BitVector *e2n = i2->unconditional->effect->cons->n_effects->vector;//neg_effect_vector;
+  BitVector *p1p = i1->pos_precond_vector;
+  BitVector *p1n = i1->neg_precond_vector;
+  BitVector *p2p = i2->pos_precond_vector;
+  BitVector *p2n = i2->neg_precond_vector;
+
+  int r;
+
+  
+  //  printf("Do %s and %s interfere\n", i1->name, i2->name);
+  //	print_BitVector(p1p, gft_vector_length);
+  //	print_BitVector(e1p, gft_vector_length);
+  //	print_BitVector(p2n, gft_vector_length);
+  //	print_BitVector(e2n, gft_vector_length); printf("\n");
+  for ( r = 0; r < gft_vector_length; r++ ) {
+    // printf("Dying\n");
+   if ( (e1p[r] | p1p[r]) & (e2n[r] | p2n[r]) ) {
+  
+    
+     //    printf("Exit do Interfere 1\n");
+/* 	print_BitVector(e1p, gft_vector_length); */
+/* 	print_BitVector(p1p, gft_vector_length); */
+/* 	print_BitVector(e2n, gft_vector_length); */
+/* 	print_BitVector(p2n, gft_vector_length); */
+
+      return TRUE;
+    }
+  }
+  // print_BitVector(p1n, gft_vector_length);
+  //  print_BitVector(e1n, gft_vector_length);
+  //  print_BitVector(p2p, gft_vector_length);
+  //  print_BitVector(e2p, gft_vector_length);
+
+  ///printf("\n");
+     for ( r = 0; r < gft_vector_length; r++ ) {
+    if ( (e2p[r] | p2p[r]) & (e1n[r] | p1n[r]) ) {
+/*       print_BitVector(p1n, gft_vector_length); */
+/*       print_BitVector(e1n, gft_vector_length); */
+/*       print_BitVector(p2p, gft_vector_length); */
+/*       print_BitVector(e2p, gft_vector_length); */
+
+/* printf("\n"); */
+   
+      //  printf("Exit do Interfere 2\n");
+      return TRUE;
+    }
+  }
+
+     //    printf("Exit don't Interfere\n");
+
+  return FALSE;
+
+}
+
+
+int noop_exclusive( OpNode *i1, OpNode *i2 )
+
+{
+
+  OpNode *noop, *op;
+  FtNode *ft;
+  BitVector *vec;
+
+
+  if ( !i1->is_noop && !i2->is_noop ) return FALSE;
+  if ( i1->is_noop && i2->is_noop ) return FALSE;
+
+  noop = i1->is_noop ? i1 : i2;
+  op = i1->is_noop ? i2 : i1;
+
+ 
+  ft = noop->preconds->ft;
+
+  /*
+   * achtung! wenn s keinen unconditional effect gibt, werden
+   * diese vectoren in build_graph.c mit 0 gesetzt!
+   */
+  if ( ft->positive ) {
+    //        printf("ft is pos\n");
+    vec = op->unconditional->effect->cons->n_effects->vector;//pos_effect_vector;
+  } else {
+    //   printf("ft is neg\n");
+   vec = op->unconditional->effect->cons->p_effects->vector;//neg_effect_vector;
+  }
+  //  printf("%d\n", ft->index);
+  //  print_BitVector(vec, gft_vector_length);
+
+
+  if (vec[ft->uid_block] & ft->uid_mask) {
+  
+
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+
+}
+  
+  
+int facts_are_exclusive( int time, FtNode *f1, FtNode *f2, DdNode* l1, DdNode *l2 )
+
+{
+	// Unsafe type cast!!!
+
+  EfExclusion *excl = f2->info_at[time]->adders_exclusives;
+  BitVector *b;
+  int r;
+  EfEdge *i, *j;
+  int first = TRUE;
+  int gotOne = FALSE;
+  int gotTwo = FALSE;
+  OpNode *op1, *op2;
+  FtEdge *ip, *jp;
+
+  //     printf("enter facts_are_exclusive \n");
+  // printFact(f1->index); printf(" %d with %d", f1->positive, f2->positive); printFact(f2->index); printf("\n");
+  // printBDD(l1);
+  //printBDD(l2);
+  
+  //check if noop support for f1 is mutex with other ops for f2
+  // check if conditions for supporting f2 are mutex with f1 
+
+  if(MUTEX_SCHEME==MS_CROSS && COMPUTE_LABELS==TRUE){
+
+   if ( f1->noop && /* !f1->adders &&  */
+	f2->noop && /* !f2->adders && */
+	!ARE_MUTEX_EFS( time-1, f1->noop->unconditional, f2->noop->unconditional, l1, l2 ) ) {
+     //     printf("Non mutex noops\n");
+      return FALSE; 
+   }
+
+  }
+  
+
+//   if ( f1->noop ) {
+//     //    printf("NOOP1\n");
+//     op1 = f1->noop;
+//     for ( j = f2->adders; j; j = j->next ) {
+//       op2 = j->ef->op;
+//        if(MUTEX_SCHEME==MS_CROSS && COMPUTE_LABELS==TRUE ){
+//          if(!Cudd_bddLeq(manager,  l2, j->ef->info_at[time-1]->label->label))
+//            continue;
+// 	 else
+// 	   gotOne = TRUE;
+// 	 //	 printf("Is a adder not mutex with an noop\n");
+// 	 if ( !ARE_MUTEX_EFS( time-1, op1->unconditional, j->ef, l1, l2 ) ) {
+// 	   //	   printf("YES\n");
+// 	//ops arent' mutex, so look at adder of f2 to see if its 
+//         //conditions are mutex with f1 at the previous level
+// /* 	for ( jp=j->ef->conditions; jp; jp = jp->next ) { */
+// /* 	  //mark mutex if you find a  */
+// /* 	  if ( ARE_MUTEX_FTS( time-1, f1, jp->ft, l1, l2 ) ) break; */
+// /* 	} */
+       
+// /* 	if ( jp ) { */
+// /* 	  //they are mutex at the previous level */
+// /* 	  if ( 0 ) { */
+// /* 	    printf("\nnoop - op pair bad!"); */
+// /* 	  } */
+// /* 	  //look at next adder */
+// /* 	  continue; */
+// /* 	} */
+// 	//they aren't mutex by one pair, so return non-mutex
+// 	return FALSE;
+//       }
+// 	 //	 printf("NO\n");
+//       }
+//       else{
+// 	if ( !ARE_MUTEX_OPS( time-1, op1, op2, NULL, NULL ) ) {
+// 	  for ( jp=j->ef->conditions; jp; jp = jp->next ) {
+// 	    if ( ARE_MUTEX_FTS( time-1, f1, jp->ft , NULL, NULL) ) break;
+// 	  }
+// 	  if ( jp ) {
+// 	    if ( 0 ) {
+// 	      printf("\nnoop - op pair bad!");
+// 	    }
+// 	  continue;
+// 	  }
+// 	  return FALSE;
+// 	}	
+//       }
+//     }
+//      if(!gotOne && COMPUTE_LABELS){
+//        //      exit(0);                                                          
+//        return FALSE;
+//      }
+
+//   }
+
+//    /*   if(MUTEX_SCHEME == MS_CROSS && 
+//       f1->noop && 
+//       !f1->adders && 
+//       f2->noop && 
+//       !f2->adders && 
+//       !ARE_MUTEX_EFS( time-1, f1->noop->unconditional, f2->noop->unconditional, l1, l2 ) )
+//      return FALSE;
+//    */
+//   //same as above block, except reversed.
+//   if ( f2->noop ) {
+//     //        printf("NOOP2\n");
+//     op1 = f2->noop;
+//     for ( j = f1->adders; j; j = j->next ) {
+//       op2 = j->ef->op;
+//       if(MUTEX_SCHEME==MS_CROSS && COMPUTE_LABELS==TRUE){
+// 	//	printf("Is a noop not mutex with an adder %s\n", op2->name);
+// 	if(! Cudd_bddLeq(manager,  l1, j->ef->info_at[time-1]->label->label)){
+// 	  continue;
+// 	}
+// 	else
+// 	  gotOne = TRUE;
+
+// 	//	printf("YO\n");
+// 	if ( !ARE_MUTEX_EFS( time-1, j->ef, op1->unconditional, l1, l2 ) ) {
+// 	  //	  printf("YES\n");
+// 	  /* 	for ( jp=j->ef->conditions; jp; jp = jp->next ) { */
+// 	  /* 	  if ( ARE_MUTEX_FTS( time-1, f2, jp->ft, l1, l2 ) ) break; */
+// 	  /* 	} */
+// 	  /* 	if ( jp ) { */
+// 	  /* 	  if ( 0 ) { */
+// 	  /* 	    printf("\nnoop - op pair bad!"); */
+// 	  /* 	  } */
+// 	  /* 	  continue; */
+// 	  /* 	} */
+// 	  return FALSE;
+// 	}
+
+//       }
+//       else {
+// 	if ( !ARE_MUTEX_OPS( time-1, op1, op2, NULL, NULL ) ) {
+// 	  for ( jp=j->ef->conditions; jp; jp = jp->next ) {
+// 	    if ( ARE_MUTEX_FTS( time-1, f2, jp->ft, NULL, NULL ) ) break;
+// 	  }
+// 	  if ( jp ) {
+// 	    if ( 0 ) {
+// 	      printf("\nnoop - op pair bad!");
+// 	    }
+// 	    continue;
+// 	  }
+// 	  return FALSE;
+// 	}
+//       }
+//     }
+//     if(!gotOne && COMPUTE_LABELS){
+//       //      exit(0);
+//       return FALSE;
+//     }
+
+//   }
+
+ 
+
+  //    printf("looking at all pairs of adders\n");
+   
+  //look at all pairs of adders
+  for ( i = f1->adders; i; i = i->next ) {
+    //        printf("Adder i = %s, %d \n", i->ef->op->name, i->ef->index);
+    if(MUTEX_SCHEME==MS_CROSS && COMPUTE_LABELS==TRUE){
+      //      printBDD(i->ef->info_at[time-1]->label->label);
+      if(! Cudd_bddLeq(manager,  l1, i->ef->info_at[time-1]->label->label)) {
+	//printf("no ent\n");
+	continue;
+      }
+      else {
+	//	printf(" ent\n");
+	gotOne = TRUE;
+	
+      }
+      //      printf("HI\n");
+
+
+      for ( j = f2->adders; (j  /*&& j->ef->index != i->ef->index*/ ); j = j->next ) {
+	if( j->ef->index != i->ef->index){
+	  //	printf("Adder j = %s, %d \n", j->ef->op->name, j->ef->index);
+
+	if(! Cudd_bddLeq(manager, l2, j->ef->info_at[time-1]->label->label) ||
+	   (j->ef->op == i->ef->op))
+	  continue;
+	else
+	  gotTwo = TRUE;
+
+
+
+	//	printf("next adder\n");
+	if ( !ARE_MUTEX_EFS( time-1, i->ef, j->ef, l1, l2 ) ) {
+	  
+	  //    printf("non mux\n");
+	  return FALSE;
+	  
+	}
+	else
+	  gotOne = FALSE;
+	}
+      }
+    }
+    else{
+      //printf("YO\n");
+      for ( j = f2->adders; j; j = j->next ) {
+      op1 = i->ef->op;
+      op2 = j->ef->op;
+ 	if (op1->alt_index != op2->alt_index && 
+	    //!ARE_MUTEX_OPS( time-1, op1, op2, NULL, NULL ) &&
+	     !ARE_MUTEX_EFS(time-1, i->ef, j->ef, NULL, NULL)) {
+	  //  printf("HI\n");
+	  for ( ip = i->ef->conditions; ip; ip = ip->next ) {
+	    for ( jp = j->ef->conditions; jp; jp = jp->next ) {
+	      if ( ARE_MUTEX_FTS( time-1, ip->ft, jp->ft, NULL, NULL ) ) break;
+	    }
+	    if ( jp ) break;
+	    
+	    for ( jp = op2->preconds; jp; jp = jp->next ) {
+	      if ( ARE_MUTEX_FTS( time-1, ip->ft, jp->ft, NULL, NULL ) ) break;
+	    }
+	    if ( jp ) break;
+	  }
+	  if ( ip ) {
+	    if ( 0 ) {
+	        printf("\nop pair bad!");
+	    }
+	    continue;
+	}
+	  
+	  for ( ip = op1->preconds; ip; ip = ip->next ) {
+	    for ( jp = j->ef->conditions; jp; jp = jp->next ) {
+	      if ( ARE_MUTEX_FTS( time-1, ip->ft, jp->ft, NULL, NULL ) ) break;
+	    }
+	    if ( jp ) break;
+	  }
+	  if ( ip ) {
+	    if ( 0 ) {
+	      printf("\nop pair bad!");
+	  }
+	    continue;
+	  }
+	  
+	  return FALSE;
+	  
+	}
+      }
+    }
+  }
+//   //mutex only if you couldn't find non-mutex support
+//   //printf("Facts are MUTEX\n");
+//   if(gotOne && gotTwo && COMPUTE_LABELS)
+//     return FALSE;
+//   else
+     return TRUE;
+
+/*   /\* bit vector code a la STAN; */
+/*    * funktioniert nur bei unconditional domains, */
+/*    * sonst kann man effect conds - excl nicht */
+/*    * abfragen. */
+/*    * */
+/*    * laengerfristig: EXCL UEBER EFFECTS DEFINIEREN!!! */
+/*    *\/ */
+
+ //   if ( !excl ) { 
+//      excl = new_EfExclusion(0);
+//      if ( f2->noop ) { 
+// 	// more unsafe type casting...
+//        free_bit_vector(excl->exclusives);
+//        excl->exclusives = copy_bit_vector( (BitVector *)f2->noop->unconditional->info_at[time-1]->exclusives, (num_alt_effs%gcword_size)+1+2*gft_vector_length ); 
+//        first = FALSE; 
+//      } 
+//      for ( i = f2->adders; i; i = i->next ) { 
+//        if ( !f2->noop && first ) { 
+//        free_bit_vector(excl->exclusives);
+//  	excl->exclusives = copy_bit_vector( (BitVector *)i->ef->op->unconditional->info_at[time-1]->exclusives, (num_alt_effs%gcword_size)+1+2*gft_vector_length  ); 
+//  	first = FALSE; 
+//        } 
+//        b = (BitVector *) i->ef->op->info_at[time-1]->exclusives; 
+//        for ( r = 0; r < gop_vector_length_at[time-1]; r++ ) { 
+//  	excl->exclusives[r] &= b[r]; 
+//        } 
+//      } 
+//      free_ef_exclusion(f2->info_at[time]->adders_exclusives);
+//      f2->info_at[time]->adders_exclusives = (EfExclusion *) excl; 
+//    } 
+
+//    b = f1->info_at[time]->adders; 
+//    for ( r = 0; r < gop_vector_length_at[time-1]; r++ ) { 
+//      if ( b[r] != ( b[r] & excl->exclusives[r] ) ) { 
+//        break; 
+//      } 
+//    } 
+
+//    //return ( r == gop_vector_length_at[time-1] ); 
+//    return 1;
+
+}
+
+void find_mutex_effects1(int time) {
+  OpNode *i1, *i2;
+  EfNode *e1, *e2;
+  for ( i1 = gall_ops_pointer; i1 ; i1 = i1->next ) {
+    for ( i2 = i1->next; i2; i2 = i2->next ) {
+	
+      int op_mutex = ARE_MUTEX_OPS(time, i1, i2, NULL, NULL);
+ //        cout << "Check Eff mutex ";
+
+//       if(i1->is_noop){
+// 	cout << "Noop " << (i1->preconds->ft->positive ? "pos " : "neg ");
+// 	printFact(i1->preconds->ft->index);
+//       }
+//       else
+// 	cout << i1->name << endl;
+      
+//       if(i2->is_noop){
+// 	cout << "Noop " << (i2->preconds->ft->positive ? "pos " : "neg ");
+// 	printFact(i2->preconds->ft->index);
+//       }
+//       else
+// 	cout << i2->name << endl;
+      
+
+      for(int t1 = 0; t1 < 2; t1++){
+	if(t1== 0 ){
+	  // cout << "uncond1" <<endl;
+	  e1 = i1->unconditional;
+	}
+	else{
+	  //  cout << "cond1" <<endl;
+	  e1 = i1->conditionals;
+	}
+
+	for(int t2 = 0; t2 < 2; t2++){
+	  if(t2== 0 ){
+	    e2 = i2->unconditional;
+	    // cout << "uncond2" <<endl;
+	  }
+	  else{
+	    e2 = i2->conditionals;
+	    // cout << "cond2" <<endl;
+	  }
+
+	  for ( ; e1 ; e1 = e1->next ) {
+	    for ( ; e2; e2 = e2->next ) {
+	      //printf("checking interfere\n");
+	      if ( ( op_mutex || 		    
+		    ef_interfere( e1, e2 ) )) {
+		//	printf("Interfere\n");fflush(stdout);
+
+		MAKE_EFS_EXCLUSIVE( time, e1, e2, NULL, NULL);
+		if(t1 == 0){
+		  //if unconditional is mutex, then all conditionals are too
+		  for(EfNode *e3 = i1->conditionals; e3; e3=e3->next)
+		    MAKE_EFS_EXCLUSIVE( time, e3, e2, NULL, NULL);
+		}
+		if(t2 == 0){
+		  //if unconditional is mutex, then all conditionals are too
+		  for(EfNode *e3 = i2->conditionals; e3; e3=e3->next)
+		    MAKE_EFS_EXCLUSIVE( time, e1, e3, NULL, NULL);
+		}
+
+		continue;
+	      }
+	      // cout << "HI"<<endl;
+	      if ( time > 0 && ef_competing_needs( time, e1, e2, NULL, NULL)){
+		//		printf("COMPETE NEEDS\n");
+		MAKE_EFS_EXCLUSIVE( time, e1, e2, NULL, NULL);
+		if(t1 == 0){
+		  //if unconditional is mutex, then all conditionals are too
+		  for(EfNode *e3 = i1->conditionals; e3; e3=e3->next)
+		    MAKE_EFS_EXCLUSIVE( time, e3, e2, NULL, NULL);
+		}
+		if(t2 == 0){
+		  //if unconditional is mutex, then all conditionals are too
+		  for(EfNode *e3 = i2->conditionals; e3; e3=e3->next)
+		    MAKE_EFS_EXCLUSIVE( time, e1, e3, NULL, NULL);
+		}
+		continue;
+	      }
+	      //  cout << "HOI"<<endl;
+	    }
+	  }
+	}
+      }
+    }
+  }  
+}
+
+void find_mutex_effects(int time) {
+  OpNode *i1, *i2;
+  EfNode *ef1, *ef2, *tmpEf;
+  ExclusionLabelPair* tmpOpEx = NULL;
+  DdNode* tmp, *tmp1;
+  int i;
+  DdNode** dda;
+  DdNode** ddb;
+  DdNode* tmpdd;
+  int sizea, sizeb;
+  int uc1, uc2;
+  //   printf("enter find mutex effects\n");
+
+  for ( i1 = gall_ops_pointer; i1 /* != gprev_level_ops_pointer */; i1 = i1->next ) {
+    //        printf("LOOKING for muxes for %s\n", i1->name);
+    //      printf("PArt 1\n");  //OpMutex copied to uncond effects
+    //    for ( ef1 = i1->unconditional; ef1; ef1 = ef1->next ) {
+
+
+
+    //copy action mutexes.
+      if(!i1->unconditional->info_at[time]->is_dummy){
+	//    printf("looking at uncond of %s\n", i1->name);
+	/*      if(!ef1->info_at[time]->exclusives->set) */
+	/* 	ef1->info_at[time]->exclusives = set_Labels_EfExclusion(ef1->info_at[time]->exclusives, gnum_cond_effects_at[time]); */
+	
+	//each unconditional inherits the mutexes of the operator
+	//but label on mutex is the operator label
+	for ( i2 = gall_ops_pointer; i2 /* != gprev_level_ops_pointer */; i2 = i2->next ) {
+	  if(!i2->unconditional->info_at[time]->is_dummy && 
+	     get_bit(i1->info_at[time]->exclusives->exclusives, 
+		     gop_vector_length_at[time] ,
+		     i2->index)// && 
+	     //	     i1->index != i2->index
+){
+	    /* 	  if(!i2->unconditional->info_at[time]->exclusives->set) */
+	    /* 	    i2->unconditional->info_at[time]->exclusives = set_Labels_EfExclusion(i2->unconditional->info_at[time]->exclusives, gnum_cond_effects_at[time]); */
+	    //	    	    printf("mux with %s %d \n", i2->name, i2->unconditional->index);
+	    
+		    //  tmpOpEx = i1->info_at[time]->exclusives->exlabels[i2->index];
+	    
+	    //  printBDD(tmpOpEx);
+		    //   while(printf("LOOPY\n") && tmpOpEx ) {
+		    //      printf("OK\n");
+
+
+	     if(WORLD_CHECK == WC_INTERSECT){
+	       tmpdd = bdd_and(manager, 
+			       i1->info_at[time]->label->label, 
+			       i2->info_at[time]->label->label);
+	       Cudd_Ref(tmpdd);
+	     }
+	
+
+	    if(bdd_is_one(manager, i1->unconditional->info_at[time]->label->label)){
+	      dda = (DdNode**)malloc(2*sizeof(DdNode*));
+	      dda[0] = Cudd_ReadOne(manager);
+	      dda[1] = NULL;
+	    }
+	    else{
+	      dda =  extractDNFfromBDD(i1->unconditional->info_at[time]->label->label);
+	    }
+	    
+	    if(bdd_is_one(manager, i2->unconditional->info_at[time]->label->label)){
+	      ddb = (DdNode**)malloc(2*sizeof(DdNode*));
+	      ddb[0] = Cudd_ReadOne(manager);
+	      ddb[1] = NULL;
+	    }
+	    else {
+	      ddb = extractDNFfromBDD(i2->unconditional->info_at[time]->label->label);
+	    }
+	    sizea = 0;
+
+	    while(dda[sizea++]){
+	      sizeb = 0;
+	      while(ddb[sizeb++]){
+		//                                                  printf("Chccking competeing needs across worlds\n" );               
+		//                        printBDD(dda[sizea-1]);                                                                       
+		//                         printBDD(ddb[sizeb-1]);                                                                      
+
+		//if checking same worlds only, don't check pair of worlds if they are different
+		if(WORLD_CHECK == WC_SAME &&
+		   !Cudd_EquivDC(manager, 
+				 dda[sizea-1], 
+				 ddb[sizeb-1], 
+				 Cudd_ReadLogicZero(manager)))
+		  continue;
+		
+		//if checking only intersection of worlds, then don't check if either world is not in intersection
+		if(WORLD_CHECK == WC_INTERSECT && 
+		   ( !bdd_entailed(manager, dda[sizea-1], tmpdd) ||
+		     !bdd_entailed(manager, ddb[sizeb-1], tmpdd)))
+		  continue;
+
+		  MAKE_EFS_EXCLUSIVE( time, i1->unconditional,i2->unconditional, dda[sizea-1], ddb[sizeb-1]);
+
+
+	      }
+	    }
+	  }
+	  /*
+	  MAKE_EFS_EXCLUSIVE(time, 
+			     i1->unconditional, 
+			     i2->unconditional,
+			     i1->info_at[time]->label->label,
+			     i2->info_at[time]->label->label);*/
+	  //    tmpOpEx = tmpOpEx->next;
+	  //  }
+	}
+      } 
+  
+  
+  // }
+/*     printf("PArt 2\n"); //Uncond Mutex copied to conditionals */
+/*     for ( ef1 = i1->conditionals; ef1; ef1 = ef1->next ) { */
+/*      //  printf("looking at cond of %s\n", i1->name); */
+/* /\* 	if(!ef1->info_at[time]->exclusives->set) *\/ */
+/* /\* 	  ef1->info_at[time]->exclusives = set_Labels_EfExclusion(ef1->info_at[time]->exclusives, gnum_cond_effects_at[time]); *\/ */
+/*     //each conditional inherits the mutexes of the operator */
+/*       //but label on mutex is the conditional label intersect the operator label */
+/*      if(!ef1->info_at[time]->is_dummy){ */
+/*        for ( i2 = gall_ops_pointer; i2 /\* != gprev_level_ops_pointer *\/; i2 = i2->next ) { */
+/* 	 if(!i1->unconditional->info_at[time]->is_dummy &&  */
+/* 	    get_bit(i1->unconditional->info_at[time]->exclusives->exclusives,  */
+/* 		    gops_count, */
+/* 		    i2->unconditional->index) &&  */
+/* 	    i1->index != i2->index){ */
+/* 	   tmpOpEx = i1->unconditional->info_at[time]->exclusives->exlabels[i2->unconditional->index]; */
+/* 	   while(tmpOpEx) { */
+/* 	     MAKE_EFS_EXCLUSIVE(time,  */
+/* 				ef1,  */
+/* 				i2->unconditional, */
+/* 				//	bdd_and(manager,  */
+/* 				ef1->info_at[time]->label->label, */
+/* 				//i1->info_at[time]->label->label), */
+/* 				tmpOpEx->elp2); */
+/* 	     print_BitVector(i2->unconditional->info_at[time]->exclusives->exclusives, gef_vector_length); */
+/* 	     tmpOpEx = tmpOpEx->next; */
+/* 	   } */
+/* 	 } */
+/*        } */
+/*      } */
+/*     } */
+
+//      printf("PArt 3\n");  //interfere/comp needs of all effects of different actions
+//      printf("i1 = %s\n", i1->name);
+    for ( i2 = gall_ops_pointer /* i1 */; i2 && MUTEX_SCHEME==MS_CROSS/* != gprev_level_ops_pointer */; i2 = i2->next ) {
+      
+      //         printf("i2 = %s\n", i2->name);
+      
+
+      for(uc1 = 0; uc1 < 2; uc1++){
+	if(uc1 == 0)
+	  ef2 = i2->unconditional;
+	else
+	  ef2 = i2->conditionals;
+	for (; ef2; ef2 = ef2->next ) {
+	  if(!ef2->info_at[time]->is_dummy){
+	    //     printf("e2 = %s %d\n", i2->name, ef2->index);
+	    for(uc2 = 0; uc2 < 2; uc2++){
+	      if(uc2 == 0)
+		ef1 = i1->unconditional;
+	      else
+		ef1 = i1->conditionals;
+	    for ( ; ef1; ef1 = ef1->next ) {
+	      if(!ef1->info_at[time]->is_dummy){
+		//printf("ef1 = %s %d\n", i1->name, ef1->index);
+	      
+
+		//	          printBDD(ef1->info_at[time]->label->label);
+		//	          printBDD(ef2->info_at[time]->label->label);
+	      
+	      //find all pos and neg exclusives for antecendents of ef1
+	      
+	      /* 	if(!ef1->info_at[time]->exclusives->set) */
+	      /* 	  ef1->info_at[time]->exclusives = set_Labels_EfExclusion(ef1->info_at[time]->exclusives, gnum_cond_effects_at[time]); */
+	      /* 	if(!ef2->info_at[time]->exclusives->set) */
+	      /* 	  ef2->info_at[time]->exclusives = set_Labels_EfExclusion(ef2->info_at[time]->exclusives, gnum_cond_effects_at[time]); */
+	      //each conditional can be mutex with other conditionals if they have
+	      
+	      //mutex can only exist between effects if they are different effects or have different labels
+	      if(ef1->index != ef2->index ||
+		 !Cudd_EquivDC(manager,
+			       ef1->info_at[time]->label->label,
+			       ef2->info_at[time]->label->label,
+			       Cudd_ReadLogicZero(manager))){
+		//		printf("CHECK\n");
+		//interfering effects, or mutex antecedents
+		if (ef_interfere(ef1, ef2)){
+		  //		  		  printf("EF INTERFERE\n");
+		  tmp =  bdd_and(manager,
+				 ef1->info_at[time]->label->label,
+				 ef2->info_at[time]->label->label);
+		  Cudd_Ref(tmp);
+		  //	      printf("tmp = \n");
+		  //	      printBDD(tmp);
+		  if(!bdd_is_one(manager, Cudd_Not(tmp))){
+		    MAKE_EFS_EXCLUSIVE( time, ef1, ef2, tmp, tmp);
+		    continue;
+		  }
+		  
+		}
+		
+		//		printf("No int\n");
+		//check competing needs
+		if(time >0 ){
+	     if(WORLD_CHECK == WC_INTERSECT){
+	       tmpdd = bdd_and(manager, 
+			       i1->info_at[time]->label->label, 
+			       i2->info_at[time]->label->label);
+	       Cudd_Ref(tmpdd);
+	     }
+	       
+
+
+
+
+		  if(bdd_is_one(manager, ef1->info_at[time]->label->label)){
+		    dda = (DdNode**)malloc(2*sizeof(DdNode*));
+		    dda[0] = Cudd_ReadOne(manager);
+		    dda[1] = NULL;
+		    }
+		  else{
+		    dda =  extractDNFfromBDD(ef1->info_at[time]->label->label);
+		  }
+		  
+		  if(bdd_is_one(manager, ef2->info_at[time]->label->label)){
+		    ddb = (DdNode**)malloc(2*sizeof(DdNode*));
+		    ddb[0] = Cudd_ReadOne(manager);
+		    ddb[1] = NULL;
+		  }
+		  else {
+		    ddb = extractDNFfromBDD(ef2->info_at[time]->label->label);
+		  }
+		  sizea = 0;
+		  
+		  while(dda[sizea++]){
+		    sizeb = 0;
+		    while(ddb[sizeb++]){
+		      //		      		      		  printf("Chccking competeing needs across worlds\n" );
+		      //			printBDD(dda[sizea-1]);
+		      //			 printBDD(ddb[sizeb-1]);
+
+		      //if checking same worlds only, don't check pair of worlds if they are different
+		 if(WORLD_CHECK == WC_SAME &&
+		    !Cudd_EquivDC(manager, 
+				  dda[sizea-1], 
+				  ddb[sizeb-1], 
+				  Cudd_ReadLogicZero(manager)))
+		   continue;
+
+		 //if checking only intersection of worlds, then don't check if either world is not in intersection
+		 if(WORLD_CHECK == WC_INTERSECT && 
+		    ( !bdd_entailed(manager, dda[sizea-1], tmpdd) ||
+		      !bdd_entailed(manager, ddb[sizeb-1], tmpdd)))
+		   continue;
+	      
+		      if (ef_competing_needs( time, ef1, ef2, dda[sizea-1], ddb[sizeb-1] ) ) {
+			//printf("COMPETE NEEDS\n");
+			
+			MAKE_EFS_EXCLUSIVE( time, ef1, ef2, dda[sizea-1], ddb[sizeb-1]);
+			//   gefs_exclusions_count++;
+		      }
+		      //		      else
+		      //			printf("no compete\n");
+		    }
+		  }
+		  
+		}
+	      }
+	      //	      else
+	      //		printf("YO GOT SAME LABEL\n");
+	      
+	    }
+	    }
+	    }
+	}
+      }
+    }
+    }
+
+
+
+
+/*   printf("PArt 4\n"); */
+/*     for ( ef1 = i1->conditionals; ef1; ef1 = ef1->next ) { */
+/*       if(!ef1->info_at[time]->is_dummy){ */
+/* 	for ( ef2 = i1->conditionals; ef2!=ef1; ef2 = ef2->next ) { */
+/* 	  if(!ef2->info_at[time]->is_dummy){ */
+/* 	    //if the labels of the antecedents have a non-empty intersection */
+/* 	    //then share their mutexes for that intersection */
+	    
+/* 	    //intersect effect labels */
+	    
+/* 	    tmp = bdd_and(manager, ef1->info_at[time]->label->label, ef2->info_at[time]->label->label); */
+/* 	    if(!bdd_is_one(manager, bdd_not(manager, tmp))) { */
+/* 	         printf("induct\n"); */
+/* 	      //if not zero then ef2 gets all of ef1s mutexes, but ef2s mutex label is the intersected label */
+/* 	      tmpEf=gall_efs_pointer; */
+/* 	      for(tmpEf=gall_efs_pointer;tmpEf!=gprev_level_efs_pointer;tmpEf=tmpEf->all_next){ */
+/* 		if(get_bit(ef1->info_at[time]->exclusives->exclusives, gef_vector_length,tmpEf->index)){ */
+/* 		  //	      printf("Found an iducement from cond, sharing mutexes\n"); */
+/* 		  	      printf("cond of %s induces mutex to cond of %s with %s\n", i1->name, i1->name, tmpEf->op->name); */
+		  
+/* 		  set_bit(ef2->info_at[time]->exclusives->exclusives, tmpEf->index); */
+/* 		  tmpOpEx = ef1->info_at[time]->exclusives->exlabels[tmpEf->index]; */
+		  
+/* 		  while(tmpOpEx){ */
+/* 		    if(ef2->info_at[time]->label->label && tmpOpEx->elp1) */
+/* 		      printf("Sharing mutex\n"); */
+/* 		      tmp = bdd_and(manager, ef2->info_at[time]->label->label, tmpOpEx->elp1); */
+/* 		      Cudd_Ref(tmp); */
+/* 		    //		if(tmp) */
+		    
+/* 		    if(!bdd_is_one(manager, bdd_not(manager, tmp))) */
+/* 		      MAKE_EFS_EXCLUSIVE( time, ef2, tmpEf, tmp, tmpOpEx->elp2); */
+/* 		    tmpOpEx=tmpOpEx->next; */
+/* 		  } */
+/* 		} */
+/* 	      } */
+/* 	    } */
+/* 	  } */
+/* 	} */
+/*       } */
+/*     } */
+//      printf("PArt 4\n");
+    if(DO_INDUCED == INDUCED){
+
+    for ( ef1 = i1->conditionals; ef1 && MUTEX_SCHEME==MS_CROSS ; ef1 = ef1->next ) {
+      if(!ef1->info_at[time]->is_dummy){
+	if(ef2 = i1->unconditional){
+	  if(!ef2->info_at[time]->is_dummy){
+	    //if the labels of the antecedents have a non-empty intersection
+	    //then share their mutexes for that intersection
+	    
+	    //intersect effect labels
+	    
+	    tmp = bdd_and(manager, ef1->info_at[time]->label->label, ef2->info_at[time]->label->label);
+	    if(!bdd_is_one(manager, bdd_not(manager, tmp))) {
+	      //	         printf("induct\n");
+	      //if not zero then ef2 gets all of ef1s mutexes, but ef2s mutex label is the intersected label
+	      tmpEf=gall_efs_pointer;
+	      for(tmpEf=gall_efs_pointer;tmpEf/* !=gprev_level_efs_pointer*/ ;tmpEf=tmpEf->all_next){
+		if(get_bit(ef2->info_at[time]->exclusives->exclusives, gef_vector_length,tmpEf->index)){
+		  //	      printf("Found an iducement from cond, sharing mutexes\n");
+		  //		  printf("uncond of %d %s induces mutex to cond of %d  %s with %d %s\n", ef2->index, i1->name, ef1->index, i1->name, tmpEf->index, tmpEf->op->name);
+		  
+		  set_bit(ef1->info_at[time]->exclusives->exclusives, tmpEf->index);
+		  tmpOpEx = ef2->info_at[time]->exclusives->exlabels[tmpEf->index];
+		  
+		  while(tmpOpEx){
+		    //    if(ef2->info_at[time]->label->label && tmpOpEx->elp1)
+		    //		     printf("Sharing mutex\n");
+		    tmp = bdd_and(manager, ef1->info_at[time]->label->label, tmpOpEx->elp1);
+		      Cudd_Ref(tmp);
+		    //		if(tmp)
+		    
+		      if(!bdd_is_one(manager, bdd_not(manager, tmp)))
+			MAKE_EFS_EXCLUSIVE( time, ef1, tmpEf, tmp, tmpOpEx->elp2);
+		      tmpOpEx=tmpOpEx->next;
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+	for ( ef2 = i1->conditionals; ef2; ef2 = ef2->next ) {
+	  if(!ef2->info_at[time]->is_dummy && ef2 != ef1){
+	    //if the labels of the antecedents have a non-empty intersection
+	    //then share their mutexes for that intersection
+	    
+	    //intersect effect labels
+	    
+	    tmp = bdd_and(manager, ef1->info_at[time]->label->label, ef2->info_at[time]->label->label);
+	    if(!bdd_is_one(manager, bdd_not(manager, tmp))) {
+	      //	         printf("induct\n");
+	      //if not zero then ef2 gets all of ef1s mutexes, but ef2s mutex label is the intersected label
+	      tmpEf=gall_efs_pointer;
+	      for(tmpEf=gall_efs_pointer;tmpEf/*!=gprev_level_efs_pointer*/;tmpEf=tmpEf->all_next){
+		if(get_bit(ef2->info_at[time]->exclusives->exclusives, gef_vector_length,tmpEf->index)){
+		  //	      printf("Found an iducement from cond, sharing mutexes\n");
+		  //printf("cond of %s induces mutex to cond of %s with %d %s\n", i1->name, i1->name, tmpEf->index, tmpEf->op->name);
+		  
+		  set_bit(ef1->info_at[time]->exclusives->exclusives, tmpEf->index);
+		  tmpOpEx = ef2->info_at[time]->exclusives->exlabels[tmpEf->index];
+		  
+		  while(tmpOpEx){
+		    // if(ef2->info_at[time]->label->label && tmpOpEx->elp1)
+		    //		      printf("Sharing mutex\n");
+		    tmp = bdd_and(manager, ef1->info_at[time]->label->label, tmpOpEx->elp1);
+		      Cudd_Ref(tmp);
+		    //		if(tmp)
+		    
+		    if(!bdd_is_one(manager, bdd_not(manager, tmp)))
+		      MAKE_EFS_EXCLUSIVE( time, ef1, tmpEf, tmp, tmpOpEx->elp2);
+		    tmpOpEx=tmpOpEx->next;
+		    }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    
+ }
+  }  
+  //  printf("exit find mutex effects\n");
+    
+}
+
