@@ -35,11 +35,13 @@
 #include <exception>
 #include <assert.h>
 #include <math.h>
+using namespace std; // zyc 11.14 ,该文件是否可以加using namespace std; -->  list<DdNode *> cubes;
 
 #include "dbn.h"
 #include "lao_wrapper.h"
 #include <float.h>
 #include "solve.h"
+#include "graph_wrapper.h" // zyc 11.14 -> pickKRandomWorlds
 
 extern int gnum_cond_effects;
 /* Verbosity level. */
@@ -2766,22 +2768,28 @@ void make_mutex(std::list<DdNode*>* preffect){
  * 这个函数实现了初始状态公式到obdd的转换,如果初始状态不是公式即概率类型还会计算一些DBN
  * 1. collect_init_state_variable，查找所有状态变量个数
  * 2. formula_bdd，将初始状态formula转化为obdd，其中one-of disjunction没太理解
- * 3. 随后将每个状态变量的否定和区上第二部的obdd，为什么需要这一步操作？
+ * 3. 随后将每个状态变量的否定和取上第二步的obdd，为什么需要这一步操作？
  */
 void collectInit(const Problem* problem){
 	/*
 	 * Construct an ADD representing initial states.
 	 */
 
+	list<DdNode *>* worlds; // zyc 11.14 : cubes需不需要重新再定义
 	problem->init_formula().print(std::cout, problem->domain().predicates(),
-			problem->domain().functions(),
-			problem->terms());
+								  problem->domain().functions(),
+								  problem->terms());
 	std::cout << std::endl;
 
 	if(&problem->init_formula()){
 		std::cout << "construct the bdd for init formula\n";
 		collect_init_state_variables(problem->init_formula()); // 公式中涉及到的状态变量即atom
-		DdNode* tmp = formula_bdd(problem->init_formula());// 根据初始状态公式创建BDD
+
+		// zyc 2022.11.14: 随即抽取单个初始状态转化为BDD，赋给tmp
+		DdNode* tmp1 = formula_bdd(problem->init_formula());// 根据初始状态公式创建BDD
+		pickKRandomWorlds(tmp1, 1, worlds);
+		DdNode *tmp = worlds->front();
+
 		Cudd_Ref(tmp);
 		
 		for(int i = 0; i < num_alt_facts; i++){//考虑每个状态变量
@@ -2802,7 +2810,7 @@ void collectInit(const Problem* problem){
 			}
 		}
 		// 记录初始状态集合，这里为何需要合取所有状态变量的否定？
-		b_initial_state = tmp;
+		b_initial_state = tmp;  // zyc 11.4 此时的tmp是随即取的可能的一个初始状态
 		Cudd_Ref(b_initial_state);
 		Cudd_RecursiveDeref(manager, tmp);
 		printBDD(b_initial_state);

@@ -11,7 +11,8 @@ libsearch_la_SOURCES = alao_star.cc alao_star.h anytime_search.cc anytime_search
 			moastar.cc moastar.h moastar_heuristics.cc moastar_heuristics.h
 
 INCLUDES =  -I. -I@top_srcdir@/src/ -I@top_srcdir@/src/cudd -I@top_srcdir@/src/ppddl \
-		-I@top_srcdir@/src/heuristics -I@top_srcdir@/src/lug -I@top_srcdir@/src/search
+		-I@top_srcdir@/src/heuristics -I@top_srcdir@/src/lug -I@top_srcdir@/src/search \
+		-I@top_srcdir@/src/counterexample
 
 
 #libsearch_la_LDFLAGS = -L../cudd -lcudd -lcudd_util -ldddmp -lepd -lst -lmtr -lm -lfl 

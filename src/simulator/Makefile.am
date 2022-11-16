@@ -3,7 +3,8 @@ libsimulator_la_SOURCES = client.cc  client.h  monitor.cc  monitor.h  server.cc 
 
 
 INCLUDES =  -I. -I@top_srcdir@/src/ -I@top_srcdir@/src/cudd -I@top_srcdir@/src/ppddl \
-		-I@top_srcdir@/src/heuristics -I@top_srcdir@/src/lug -I@top_srcdir@/src/search 
+		-I@top_srcdir@/src/heuristics -I@top_srcdir@/src/lug -I@top_srcdir@/src/search \
+		-I@top_srcdir@/src/counterexample
 
 
 #libsimulator_la_LDFLAGS = -L../cudd -lcudd -lcudd_util -ldddmp -lepd -lst -lmtr -lm -lfl

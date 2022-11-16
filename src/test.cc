@@ -214,7 +214,7 @@ int main(int argc, char const *argv[])
 		gStartTime = clock();
 		randomGen = new randomGenerator(100000); // use a million random nums
 
-/*解析domain、problem文件---> 加载信息*/
+						/*解析domain、problem文件---> 加载信息*/
         if ((read_file(argv[1]) && (Problem::begin()) != (Problem::end())) || read_file(argv[2]))
 			cout << "done Parsing\n==================================" << endl;
 		else
@@ -222,13 +222,18 @@ int main(int argc, char const *argv[])
 			cout << "Parse Error" << endl;
 			exit(0);
 		}
-/*实例化problem*/
+						/*实例化problem*/
         try
         {
             clock_t groundingStartTime = clock();
-/*获取domain*/
+						/*获取domain*/
             my_problem = (*(Problem::begin())).second;
 
+/*==================重大问题========================*/
+/**
+ * 由于solve_problem中调用collectInit,其将初始状态b_initial_state选定为了一个随机的可能的初始状态 
+ * 不知道为何出现了Segmentation fault错误，是因为不能针对单个初始状态进行规划吗？？
+*/
             solve_problem(*my_problem, 1.0, 0.0);
             printBDD(b_initial_state);
             cout << "Grounding/Instantiation Time: " << ((float)(clock() - groundingStartTime) / CLOCKS_PER_SEC) << endl;
@@ -237,7 +242,7 @@ int main(int argc, char const *argv[])
             if ((*my_problem).goal_cnf())
                 bdd_goal_cnf(&goal_cnf);
 
-/*处理非确定性*/
+						/*处理非确定性*/
 			if (my_problem->domain().requirements.non_deterministic)
 			{
 				std::cout << "nondet goal\n";
@@ -270,7 +275,7 @@ int main(int argc, char const *argv[])
             std::cerr << "main: " << e << '\n';
             exit(0);
         }
-/*输出实例化后得到的actions、events、propositions的数量*/
+					/*输出实例化后得到的actions、events、propositions的数量*/
         cout << "#ACTIONS = " << num_alt_acts << endl;
 		cout << "#EVENTS = " << event_preconds.size() << endl;
 		cout << "#PROPOSITIONS = " << num_alt_facts << endl;
@@ -313,7 +318,7 @@ int main(int argc, char const *argv[])
 		}
 		
 
-/*设置搜索类型*/
+					/*设置搜索类型*/
         if (step_search != NULL)//如果参数使用了step_search的子类
 		{
 			if (search == NULL)
@@ -323,14 +328,14 @@ int main(int argc, char const *argv[])
 			step_search = NULL;
 		}
 
-/*若未制定搜索算法，则默认强制爬山算法*/
+					/*若未制定搜索算法，则默认强制爬山算法*/
         if (search == NULL)
 		{
 			std::cout << "using EHC() algorithm\n";
 			search = new EHC();
 		}
 
-// 初始化动作个数，状态和目标状态
+					// 初始化动作个数，状态和目标状态
         search->init(num_alt_acts, b_initial_state, b_goal_state);
 /*------是否每一次b_initial_state更新，search都需要重新初始化------*/
 
@@ -364,9 +369,7 @@ int main(int argc, char const *argv[])
     }
 }
 
-/**
- * 创建当前和后继状态变量的Cube，设置映射关系
- */
+//创建当前和后继状态变量的Cube，设置映射关系
 void set_cubes()
 {
 	// 非确定
