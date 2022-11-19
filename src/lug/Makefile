@@ -353,7 +353,8 @@ exclusions.cc     memory.cc           utilities.cc \
 exclusions.h       memory.h            utilities.h 
 
 INCLUDES = -I. -I../../src/ -I../../src/cudd -I../../src/ppddl \
-		-I../../src/heuristics -I../../src/lug -I../../src/search
+		-I../../src/heuristics -I../../src/lug -I../../src/search \
+		-I../../src/counterexample
 
 liblug_la_LDFLAGS = -no-undefined
 liblug_ladir = .

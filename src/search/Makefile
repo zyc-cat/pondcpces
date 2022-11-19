@@ -360,7 +360,8 @@ libsearch_la_SOURCES = alao_star.cc alao_star.h anytime_search.cc anytime_search
 			moastar.cc moastar.h moastar_heuristics.cc moastar_heuristics.h
 
 INCLUDES = -I. -I../../src/ -I../../src/cudd -I../../src/ppddl \
-		-I../../src/heuristics -I../../src/lug -I../../src/search
+		-I../../src/heuristics -I../../src/lug -I../../src/search \
+		-I../../src/counterexample
 
 libsearch_ladir = .
 all: all-am

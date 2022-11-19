@@ -375,7 +375,8 @@ libppddl_la_SOURCES = client.cc client.h strxml.cc strxml.h \
                     states.h tokenizer.ll mtbdd.cc mtbdd.h parser.yy observations.cc observations.h
 
 INCLUDES = -I. -I../../src/ -I../../src/cudd -I../../src/ppddl \
-		-I../../src/heuristics -I../../src/lug -I../../src/search
+		-I../../src/heuristics -I../../src/lug -I../../src/search \
+		-I../../src/counterexample
 
 libppddl_la_LDFLAGS = -no-undefined
 libppddl_ladir = .

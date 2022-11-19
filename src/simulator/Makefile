@@ -342,7 +342,8 @@ top_srcdir = ../..
 lib_LTLIBRARIES = libsimulator.la
 libsimulator_la_SOURCES = client.cc  client.h  monitor.cc  monitor.h  server.cc  server.h
 INCLUDES = -I. -I../../src/ -I../../src/cudd -I../../src/ppddl \
-		-I../../src/heuristics -I../../src/lug -I../../src/search 
+		-I../../src/heuristics -I../../src/lug -I../../src/search \
+		-I../../src/counterexample
 
 libsimulator_ladir = .
 all: all-am

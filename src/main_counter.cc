@@ -428,6 +428,9 @@ int main(int argc, char *argv[])
 		 * 
 		*/
 		std::vector<const Action *> candidateplan;
+		search->init(num_alt_acts, b_initial_state, b_goal_state);
+		cout << "初始化candidateplan" << endl;
+		search->search();
 		/*计算初始的candidateplan*/
 		// candidateplan = search->search();
 

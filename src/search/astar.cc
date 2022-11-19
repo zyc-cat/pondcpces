@@ -51,7 +51,17 @@ bool AStar::step(){
 			printf("goal BDD is :");
 			printBDD(next->dd);
 			cout << "Found branch!\n";
-			printBestPlan();//输出最佳方案
+			// printBestPlan();//输出最佳方案
+			// zyc11.19
+			planlist(candidateplan);
+			std::cout << "successfully found candidateplan" << endl;
+			/*下面在个部分没有输出--> 是因为candidateplan传递给他的时候已经被销毁失效了吗*/
+			/*试一下将变量放在step_search中*/
+			for (int i = 0; i < candidateplan.size(); i++)
+			{
+				candidateplan[i]->print(std::cout, my_problem->terms());
+				std::cout << "\n";
+			}
 		}
 
 		return false;// 返回false停止搜索
@@ -295,4 +305,29 @@ void AStar::printBestPlan()
 		std::cout << "\n";
 	}
 	std::cout << "Plan Length is: " << i << std::endl;
+}
+
+void AStar::planlist(std::vector<const Action*> &candplan){
+	ActionNode *actNode;
+	StateNode *stateNode = next;
+	std::stack<ActionNode *> plan;
+	while (next->dd != start->dd)
+	{
+		if(next->BestPrevAction == NULL)
+		{
+			std::cout << "Plan abstract error\n"
+					  << std::flush;
+			abort();
+		}
+		plan.push(next->BestPrevAction);
+		next = next->BestPrevAction->PrevState;
+	}
+	// 将栈里的动作ActioNode转化到vector中的Action
+	while(!plan.empty())
+	{
+		actNode = plan.top();
+		plan.pop();
+		candplan.push_back(actNode->act);
+		std::cout << "successfully placed" << endl;
+	}
 }

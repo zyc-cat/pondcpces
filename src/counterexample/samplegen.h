@@ -11,7 +11,7 @@ public:
     // ~samplegen();
     // bool refineCPCESSample(std::vector<const Action*> candidateplan);
 
-    StateFormula& computeSingleCounterExample(std::vector<const Action *> candidateplan);
+    StateFormula& computeSingleCounterExample(std::vector<const Action*> &candplan);
 };
 
 #endif

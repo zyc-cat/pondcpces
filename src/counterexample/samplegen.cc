@@ -5,10 +5,10 @@ using namespace std;
 
 
 
-StateFormula& samplegen::computeSingleCounterExample(std::vector<const Action *> candidateplan){
+StateFormula& samplegen::computeSingleCounterExample(std::vector<const Action*> &candplan){
     try
     {
-        if (!candidateplan.empty())
+        if (!candplan.empty())
         {
             cout << "可以正常运行" << endl;
             return *tmp_counterexample;

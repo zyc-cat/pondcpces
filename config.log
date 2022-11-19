@@ -240,11 +240,11 @@ configure:5071: checking lex output file root
 configure:5085: result: lex.yy
 configure:5090: checking lex library
 configure:5104: gcc -o conftest -g -O2   conftest.c   >&5
-/usr/bin/ld: /tmp/ccrVPxq0.o: in function `input':
+/usr/bin/ld: /tmp/ccEBD4df.o: in function `input':
 /home/nero/Desktop/Experiment/pondcounter/lex.yy.c:1179: undefined reference to `yywrap'
-/usr/bin/ld: /tmp/ccrVPxq0.o: in function `yylex':
+/usr/bin/ld: /tmp/ccEBD4df.o: in function `yylex':
 /home/nero/Desktop/Experiment/pondcounter/lex.yy.c:870: undefined reference to `yywrap'
-/usr/bin/ld: /tmp/ccrVPxq0.o: in function `main':
+/usr/bin/ld: /tmp/ccEBD4df.o: in function `main':
 /home/nero/Desktop/Experiment/pondcounter/conftest.l:16: undefined reference to `yywrap'
 collect2: error: ld returned 1 exit status
 configure:5104: $? = 1

@@ -25,11 +25,14 @@ public:
 
 	void printBestPlan();
 
+	void planlist(std::vector<const Action*> &candplan);
+
 protected:
 	std::set<StateNode*> closed;
 	std::set<StateNode*, StateComparator> open;// 通过启发式函数进行排序
 	StateNode* next;// 下一个处理结点
 	bool first;
+	std::vector<const Action*> candidateplan;
 };
 
 #endif  // ASTAR_H

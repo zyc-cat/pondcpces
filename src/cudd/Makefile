@@ -346,7 +346,8 @@ libdd_la_SOURCES = dd.cc dd.h cudd.h
 
 #INCLUDES = -I../../src -I. -I.. -I../lug
 INCLUDES = -I. -I../../src/ -I../../src/cudd -I../../src/ppddl \
-		-I../../src/heuristics -I../../src/lug -I../../src/search
+		-I../../src/heuristics -I../../src/lug -I../../src/search  \
+		-I../../src/counterexample
 
 libdd_la_LDFLAGS = -L. 
 libdd_ladir = .

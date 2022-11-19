@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 SUBDIRS = ppddl search heuristics lug cudd simulator rddlclient
 # create three executable program
-bin_PROGRAMS = pond ppddl2st lug2txt pondbeta simptest counter
+bin_PROGRAMS = pond ppddl2st lug2txt pondbeta simptest #counter
 
 #--------------------------------------------------------------
 # The first one target
@@ -92,16 +92,16 @@ simptest_LDFLAGS = -no-undefined --disable-shared -L/usr/local/lib
 #--------------------------------------------------------------
 # The counter target
 
-counter_SOURCES = main_counter.cc globals.cc globals.h
+# counter_SOURCES = main_counter.cc globals.cc globals.h
 
-INCLUDES =  -I. -I@top_srcdir@/src/ -I@top_srcdir@/src/cudd -I@top_srcdir@/src/ppddl \
-            -I@top_srcdir@/src/heuristics -I@top_srcdir@/src/lug -I@top_srcdir@/src/counterexample \
-            -I@top_srcdir@/src/search -I/home/labrea6/bryce/include
+# INCLUDES =  -I. -I@top_srcdir@/src/ -I@top_srcdir@/src/cudd -I@top_srcdir@/src/ppddl \
+#             -I@top_srcdir@/src/heuristics -I@top_srcdir@/src/lug -I@top_srcdir@/src/counterexample \
+#             -I@top_srcdir@/src/search -I/home/labrea6/bryce/include
 
-# define the dynamic link
-counter_LDADD = ppddl/libppddl.la search/libsearch.la heuristics/libheuristics.la lug/liblug.la \
-             cudd/libdd.la simulator/libsimulator.la ${CUDD_HOME}/cudd/libcudd.a \
-             ${CUDD_HOME}/dddmp/libdddmp.a ${CUDD_HOME}/epd/libepd.a ${CUDD_HOME}/mtr/libmtr.a \
-             ${CUDD_HOME}/st/libst.a ${CUDD_HOME}/util/libutil.a 
+# # define the dynamic link
+# counter_LDADD = ppddl/libppddl.la search/libsearch.la heuristics/libheuristics.la lug/liblug.la \
+#              cudd/libdd.la simulator/libsimulator.la ${CUDD_HOME}/cudd/libcudd.a \
+#              ${CUDD_HOME}/dddmp/libdddmp.a ${CUDD_HOME}/epd/libepd.a ${CUDD_HOME}/mtr/libmtr.a \
+#              ${CUDD_HOME}/st/libst.a ${CUDD_HOME}/util/libutil.a 
  
-counter_LDFLAGS = -no-undefined --disable-shared -L/usr/local/lib 
+# counter_LDFLAGS = -no-undefined --disable-shared -L/usr/local/lib 

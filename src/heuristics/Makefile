@@ -344,7 +344,8 @@ top_srcdir = ../..
 lib_LTLIBRARIES = libheuristics.la
 libheuristics_la_SOURCES = lug.cc  lug.h  relaxedPlan.cc  relaxedPlan.h  statistical.cc  statistical.h
 INCLUDES = -I. -I../../src/ -I../../src/cudd -I../../src/ppddl \
-		-I../../src/heuristics -I../../src/lug -I../../src/search
+		-I../../src/heuristics -I../../src/lug -I../../src/search  \
+		-I../../src/counterexample
 
 libheuristics_la_LDFLAGS = -no-undefined
 libheuristics_ladir = .
