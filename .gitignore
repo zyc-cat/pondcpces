@@ -6,3 +6,6 @@ src/heuristics/*.o
 src/lug/*.o
 src/ppddl/*.o
 src/search/*.o
+src/search/.libs
+src/pondbeta
+src/pond

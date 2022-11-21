@@ -55,11 +55,11 @@ bool AStar::step(){
 			// zyc11.19
 			planlist(candidateplan);
 			std::cout << "successfully found candidateplan" << endl;
-			for (int i = 0; i < candidateplan.size(); i++)
-			{
-				candidateplan[i]->print(std::cout, my_problem->terms());
-				std::cout << "\n";
-			}
+			// for (int i = 0; i < candidateplan.size(); i++)
+			// {
+			// 	candidateplan[i]->print(std::cout, my_problem->terms());
+			// 	std::cout << "\n";
+			// }
 		}
 
 		return false;// 返回false停止搜索
@@ -309,6 +309,9 @@ void AStar::planlist(std::vector<const Action*> &candplan){
 	ActionNode *actNode;
 	StateNode *stateNode = next;
 	std::stack<ActionNode *> plan;
+	int i = 0;
+	std::cout << "start to print plan\n"
+			  << std::flush;
 	while (next->dd != start->dd)
 	{
 		if(next->BestPrevAction == NULL)
@@ -317,6 +320,7 @@ void AStar::planlist(std::vector<const Action*> &candplan){
 					  << std::flush;
 			abort();
 		}
+		i++;
 		plan.push(next->BestPrevAction);
 		next = next->BestPrevAction->PrevState;
 	}
@@ -325,7 +329,8 @@ void AStar::planlist(std::vector<const Action*> &candplan){
 	{
 		actNode = plan.top();
 		plan.pop();
+		actNode->act->print(std::cout, my_problem->terms());
+		std::cout << "\n";
 		candplan.push_back(actNode->act);
-		std::cout << "successfully placed" << endl;
 	}
 }
