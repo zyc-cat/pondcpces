@@ -185,7 +185,10 @@ mtbdd.lo: mtbdd.cc /usr/include/stdc-predef.h mtbdd.h \
  ../../src/ppddl/problems.h ../../src/ppddl/strxml.h \
  ../../src/ppddl/parser.h ../../src/search/lao_wrapper.h \
  ../../src/search/graph.h ../../src/search/dbn.h \
- /usr/lib/gcc/x86_64-linux-gnu/5/include/float.h ../../src/search/solve.h
+ /usr/lib/gcc/x86_64-linux-gnu/5/include/float.h ../../src/search/solve.h \
+ ../../src/lug/graph_wrapper.h ../../src/lug/ipp.h \
+ ../../src/heuristics/relaxedPlan.h ../../src/lug/labelledElement.h \
+ ../../src/lug/ipp.h
 
 /usr/include/stdc-predef.h:
 
@@ -732,3 +735,13 @@ effects.h:
 /usr/lib/gcc/x86_64-linux-gnu/5/include/float.h:
 
 ../../src/search/solve.h:
+
+../../src/lug/graph_wrapper.h:
+
+../../src/lug/ipp.h:
+
+../../src/heuristics/relaxedPlan.h:
+
+../../src/lug/labelledElement.h:
+
+../../src/lug/ipp.h:
