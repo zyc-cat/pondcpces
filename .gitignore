@@ -40,6 +40,7 @@ src/search/.libs/*
 src/search/.deps/*
 src/search/*.lo
 src/search/*.la
+src/search/Makefile.in
 src/search/Makefile
 src/cudd/*.o
 src/cudd/*.la
