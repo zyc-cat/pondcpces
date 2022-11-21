@@ -2,3 +2,7 @@ config.log
 autom4te.cache/requests
 src/*.o
 src/*.a
+src/heuristics/*.o
+src/lug/*.o
+src/ppddl/*.o
+src/search/*.o
