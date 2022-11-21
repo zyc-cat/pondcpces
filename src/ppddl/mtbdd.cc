@@ -2775,7 +2775,7 @@ void collectInit(const Problem* problem){
 	 * Construct an ADD representing initial states.
 	 */
 
-	list<DdNode *>* worlds; // zyc 11.14 : cubes需不需要重新再定义
+	list<DdNode *> worlds;
 	problem->init_formula().print(std::cout, problem->domain().predicates(),
 								  problem->domain().functions(),
 								  problem->terms());
@@ -2787,8 +2787,8 @@ void collectInit(const Problem* problem){
 
 		// zyc 2022.11.14: 随即抽取单个初始状态转化为BDD，赋给tmp
 		DdNode* tmp1 = formula_bdd(problem->init_formula());// 根据初始状态公式创建BDD
-		pickKRandomWorlds(tmp1, 1, worlds);
-		DdNode *tmp = worlds->front();
+		pickKRandomWorlds(tmp1, 1, &worlds);
+		DdNode *tmp = worlds.front();
 
 		Cudd_Ref(tmp);
 		

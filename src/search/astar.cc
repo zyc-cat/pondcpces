@@ -55,8 +55,6 @@ bool AStar::step(){
 			// zyc11.19
 			planlist(candidateplan);
 			std::cout << "successfully found candidateplan" << endl;
-			/*下面在个部分没有输出--> 是因为candidateplan传递给他的时候已经被销毁失效了吗*/
-			/*试一下将变量放在step_search中*/
 			for (int i = 0; i < candidateplan.size(); i++)
 			{
 				candidateplan[i]->print(std::cout, my_problem->terms());

@@ -229,11 +229,7 @@ int main(int argc, char const *argv[])
 						/*获取domain*/
             my_problem = (*(Problem::begin())).second;
 
-/*==================重大问题========================*/
-/**
- * 由于solve_problem中调用collectInit,其将初始状态b_initial_state选定为了一个随机的可能的初始状态 
- * 不知道为何出现了Segmentation fault错误，是因为不能针对单个初始状态进行规划吗？？
-*/
+
             solve_problem(*my_problem, 1.0, 0.0);
             printBDD(b_initial_state);
             cout << "Grounding/Instantiation Time: " << ((float)(clock() - groundingStartTime) / CLOCKS_PER_SEC) << endl;

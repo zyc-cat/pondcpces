@@ -427,17 +427,13 @@ int main(int argc, char *argv[])
 		 * 			合并反例时,先将反例转化成DdNode*,与当前初始状态DdNode*合并(Cudd_bddOr)
 		 * 
 		*/
-		std::vector<const Action *> candidateplan;
 		search->init(num_alt_acts, b_initial_state, b_goal_state);
 		cout << "初始化candidateplan" << endl;
 		search->search();
-		/*计算初始的candidateplan*/
-		// candidateplan = search->search();
 
 		int iteration = 0; // 循环次数
 		samplegen sgen;  // 样本生成器--> !!!
-		// undefined reference to `samplegen::~samplegen()` && undefined reference to `samplegen::samplegen()'
-		StateFormula *counterexample;  // 反例  
+		StateFormula* counterexample;  // 反例  
 		for (;;)
 		{
 			++iteration;
@@ -455,16 +451,16 @@ int main(int argc, char *argv[])
 			 * 1. 将反例StateFormula *转化为Ddnode *
 			 * 2. Cudd_bddOr(manager, DdNode*, DdNode*)合并反例和当前初始状态
 			*/
-			DdNode *b_candidateplan = formula_bdd(*counterexample,false);
-			b_initial_state = Cudd_bddOr(manager, b_candidateplan, b_initial_state);
+			DdNode *b_counterexample = formula_bdd(*counterexample,false);
+			b_initial_state = Cudd_bddOr(manager, b_counterexample, b_initial_state);
 
 			{  // planning
 				// 初始化
 				search->init(num_alt_acts, b_initial_state, b_goal_state);
 				cout << "starting search" << endl;
 				std::cout << "call search()\n";
-				search->search();
-// zyc11.11: 将规划结果传递给candidateplan
+				search->search();  // 将规划结果传递给candidateplan
+
 				
 				if (allowed_time > 0)
 				{
@@ -479,7 +475,7 @@ int main(int argc, char *argv[])
 
 				if (candidateplan.empty())
 				{
-					cout << "The Problem is Unsolvable" << endl;
+					cout << "The Problem is Unsolvable Or Some other error" << endl;
 					return 0;
 				}
 
