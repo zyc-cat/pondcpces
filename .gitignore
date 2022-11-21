@@ -6,6 +6,8 @@ compile
 config.guess
 config.status
 config.sub
+Makefile.in
+ylwrap
 src/*.o
 src/*.a
 src/*.in
@@ -39,6 +41,7 @@ src/search/.deps/*
 src/search/*.lo
 src/search/*.la
 src/search/Makefile
+src/cudd/*.o
 src/cudd/*.la
 src/cudd/*.in
 src/cudd/*.lo
