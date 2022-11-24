@@ -25,7 +25,7 @@ AC_CHECK_HEADERS([stddef.h stdlib.h string.h strings.h sstream  ])
 
 # Set the language.
 AC_LANG(C++)
-AC_CONFIG_FILES(Makefile src/Makefile src/ppddl/Makefile src/search/Makefile src/cudd/Makefile src/lug/Makefile src/heuristics/Makefile src/simulator/Makefile) 
+AC_CONFIG_FILES(Makefile src/Makefile src/ppddl/Makefile src/search/Makefile src/cudd/Makefile src/lug/Makefile src/heuristics/Makefile src/simulator/Makefile src/validate/Makefile) 
 AC_OUTPUT
 
 AC_DEFINE(SIZEOF_LONG, 8)

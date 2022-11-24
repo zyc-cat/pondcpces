@@ -2810,7 +2810,7 @@ void collectInit(const Problem* problem){
 			}
 		}
 		// 记录初始状态集合，这里为何需要合取所有状态变量的否定？
-		b_initial_state = tmp;  // zyc 11.4 此时的tmp是随即取的可能的一个初始状态
+		b_initial_state = tmp;  // zyc 11.4 此时的tmp是随机取的可能的一个初始状态
 		Cudd_Ref(b_initial_state);
 		Cudd_RecursiveDeref(manager, tmp);
 		printBDD(b_initial_state);

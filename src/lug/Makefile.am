@@ -8,9 +8,9 @@ correlation.h       labelledElement.h   sample_size.h \
 exclusions.cc     memory.cc           utilities.cc \
 exclusions.h       memory.h            utilities.h 
 
-INCLUDES =  -I. -I@top_srcdir@/src/ -I@top_srcdir@/src/cudd -I@top_srcdir@/src/ppddl \
-		-I@top_srcdir@/src/heuristics -I@top_srcdir@/src/lug -I@top_srcdir@/src/search \
-		-I@top_srcdir@/src/counterexample
+INCLUDES =  -I. -I@top_srcdir@/src/ -I@top_srcdir@/src/validate -I@top_srcdir@/src/cudd \
+		-I@top_srcdir@/src/ppddl -I@top_srcdir@/src/heuristics -I@top_srcdir@/src/lug \
+		-I@top_srcdir@/src/search
 
 
 liblug_la_LDFLAGS = -no-undefined

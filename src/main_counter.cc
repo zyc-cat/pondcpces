@@ -58,7 +58,10 @@ void IPC_write();
 #include "sample_size.h"
 
 /* 反例 */
-#include "samplegen.h"
+// #include "samplegen.h"
+// #include "planval.h"
+#include "planvalidate.h"
+
 
 #define OUTPUT_OVERHEAD (10 + 5) /* the number of milliseconds it takes to receive (10) and process (5) the signal */
 
@@ -422,37 +425,44 @@ int main(int argc, char *argv[])
 
 		/**
 		 * (1) candidateplan(候选规划)： std::vector<const Action*>
-		 * (2) counterexample(反例)： StateFormula*
+		 * (2) counterexample(反例)： StateFormula*  --> 验证规划可行性改为DdNode*
 		 * (3) 当前初始状态：
-		 * 			合并反例时,先将反例转化成DdNode*,与当前初始状态DdNode*合并(Cudd_bddOr)
+		 * 			合并反例与当前初始状态 -->DdNode*合并(Cudd_bddOr)
 		 * 
 		*/
-		search->init(num_alt_acts, b_initial_state, b_goal_state);
+		search->init(num_alt_acts, b_initial_state, b_goal_state);  // 单个初始状态
 		cout << "初始化candidateplan" << endl;
-		search->search();
+		search->search();  // -> 获取到针对单个初始状态的candidateplan
 
 		int iteration = 0; // 循环次数
-		samplegen sgen;  // 样本生成器--> !!!
-		StateFormula* counterexample;  // 反例  
+		// samplegen sgen;  // 样本生成器--> !!!
+		// StateFormula* counterexample;  // 反例
+		Planvalidate p;
 		for (;;)
 		{
 			++iteration;
 			{ // sampling
-				counterexample = &sgen.computeSingleCounterExample(candidateplan);  // --> !!!
-// undefined reference to `samplegen::computeSingleCounterExample(std::vector<Action const*, std::allocator<Action const*> >)'
-				if (NULL == counterexample)
-				{
+				if (!p.planvalidate(my_problem,candidateplan,counterexample))	{
+					// 没有找到反例
 					outputPlan();
 					break; // 结束for(;;)循环
-				}				
+				}
+				// counterexample = &sgen.computeSingleCounterExample(candidateplan);  // --> !!!
+				// if (NULL == counterexample)
+				// {
+				// 	outputPlan();
+				// 	break; // 结束for(;;)循环
+				// }				
 			}
 
+			// 否则将反例counterexample合并到b_initial_state初始状态中
+			b_initial_state = Cudd_bddOr(manager, counterexample, b_initial_state);  // counterexample重定义为DdNode*，直接合并
 			/**
 			 * 1. 将反例StateFormula *转化为Ddnode *
 			 * 2. Cudd_bddOr(manager, DdNode*, DdNode*)合并反例和当前初始状态
 			*/
-			DdNode *b_counterexample = formula_bdd(*counterexample,false);
-			b_initial_state = Cudd_bddOr(manager, b_counterexample, b_initial_state);
+			// DdNode *b_counterexample = formula_bdd(*counterexample,false);
+			// b_initial_state = Cudd_bddOr(manager, b_counterexample, b_initial_state);
 
 			{  // planning
 				// 初始化
@@ -480,11 +490,8 @@ int main(int argc, char *argv[])
 				}
 
 				
-				
 			}
 		}
-
-
 
 		/*从下面这一部分开始修改代码*/
 		// 初始化动作个数，状态和目标状态
@@ -518,13 +525,6 @@ int main(int argc, char *argv[])
 	{
 		cout << "caught something: " << e.what() << endl;
 	}
-}
-
-// 将反例添加到初始状态中，并获得样本
-std::vector<const StateFormula *> addcetostate(std::vector<const StateFormula *> init_state_, 
-												StateFormula *counterexample_){
-	init_state_.push_back(counterexample_);
-	return init_state_;
 }
 
 // 创建当前和后继状态变量的Cube，设置映射关系

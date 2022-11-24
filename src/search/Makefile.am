@@ -8,11 +8,11 @@ libsearch_la_SOURCES = alao_star.cc alao_star.h anytime_search.cc anytime_search
 			sampled_search.cc sampled_search.h search.cc search.h solve.cc \
 			solve.h step_search.cc step_search.h vi.cc vi.h rtdp.h rtdp.cc molao.cc molao.h \
 			mobackup.cc mobackup.h movalfn.cc movalfn.h dbn.cc dbn.h \
-			moastar.cc moastar.h moastar_heuristics.cc moastar_heuristics.h
+			moastar.cc moastar.h moastar_heuristics.cc moastar_heuristics.h planvalidate.cc planvalidate.h
 
-INCLUDES =  -I. -I@top_srcdir@/src/ -I@top_srcdir@/src/cudd -I@top_srcdir@/src/ppddl \
-		-I@top_srcdir@/src/heuristics -I@top_srcdir@/src/lug -I@top_srcdir@/src/search \
-		-I@top_srcdir@/src/counterexample
+INCLUDES =  -I. -I@top_srcdir@/src/ -I@top_srcdir@/src/validate -I@top_srcdir@/src/cudd \
+		-I@top_srcdir@/src/ppddl -I@top_srcdir@/src/heuristics -I@top_srcdir@/src/lug \
+		-I@top_srcdir@/src/search 
 
 
 #libsearch_la_LDFLAGS = -L../cudd -lcudd -lcudd_util -ldddmp -lepd -lst -lmtr -lm -lfl 

@@ -333,4 +333,5 @@ void AStar::planlist(std::vector<const Action*> &candplan){
 		std::cout << "\n";
 		candplan.push_back(actNode->act);
 	}
+	std::cout << "Plan Length is: " << i << std::endl;
 }
