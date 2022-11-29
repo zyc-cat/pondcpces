@@ -56,4 +56,11 @@ src/simulator/*.o
 src/simulator/*.lo
 src/simulator/*.la
 src/simulator/Makefile
+src/validate/.libs/*
+src/validate/.deps/*
+src/validate/*.in
+src/validate/*.o
+src/validate/*.lo
+src/validate/*.la
+src/validate/Makefile
 src/rddlclient/*.o

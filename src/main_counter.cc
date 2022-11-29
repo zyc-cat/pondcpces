@@ -58,8 +58,6 @@ void IPC_write();
 #include "sample_size.h"
 
 /* 反例 */
-// #include "samplegen.h"
-// #include "planval.h"
 #include "planvalidate.h"
 
 
@@ -433,17 +431,18 @@ int main(int argc, char *argv[])
 		search->init(num_alt_acts, b_initial_state, b_goal_state);  // 单个初始状态
 		cout << "初始化candidateplan" << endl;
 		search->search();  // -> 获取到针对单个初始状态的candidateplan
+		std::cout << "初始化candidateplan结束" << std::endl;
 
 		int iteration = 0; // 循环次数
-		// samplegen sgen;  // 样本生成器--> !!!
-		// StateFormula* counterexample;  // 反例
 		Planvalidate p;
 		for (;;)
 		{
 			++iteration;
+			std::cout << "进入规划和采样循环" << std::endl;
 			{ // sampling
-				if (!p.planvalidate(my_problem,candidateplan,counterexample))	{
-					// 没有找到反例
+				std::cout << "开始采样" << std::endl;
+				if (!p.planvalidate(my_problem, candidateplan, counterexample))
+				{
 					outputPlan();
 					break; // 结束for(;;)循环
 				}
@@ -452,11 +451,12 @@ int main(int argc, char *argv[])
 				// {
 				// 	outputPlan();
 				// 	break; // 结束for(;;)循环
-				// }				
+				// }
 			}
 
 			// 否则将反例counterexample合并到b_initial_state初始状态中
-			b_initial_state = Cudd_bddOr(manager, counterexample, b_initial_state);  // counterexample重定义为DdNode*，直接合并
+			// counterexample重定义为DdNode*，直接合并
+			b_initial_state = Cudd_bddOr(manager, counterexample, b_initial_state); 
 			/**
 			 * 1. 将反例StateFormula *转化为Ddnode *
 			 * 2. Cudd_bddOr(manager, DdNode*, DdNode*)合并反例和当前初始状态
@@ -466,10 +466,12 @@ int main(int argc, char *argv[])
 
 			{  // planning
 				// 初始化
+				std::cout << "开始规划" << std::endl;
 				search->init(num_alt_acts, b_initial_state, b_goal_state);
 				cout << "starting search" << endl;
 				std::cout << "call search()\n";
 				search->search();  // 将规划结果传递给candidateplan
+				std::cout << "本次规划结束" << std::endl;
 
 				
 				if (allowed_time > 0)
@@ -491,6 +493,7 @@ int main(int argc, char *argv[])
 
 				
 			}
+			std::cout << "循环次数 = " << iteration << std::endl;
 		}
 
 		/*从下面这一部分开始修改代码*/

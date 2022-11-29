@@ -8,10 +8,10 @@ class Planval{
 public:
     Planval();
 
-    bool planvalidate1(const Problem* problem, std::vector<const Action*> &candplan, DdNode* ce);
+    bool planval(const Problem* problem, std::vector<const Action*> &candplan, StateNode* ce);
 
 protected:
-    StateNode *node; // 当前结点
+    StateNode *next; // 当前结点
 };
 
 #endif  // PLANVAL_H
