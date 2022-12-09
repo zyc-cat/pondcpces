@@ -64,3 +64,10 @@ src/validate/*.lo
 src/validate/*.la
 src/validate/Makefile
 src/rddlclient/*.o
+src/pond
+src/lug2txt
+src/pondbeta
+test/pond
+src/ppddl2st
+src/simptest
+test/*.pddl

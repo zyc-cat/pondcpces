@@ -30,7 +30,7 @@
 (:action down-y
                    :parameters ()
                   :precondition ()
-                   :effect (and (when (y-pos p0) (and (y-pos p0) (not (y-pos p1))))
+                   :effect (and (when (and(y-pos p0)) (and (y-pos p0) (not (y-pos p1))))
                     (when (and (y-pos p1)) (and (y-pos p0) (not (y-pos p1))))
 ))
 (:action up-z

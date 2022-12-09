@@ -437,26 +437,69 @@ int main(int argc, char *argv[])
 		Planvalidate p;
 		for (;;)
 		{
+			// ++iteration;
+			// std::cout << "进入规划和采样循环" << std::endl;
+			//  // sampling
+			// std::cout << "开始采样" << std::endl;
+			// if (p.planvalidate(my_problem, candidateplan, counterexample))
+			// {
+			// 	// 此段内表示有counterexample
+			// 	std::cout << "采样成功(初始化初始状态)" <<std::endl;
+			// 	// 将反例counterexample合并到b_initial_state初始状态中
+			// 	std::cout << "看看如果找到了反例, 是否能正确打印counterexample" << std::endl;
+			// 	printBDD(&counterexample);  // 打印出来是个空指针 空指针错误Segmentation Fault
+			// 	b_initial_state = Cudd_bddOr(manager, &counterexample, b_initial_state);
+			// 	// planning
+			// 	// 初始化
+			// 	std::cout << "开始规划" << std::endl;
+			// 	search->init(num_alt_acts, b_initial_state, b_goal_state);
+			// 	cout << "starting search" << endl;
+			// 	std::cout << "call search()\n";
+			// 	search->search();  // 将规划结果传递给candidateplan
+			// 	std::cout << "本次规划结束" << std::endl;	
+			// 	if (allowed_time > 0)
+			// 	{
+			// 		// disable the sender
+			// 		timer.it_value.tv_sec = 0;
+			// 		timer.it_value.tv_usec = 0;
+			// 		setitimer(ITIMER_REAL, &timer, 0);
+			// 		// before the receiver
+			// 		signal(SIGALRM, SIG_DFL);
+			// 	}
+			// }
+			// if (candidateplan.empty())
+			// {
+			// 	cout << "The Problem is Unsolvable Or Some other error" << endl;
+			// 	return 0;
+			// }	
+			// // 否则，输出输出当前规划相关信息
+			// std::cout << "输出规划相关信息" << std::endl;
+			// outputPlan();
+			// break; // 结束for(;;)循环
+			//  * 1. 将反例StateFormula *转化为Ddnode *
+			//  * 2. Cudd_bddOr(manager, DdNode*, DdNode*)合并反例和当前初始状态
+			// DdNode *b_counterexample = formula_bdd(*counterexample,false);
+			// b_initial_state = Cudd_bddOr(manager, b_counterexample, b_initial_state);
+
+/*=============================================================================================================*/
 			++iteration;
 			std::cout << "进入规划和采样循环" << std::endl;
 			{ // sampling
 				std::cout << "开始采样" << std::endl;
 				if (!p.planvalidate(my_problem, candidateplan, counterexample))
 				{
+					// counterexample在这里本来就是空的
+					std::cout << "输出规划相关信息" << std::endl;
 					outputPlan();
 					break; // 结束for(;;)循环
 				}
-				// counterexample = &sgen.computeSingleCounterExample(candidateplan);  // --> !!!
-				// if (NULL == counterexample)
-				// {
-				// 	outputPlan();
-				// 	break; // 结束for(;;)循环
-				// }
 			}
 
 			// 否则将反例counterexample合并到b_initial_state初始状态中
 			// counterexample重定义为DdNode*，直接合并
-			b_initial_state = Cudd_bddOr(manager, counterexample, b_initial_state); 
+			std::cout << "看看如果找到了反例, 是否能正确打印counterexample" << std::endl;
+			printBDD(counterexample);  // 打印出来是个空指针 空指针错误Segmentation Fault
+			b_initial_state = Cudd_bddOr(manager, counterexample, b_initial_state);  // 出现错误
 			/**
 			 * 1. 将反例StateFormula *转化为Ddnode *
 			 * 2. Cudd_bddOr(manager, DdNode*, DdNode*)合并反例和当前初始状态
@@ -493,8 +536,9 @@ int main(int argc, char *argv[])
 
 				
 			}
-			std::cout << "循环次数 = " << iteration << std::endl;
+			// std::cout << "循环次数 = " << iteration << std::endl;
 		}
+		std::cout << "循环次数 = " << iteration << std::endl;
 
 		/*从下面这一部分开始修改代码*/
 		// 初始化动作个数，状态和目标状态

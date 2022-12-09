@@ -177,8 +177,7 @@ double NUMBER_OF_MGS = 0.0;
 int LUG_LEVEL_WORLDS = 0;
 
 std::vector<const Action*> candidateplan;
-DdNode *counterexample;
-// StateNode *counterexample;
+DdNode* counterexample;
 
 DdNode* b_initial_state=0;
 DdNode* b_goal_state=0; // the bdd of the goal formula or goal rewawrd 
