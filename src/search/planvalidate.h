@@ -8,8 +8,7 @@ class Planvalidate{
 public:
     Planvalidate();
 
-    bool planvalidate(const Problem* problem, std::vector<const Action*> &candplan, DdNode* ce);
-    // bool planvalidate(const Problem* problem, std::vector<const Action*> &candplan, DdNode& ce);
+    bool planvalidate(const Problem* problem, std::vector<const Action*> &candplan, DdNode *&ce);
     
 protected:
     StateNode *next;

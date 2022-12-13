@@ -482,6 +482,7 @@ int main(int argc, char *argv[])
 			// b_initial_state = Cudd_bddOr(manager, b_counterexample, b_initial_state);
 
 /*=============================================================================================================*/
+			
 			++iteration;
 			std::cout << "进入规划和采样循环" << std::endl;
 			{ // sampling
@@ -498,12 +499,23 @@ int main(int argc, char *argv[])
 			// 否则将反例counterexample合并到b_initial_state初始状态中
 			// counterexample重定义为DdNode*，直接合并
 			std::cout << "看看如果找到了反例, 是否能正确打印counterexample" << std::endl;
-			printBDD(counterexample);  // 打印出来是个空指针 空指针错误Segmentation Fault
-			b_initial_state = Cudd_bddOr(manager, counterexample, b_initial_state);  // 出现错误
-			/**
-			 * 1. 将反例StateFormula *转化为Ddnode *
-			 * 2. Cudd_bddOr(manager, DdNode*, DdNode*)合并反例和当前初始状态
-			*/
+			printBDD(counterexample);  // 打印出来是个空指针BDD is null pointer Segmentation Fault
+			
+			// std::cout << "flag:是否正确得到了counterexample" << std::endl;
+			// std::cout << "打印一下candidateplan和b_initial_state,"
+			// 			<< "判断一下candidateplan和b_initial_state是否有问题 " << std::endl;
+			// printBDD(b_initial_state);
+			// for (int i = 0; i < candidateplan.size(); i++)
+			// {
+			// 	candidateplan[i]->print(std::cout, my_problem->terms());
+			// 	std::cout << "\n";
+			// }
+			// std::cout << "打印完毕，两个都没问题" << std::endl;
+			b_initial_state = Cudd_bddOr(manager, counterexample, b_initial_state);
+			std::cout << "当前的初始信念状态:" << std::endl;
+			printBDD(b_initial_state);
+			std::cout << "当前的初始信念状态打印完毕" << std::endl;
+
 			// DdNode *b_counterexample = formula_bdd(*counterexample,false);
 			// b_initial_state = Cudd_bddOr(manager, b_counterexample, b_initial_state);
 
