@@ -401,13 +401,20 @@ int main(int argc, char *argv[])
 
 		int iteration = 0; // 循环次数
 		Planvalidate p;
+		std::cout << "开始采样" << std::endl;
+		// 调用函数initial_states,得到采样集合，并输出
+		p.initial_states(my_problem, init_states);
+		std::cout << "初始状态集合打印完毕" << std::endl;
+		std::cout << "=============================" << std::endl;
 		for (;;)
 		{  // 查找反例
 			++iteration;
 			std::cout << "进入规划和查找反例循环" << std::endl;
 			{ // 
 				std::cout << "开始查找反例" << std::endl;
-				if (!p.planvalidate(my_problem, candidateplan, counterexample))
+				// if (!p.planvalidate(my_problem, candidateplan, counterexample))
+				// 没有进入到下面的语句，那还是planvalidate()判断出问题了
+				if (!p.planvalidate(candidateplan, counterexample))
 				{
 					std::cout << "反例查找结束：" << std::endl;
 					std::cout << "输出规划相关信息" << std::endl;
@@ -422,13 +429,17 @@ int main(int argc, char *argv[])
 				}
 			}
 
-			candidateplan.clear(); // 将当前候选规划置为空，重新进行规划寻找
-			// 但是可能存在bug，比如说无法为当前初始状态找到规划，先试一下
+			// 将候选规划清空，以免每次找到的规划叠加
+			candidateplan.clear(); 
 
 			std::cout << "看是否能正确打印counterexample: " << std::endl;
 			printBDD(counterexample);
-			// 合并counterexample
 			b_initial_state = Cudd_bddOr(manager, counterexample, b_initial_state);
+			std::cout << "合并初始状态成功" <<std::endl;
+
+			// 将反例置为空，以免反例不清空从而使得planvalidate一直为true,从而造成无限循环
+			counterexample = NULL;
+
 			std::cout << "当前的初始信念状态:" << std::endl;
 			printBDD(b_initial_state);
 			std::cout << "当前的初始信念状态打印完毕" << std::endl;
