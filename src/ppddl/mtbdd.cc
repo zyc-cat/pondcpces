@@ -35,13 +35,12 @@
 #include <exception>
 #include <assert.h>
 #include <math.h>
-using namespace std; // zyc 11.14 ,该文件是否可以加using namespace std; -->  list<DdNode *> cubes;
 
 #include "dbn.h"
 #include "lao_wrapper.h"
 #include <float.h>
 #include "solve.h"
-#include "graph_wrapper.h" // zyc 11.14 -> pickKRandomWorlds
+#include "graph_wrapper.h"  // zyc12.27 -> pickKRandomWorlds
 
 extern int gnum_cond_effects;
 /* Verbosity level. */
@@ -228,25 +227,25 @@ static void collect_state_variables(const StateFormula& formula, bool initState,
 			if((!topLevel && initState) ||  !initState){
 				//	std::cout << "new var = " << dynamic_atoms.size() << " " << initState <<std::endl;
 				dynamic_atoms.insert(std::make_pair(state_variables.size(), af));
-				std::cout << "AC::" << std::flush;
-				af->print(std::cout, my_problem->domain().predicates(), my_problem->domain().functions(),
-						  my_problem->terms());
-				printf("\n");
+				// std::cout << "AC::" << std::flush;
+				// af->print(std::cout, my_problem->domain().predicates(), my_problem->domain().functions(),
+				// 		  my_problem->terms());
+				// printf("\n");
 			}
-			else{
-				std::cout << "MISS::" << std::flush;
-				af->print(std::cout, my_problem->domain().predicates(), my_problem->domain().functions(),
-						  my_problem->terms());
-				printf("\n");
-			}
+			// else{
+			// 	std::cout << "MISS::" << std::flush;
+			// 	af->print(std::cout, my_problem->domain().predicates(), my_problem->domain().functions(),
+			// 			  my_problem->terms());
+			// 	printf("\n");
+			// }
 			state_variables.insert(std::make_pair(af, state_variables.size()));
 
 		}
-		else{
-			af->print(std::cout, my_problem->domain().predicates(), my_problem->domain().functions(),
-						  my_problem->terms());
-				printf("has beed added\n");
-		}
+		// else{
+		// 	af->print(std::cout, my_problem->domain().predicates(), my_problem->domain().functions(),
+		// 				  my_problem->terms());
+		// 		printf("has beed added\n");
+		// }
 		return;
 	}
 
@@ -328,12 +327,12 @@ static void collect_state_variables(const pEffect& effect) {
 		 * Only reward assignments are supported, and they do not involve
 		 * any state variables.
 		 */
-		std::cout << "AssigE:" << std::endl;
+		// std::cout << "AssigE:" << std::endl;
 		if (fe->assignment().application().function() != reward_function)
 		{
 			throw std::logic_error("numeric state variables not supported");
 		}
-		std::cout << "done AssigE:" << std::endl;
+		// std::cout << "done AssigE:" << std::endl;
 		return;
 	}
 	// effect最终都是simple Effect,涉及到的都是dynamic并且状态变量
@@ -348,17 +347,17 @@ static void collect_state_variables(const pEffect& effect) {
 			//std::cout << "AE " << dynamic_atoms.size() <<std::endl;
 			dynamic_atoms.insert(std::make_pair(state_variables.size(), atom));
 			state_variables.insert(std::make_pair(atom, state_variables.size()));
-			std::cout << "AE::" << std::flush;
-			atom->print(std::cout, my_problem->domain().predicates(), my_problem->domain().functions(),
-						  my_problem->terms());
-				printf("\n");
+			// std::cout << "AE::" << std::flush;
+			// atom->print(std::cout, my_problem->domain().predicates(), my_problem->domain().functions(),
+			// 			  my_problem->terms());
+			// 	printf("\n");
 		}
-		else
-		{
-			atom->print(std::cout, my_problem->domain().predicates(), my_problem->domain().functions(),
-						  my_problem->terms());
-				printf("has beed added\n");
-		}
+		// else
+		// {
+		// 	atom->print(std::cout, my_problem->domain().predicates(), my_problem->domain().functions(),
+		// 				  my_problem->terms());
+		// 		printf("has beed added\n");
+		// }
 		return;
 	}
 
@@ -369,11 +368,11 @@ static void collect_state_variables(const pEffect& effect) {
 		 * The state variables of a conjunctive effect are the state
 		 * variables of the conjuncts.
 		 */
-		std::cout << "CE" <<std::endl;
+		// std::cout << "CE" <<std::endl;
 		for (size_t i = 0; i < ce->size(); i++) {
 			collect_state_variables(ce->conjunct(i));
 		}
-		std::cout << "done CE" <<std::endl;
+		// std::cout << "done CE" <<std::endl;
 		return;
 	}
 
@@ -384,10 +383,10 @@ static void collect_state_variables(const pEffect& effect) {
 		 * The state variables of a conditional effect are the state
 		 * variables of the condition and the effect.
 		 */
-		std::cout << "CndE" <<std::endl;
+		// std::cout << "CndE" <<std::endl;
 		collect_state_variables(we->condition(), false);
 		collect_state_variables(we->effect());
-		std::cout << "done CondE" << std::endl;
+		// std::cout << "done CondE" << std::endl;
 		return;
 	}
 
@@ -398,11 +397,11 @@ static void collect_state_variables(const pEffect& effect) {
 		 * The state variables of a probabilistic effect are the state
 		 * variables of the possible effects.
 		 */
-		std::cout << "PrE" <<std::endl;
+		// std::cout << "PrE" <<std::endl;
 		for (size_t i = 0; i < pe->size(); i++) {
 			collect_state_variables(pe->effect(i));
 		}
-		std::cout << "done PrE" << std::endl;
+		// std::cout << "done PrE" << std::endl;
 		return;
 	}
 
@@ -542,7 +541,7 @@ DdNode* formula_bdd(const StateFormula& formula, bool primed = false) {
 		 * negand.
 		 *	递归对否定的内层处理，随后在对内层取否
 		 */
-		std::cout << "negation(#) ";
+		// std::cout << "negation(#) ";
 		DdNode* ddn = formula_bdd(nf->negand(), primed);
 		DdNode* ddf = Cudd_Not(ddn);
 		Cudd_Ref(ddf);
@@ -557,7 +556,7 @@ DdNode* formula_bdd(const StateFormula& formula, bool primed = false) {
 		 * the conjuncts.
 		 * 这里readone为了和下面的conjunct合取
 		 */
-		std::cout << "conjunction\n";
+		// std::cout << "conjunction\n";
 		DdNode *ddf = Cudd_ReadOne(dd_man);
 		Cudd_Ref(ddf);
 
@@ -568,9 +567,9 @@ DdNode* formula_bdd(const StateFormula& formula, bool primed = false) {
 			Cudd_Ref(ddi);//DON'T REALLY NEED THIS, except in uts k30.pddl
 			DdNode* dda = Cudd_bddAnd(dd_man, ddf, ddi);
 			Cudd_Ref(dda);
-			cf->conjunct(i).print(std::cout, my_problem->domain().predicates(),
-								  my_problem->domain().functions(), my_problem->terms());
-			std::cout << "\n";
+			// cf->conjunct(i).print(std::cout, my_problem->domain().predicates(),
+			// 					  my_problem->domain().functions(), my_problem->terms());
+			// std::cout << "\n";
 			if (dda == Cudd_ReadLogicZero(manager))
 			{
 				std::cout << "formula_bdd conjunct get FALSE\n";
@@ -580,7 +579,7 @@ DdNode* formula_bdd(const StateFormula& formula, bool primed = false) {
 			Cudd_RecursiveDeref(dd_man, ddi);
 			ddf = dda;
 		}
-		std::cout << "done conjunction\n";
+		// std::cout << "done conjunction\n";
 		return ddf;
 	}
 	
@@ -591,7 +590,7 @@ DdNode* formula_bdd(const StateFormula& formula, bool primed = false) {
 		 * the disjuncts.
 		 * 类似前面的，这里clause所以是readzero随后析取
 		 */
-		std::cout << "disjunction\n";
+		// std::cout << "disjunction\n";
 		DdNode* ddf = Cudd_ReadLogicZero(dd_man);
 		Cudd_Ref(ddf);
 		for (size_t i = 0; i < df->size(); i++) {
@@ -602,7 +601,7 @@ DdNode* formula_bdd(const StateFormula& formula, bool primed = false) {
 			Cudd_RecursiveDeref(dd_man, ddi);
 			ddf = ddo;
 		}
-		std::cout << "done disjunction\n";
+		// std::cout << "done disjunction\n";
 		return ddf;
 	}
 
@@ -612,7 +611,7 @@ DdNode* formula_bdd(const StateFormula& formula, bool primed = false) {
 		 * The BDD for a one of disjunction
 		 */
 		DdNode* ddx, *ddn;
-		std::cout << "oneOfDisjunction\n";
+		// std::cout << "oneOfDisjunction\n";
 		if(odf->size() == 2){
 			ddx = formula_bdd(odf->disjunct(0), primed);
 			Cudd_Ref(ddx);
@@ -663,7 +662,7 @@ DdNode* formula_bdd(const StateFormula& formula, bool primed = false) {
 
 
 		}
-		std::cout << "done oneOfDisjunction\n";
+		// std::cout << "done oneOfDisjunction\n";
 		return ddx;
 	}
 	const Forall* faf = dynamic_cast<const Forall*>(&formula);
@@ -1160,8 +1159,8 @@ static void effect_outcomes(OutcomeSet& outcomes,
 		std::cout << "probability effect outcome[warning!!!]\n";
 		Rational p_rest = 1;
 		size_t n = pe->size();
-		//cout << "n = " << n << " pr0 = " << (pe->probability(0).double_value()) <<endl;
-		if(n == 1 && (pe->probability(0).double_value()) == -2.0) {//unknown effect
+		std::cout << "n = " << n << " pr0 = " << (pe->probability(0).double_value()) << std::endl;
+		if(n == 1 && (pe->probability(0).double_value()) == -2.0) {//unknown effect, do not enter in
 			Rational p(0.5);
 			OutcomeSet p_outcomes;
 			effect_outcomes(p_outcomes, condition_bdd, pe->effect(0));
@@ -1741,7 +1740,7 @@ pomdp_observation_mtbdds(ObservationVector& ob,
 	for(std::map<DdNode*, DdNode*>::iterator j = observables.begin();
 			j != observables.end(); j++){
 		observations->push_back((*j).second);
-		printBDD((*j).second);
+		// printBDD((*j).second);
 	}
 	//cout << "done" << endl;
 	return observations;
@@ -2424,7 +2423,7 @@ std::pair<DdNode*, DdNode*> action_mtbdds(const Action& action,
 				/*
 				 * Finally, the condition.
 				 */
-				std::cout << "err inconsistent effect\n";
+				// std::cout << "err inconsistent effect\n";
 				dda = Cudd_bddAnd(dd_man, Cudd_Not(t.condition_bdd()), ddt);
 				Cudd_Ref(dda);
 				Cudd_RecursiveDeref(dd_man, ddt);
@@ -2708,15 +2707,15 @@ void make_mutex(std::list<DdNode*>* preffect){
 
 	for(std::list<DdNode*>::iterator i = preffect->begin();
 			i != preffect->end(); i++){
-		std::cout << "i = " <<std::endl;
-		printBDD(*i);
+		// std::cout << "i = " <<std::endl;
+		// printBDD(*i);
 		DdNode* tmpd = *i;
 		Cudd_Ref(tmpd);
 		for(std::list<DdNode*>::iterator j = preffect->begin();
 				j != preffect->end(); j++){
 			if(i != j){
-				std::cout << "j = " <<std::endl;
-				printBDD(*j);
+				// std::cout << "j = " <<std::endl;
+				// printBDD(*j);
 				DdNode* tmpi = Cudd_addBddStrictThreshold(manager, tmpd, 0.0);
 				Cudd_Ref(tmpi);
 
@@ -2751,8 +2750,8 @@ void make_mutex(std::list<DdNode*>* preffect){
 			}
 		}
 		out.push_back(tmpd);
-		std::cout << "tmpd = " <<std::endl;
-		printBDD(tmpd);
+		// std::cout << "tmpd = " <<std::endl;
+		// printBDD(tmpd);
 	}
 
 	for(std::list<DdNode*>::iterator i = preffect->begin();
@@ -2768,28 +2767,30 @@ void make_mutex(std::list<DdNode*>* preffect){
  * 这个函数实现了初始状态公式到obdd的转换,如果初始状态不是公式即概率类型还会计算一些DBN
  * 1. collect_init_state_variable，查找所有状态变量个数
  * 2. formula_bdd，将初始状态formula转化为obdd，其中one-of disjunction没太理解
- * 3. 随后将每个状态变量的否定和取上第二步的obdd，为什么需要这一步操作？
+ * 3. 随后将每个状态变量的否定和区上第二部的obdd，为什么需要这一步操作？
  */
 void collectInit(const Problem* problem){
 	/*
 	 * Construct an ADD representing initial states.
 	 */
-
-	list<DdNode *> worlds;
+	/**
+	 * zyc12.27
+	*/
+	std::list<DdNode *> worlds;
 	problem->init_formula().print(std::cout, problem->domain().predicates(),
 								  problem->domain().functions(),
 								  problem->terms());
 	std::cout << std::endl;
 
 	if(&problem->init_formula()){
+		/**
+		 * zyc12.27
+		*/
 		std::cout << "construct the bdd for init formula\n";
 		collect_init_state_variables(problem->init_formula()); // 公式中涉及到的状态变量即atom
-
-		// zyc 2022.11.14: 随即抽取单个初始状态转化为BDD，赋给tmp
 		DdNode* tmp1 = formula_bdd(problem->init_formula());// 根据初始状态公式创建BDD
 		pickKRandomWorlds(tmp1, 1, &worlds);
 		DdNode *tmp = worlds.front();
-
 		Cudd_Ref(tmp);
 		
 		for(int i = 0; i < num_alt_facts; i++){//考虑每个状态变量
@@ -2810,10 +2811,10 @@ void collectInit(const Problem* problem){
 			}
 		}
 		// 记录初始状态集合，这里为何需要合取所有状态变量的否定？
-		b_initial_state = tmp;  // zyc 11.4 此时的tmp是随机取的可能的一个初始状态
+		b_initial_state = tmp;  // zyc12.27, 此时的tmp是随机取的一个可能的初始状态
 		Cudd_Ref(b_initial_state);
 		Cudd_RecursiveDeref(manager, tmp);
-		printBDD(b_initial_state);
+		printBDD(b_initial_state);  // zyc12.27
 		return;
 	}
 
@@ -3173,7 +3174,36 @@ dbn* action_dbn(const Action& action){
 	//action_dbns[&action]->get_dds();
 
 }
-
+DdNode* getObservationDD(const Action& action){
+	assert(action.hasObservation());
+	if(action_observations.count(&action) > 0){
+		return action_observations[&action]->front();
+	}
+	std::list<DdNode*>* ddos = NULL; 
+	int err = 0;
+	action.setProbabilityFromExpressions(my_problem);
+	try{
+		std::cout << "start Observation BDD()\n";
+		ddos = observation_mtbdds(action, *my_problem);
+		std::cout << "done Observation BDD()\n";
+	} catch (std::logic_error& e) {
+		err = 1;
+	}
+	if(!err){
+		if(ddos && ddos->size() > 0){
+			OBSERVABILITY = OBS_PART;
+			action_observations.insert(std::make_pair(&action, ddos));
+			ddos = NULL;
+		}
+	}
+	else{
+		std::cout << "ERROR, pruning: ";
+		if(LUGTOTEXT)
+			num_alt_effs++;//for dummy unconditional effect index
+		return Cudd_ReadZero(manager);
+	}
+	return action_observations[&action]->front();
+}
 /**
  * momo007 2022.05.12 获取动作的BDD
  * 

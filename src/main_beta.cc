@@ -417,7 +417,7 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			std::cout << 'call search()\n';
+			std::cout << "call search()\n";
 			search->search();
 		}
 		if (allowed_time > 0)

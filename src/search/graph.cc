@@ -1196,10 +1196,12 @@ bool StateComparator::operator() (StateNode *lhs, StateNode *rhs) const{
 	// }
 	if(lhs->goalSatisfaction != rhs->goalSatisfaction)
 		return (lhs->goalSatisfaction > rhs->goalSatisfaction);
-	if (lhs->randPriority != rhs->randPriority)
-		return (lhs->randPriority < rhs->randPriority);
 
-	return lhs < rhs;	// In case this comparator is used for a set
+	return lhs->StateNo < rhs->StateNo;
+	// if (lhs->randPriority != rhs->randPriority)
+	// 	return (lhs->randPriority < rhs->randPriority);
+
+	// return lhs < rhs;	// In case this comparator is used for a set
 }
 
 bool StateComparator::operator() (PolicyState *lhs_ps, PolicyState *rhs_ps) const{

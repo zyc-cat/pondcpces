@@ -23,14 +23,13 @@ void AStar::setup(StateNode* start){
 	StepSearch::setup(start);// 设置初始状态
 	closed.clear();// 清空两个表
 	open.clear();
-	open.key_comp().init(StateComparator::HEUR);// 默认使用HEUR
+	// open.key_comp().init(StateComparator::HEUR);// 默认使用HEUR
+	open.key_comp().init(StateComparator::F_VAL);
 	next = start;
 	next->PrevActions = NULL;
 	next->BestPrevAction = NULL; //最佳action值为空
 	next->NextActions = NULL;
 	open.insert(next); // 插入节点next
-
-	first = true;//第一次调用
 }
 /**
  * 返回true，说明需要继续搜索
@@ -38,28 +37,20 @@ void AStar::setup(StateNode* start){
  */
 bool AStar::step(){
 	assert(next != NULL);
-
-	if(first){
-		first = false;
-		return true;
-	}
 	if(open.empty() || next->isGoal()){
 		cout << "\t[sNo = " << next->StateNo << "]\t[g = " << next->g << "]\t[h = " << next->h << "]\t[t = " << next->goalSatisfaction << "]\t[pr =" << next->prReached  << "]"<< endl;
 		if(open.empty())
 			cout << "Dead end!\n";
 		if(next->isGoal()){
-			printf("goal BDD is :");
-			printBDD(next->dd);
+			// printf("goal BDD is :");
+			// printBDD(next->dd);
 			cout << "Found branch!\n";
+			/**
+			 * zyc12.27
+			*/
 			// printBestPlan();//输出最佳方案
-			// zyc11.19
 			planlist(candidateplan);
-			std::cout << "successfully found candidateplan" << endl;
-			// for (int i = 0; i < candidateplan.size(); i++)
-			// {
-			// 	candidateplan[i]->print(std::cout, my_problem->terms());
-			// 	std::cout << "\n";
-			// }
+			std::cout << "successfully found candidateplan" << std::endl;
 		}
 
 		return false;// 返回false停止搜索
@@ -84,6 +75,11 @@ bool AStar::step(){
 	for(map<const Action*, DdNode*>::iterator a = action_preconds.begin(); a != action_preconds.end(); a++){
 		if((*a).first->name().compare("noop_action") == 0)
 			continue;
+		DdNode *preBdd = action_preconds.find((*a).first)->second;
+		if(bdd_isnot_one(manager, bdd_imply(manager, next->dd,preBdd)))
+		{
+			continue;
+		}
 		ActionNode *actNode = new ActionNode();
 		actNode->act = (*a).first;
 		actNode->PrevState = next;// 状态结点连接动作结点
@@ -92,21 +88,33 @@ bool AStar::step(){
 	}
 	// 拓展结点个数+1
 	expandedNodes++;
+	// std::cout << "######:" << expandedNodes << std::endl;
 	// 考虑每个动作，计算后继状态，同时链接起来
 	for (ActionNodeList::iterator act_it = next->NextActions->begin(); act_it != next->NextActions->end(); act_it++)
 	{
 		ActionNode *action = *act_it;
 		DdNode *preBdd = action_preconds.find(action->act)->second;
-		if (bdd_isnot_one(manager, bdd_imply(manager, next->dd, preBdd))) // action满足前提条件
-		{
-			// 后续考虑将该动作节点删除
-			continue;
-		}
 		// 计算得到后继状态结点
-		action->act->print(std::cout, my_problem->terms());
-		// pair<const Action *const, DdNode *> act_pair(action->act, preBdd); // 动作及其前提条件pair
-		// DdNode *successor = progress(&act_pair, next->dd);// 计算后继状态
-		DdNode *successor = progress(next->dd, action->act);
+		debugCnt++;
+		// std::cout << "######:" << debugCnt << std::endl;
+		// action->act->print(std::cout, my_problem->terms());
+		pair<const Action *const, DdNode *> act_pair(action->act, preBdd); // 动作及其前提条件pair
+		DdNode *successor = progress(&act_pair, next->dd);// 计算后继状态
+		// DdNode *successor = progress(next->dd, action->act);
+		/**
+		 * zyc12.27
+		*/
+		// DdNode *successor1 = definability_progress(next->dd, action->act);
+		// if(successor1 != successor)
+		// {
+		// 	printBDD(next->dd);
+		// 	action->act->print(std::cout, my_problem->terms());
+		// 	printBDD(successor);
+		// 	printBDD(successor1);
+		// 	assert(false);
+		// }
+
+		// Cudd_Ref(successor);
 		// std::cout << "std::\n";
 		// printBDD(successor);
 		// std::cout << "new::\n";
@@ -156,7 +164,10 @@ bool AStar::step(){
 			StateNode::generated[successor] = child;
 		}
 		else
+		{
 			child = StateNode::generated[successor];
+			Cudd_RecursiveDeref(manager, successor);
+		}
 
 		assert(child != NULL);
 		double new_g = next->g + action->Cost;// A* Heuristic
@@ -305,6 +316,9 @@ void AStar::printBestPlan()
 	std::cout << "Plan Length is: " << i << std::endl;
 }
 
+/**
+ * zyc12.27
+*/
 void AStar::planlist(std::vector<const Action*> &candplan){
 	ActionNode *actNode;
 	StateNode *stateNode = next;

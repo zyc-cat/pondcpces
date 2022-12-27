@@ -4755,6 +4755,7 @@ static void add_effect_outcome(ProbabilisticEffect& peffect,
 			        const Rational* p, const pEffect& effect) {
     std::cout << "*p = " << *p << std::endl; 
     // oneof涉及到non-deterministic效果
+    std::cout << "requirements->non_deterministic:" << requirements->non_deterministic;
 	if((*p == -1.0 || *p == -2.0 || *p == -3.0) && !requirements->non_deterministic){
 		yywarning("assuming `:non-deterministic' requirement");
 		requirements->non_deterministic = true;    

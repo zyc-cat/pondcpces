@@ -16,6 +16,7 @@
 #include <iostream>
 #include <float.h>
 #include <math.h>
+#include "../ppddl/mtbdd.h"
 
 using namespace __gnu_cxx;
 using namespace std;
@@ -29,8 +30,7 @@ void AOStar::setup(StateNode *q){
     StepSearch::setup(q);
     closed.clear();
     open.clear();
-    open.key_comp().init(StateComparator::HEUR);
-    // open.key_comp().init(StateComparator::F_VAL);
+    open.key_comp().init(StateComparator::F_VAL);
     m_depth = -1;
     start->m_status = UNEXPANDED;
     start->PrevActions = new ActionNodeList();
@@ -425,7 +425,7 @@ bool AOStar::new_sensing_transition(StateNode* node, ActionNode* action, DdNode*
     // linke node and lchild;
     if (rExist == false)
     {
-        std::cout << "a1\n";
+        // std::cout << "a1\n";
         rchild = new StateNode();
         rchild->StateNo = state_count++;
         rchild->dd = c2;
@@ -450,7 +450,7 @@ bool AOStar::new_sensing_transition(StateNode* node, ActionNode* action, DdNode*
         m_states.push_back(rchild);
         getHeuristic(&m_states, node, node->horizon + 1);
         m_states.clear();
-        std::cout << "a2\n";
+        // std::cout << "a2\n";
         if (rchild->isGoal())
         {
             rchild->m_status = GOAL_REACHABLE;
@@ -464,12 +464,12 @@ bool AOStar::new_sensing_transition(StateNode* node, ActionNode* action, DdNode*
         {
             open.insert(rchild);
         }
-        std::cout << "a3\n";
+        // std::cout << "a3\n";
         StateNode::generated[c2] = rchild;
     }
     else
     {
-        std::cout << "b1\n";
+        // std::cout << "b1\n";
         rchild = StateNode::generated[c2];
         action->NextState->Next = new StateDistribution();
         action->NextState->Next->State = rchild;
@@ -480,7 +480,7 @@ bool AOStar::new_sensing_transition(StateNode* node, ActionNode* action, DdNode*
         {
             if(lchild->m_status == GOAL_REACHABLE)
             {
-                std::cout << "e1\n";
+                // std::cout << "e1\n";
                 node->m_status = GOAL_REACHABLE;
                 goal_propagate(node, lchild, rchild);
             }
@@ -495,15 +495,15 @@ bool AOStar::new_sensing_transition(StateNode* node, ActionNode* action, DdNode*
         }
         else
         {
-            std::cout << "e2\n";
+            // std::cout << "e2\n";
             reconnection_propagate(rchild);
             if(lchild->m_status == EXPANDED)
             {
-                std::cout << "e3\n";
+                // std::cout << "e3\n";
                 reconnection_propagate(lchild);
             }
         }
-        std::cout << "b2\n";
+        // std::cout << "b2\n";
     }
     // link node and rchild
     return true;
@@ -530,7 +530,7 @@ bool decides(DdNode* cur, DdNode* literal)
 {
     if(bdd_entailed(manager,cur, literal) || bdd_entailed(manager, cur, Cudd_Not(literal)))
     {
-        cout << "Not optimize\n";
+        // cout << "Not optimize\n";
         return true;
     }
     else
@@ -564,20 +564,12 @@ bool AOStar::expand(StateNode* node)
             }
             else
             {
-                pair<const Action *const, DdNode *> act_pair(act, preBdd);
-                progress(&act_pair, node->dd);//根据当前状态和动作计算后继状态
-                effBDD = action_observations[act]->front();
-                // ObservationEntry&ob = (ObservationEntry&)((ObservationVector&)((Observation&)((Action&)*act).observation()).obVector()).front();
-                // effBDD = formula_bdd(ob.formula(), false);
-                // std::list<DdNode*>* ln = new std::list<DdNode*>();
-                // ln->push_back(effBDD);
-                // action_observations.insert(make_pair(act, ln));
+                effBDD = getObservationDD(*act);
             }
             if(decides(node->dd, effBDD))
             {
                 continue;
             }
-            printBDD(effBDD);
             DdNode *s1 = Cudd_bddAnd(manager, node->dd, effBDD);
             DdNode *s2 = Cudd_bddAnd(manager, node->dd, Cudd_Not(effBDD));
             Cudd_Ref(s1);
@@ -589,9 +581,9 @@ bool AOStar::expand(StateNode* node)
             actNode->NextState = NULL;
             // 创建连接
             node->NextActions->push_back(actNode);
-            std::cout << "enter1\n";
+            // std::cout << "enter1\n";
             new_sensing_transition(node, actNode,s1, s2);
-            std::cout << "done1\n";
+            // std::cout << "done1\n";
             if(Start->m_status == GOAL_REACHABLE)
             {
                 return true;
@@ -603,8 +595,9 @@ bool AOStar::expand(StateNode* node)
         }
         else
         {
-            pair<const Action *const, DdNode *> act_pair(act, preBdd);
-            DdNode *successor = progress(&act_pair, node->dd);//根据当前状态和动作计算后继状态
+            // pair<const Action *const, DdNode *> act_pair(act, preBdd);
+            // DdNode *successor = progress(&act_pair, node->dd);//根据当前状态和动作计算后继状态
+            DdNode *successor = progress(node->dd, act);
             // 前面已经完成了Precondition测试
             if(bdd_is_zero(manager,successor))
             {
@@ -623,9 +616,9 @@ bool AOStar::expand(StateNode* node)
             actNode->NextState = NULL;
             // 创建连接
             node->NextActions->push_back(actNode);
-            std::cout << "enter2\n";
+            // std::cout << "enter2\n";
             new_action_transition(node, actNode, successor);
-            std::cout << "done2\n";
+            // std::cout << "done2\n";
             if(Start->m_status == GOAL_REACHABLE){
                 return true;
             }
@@ -693,8 +686,10 @@ void AOStar::solution_print(StateNode* node, int level)
     }
     ActionNode* actNode = node->NextActions->front();
     const Action *act = actNode->act;
-    std::cout << m_commandNo.size() << ": " << act->name() << std::endl;
-    // act->print(std::cout, my_problem->terms());
+    std::cout << m_commandNo.size() << ": ";
+    // << act->name() << std::endl;
+    act->print(std::cout, my_problem->terms());
+    std::cout << std::endl;
     m_commandNo.insert(make_pair(node, m_commandNo.size()));
     if (!act->hasObservation())
     {

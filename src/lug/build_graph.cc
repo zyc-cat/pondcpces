@@ -528,7 +528,7 @@ int  build_graph( int *min_time,
 
 	// printf("MUX = %d, LEVOFF = %d\n", MUTEX_SCHEME, ALLOW_LEVEL_OFF);
 
-	std::cout <<"\n\nenter build graph\n" << std::flush;
+	// std::cout <<"\n\nenter build graph\n" << std::flush;
 	// printBDD(b_initial_state);
 	// clear the layers
 	for(j=0;j<IPP_MAX_PLAN;j++){
@@ -556,7 +556,7 @@ int  build_graph( int *min_time,
 	 * 这里所有俄positive和negative可以indices拿到index
 	 * 该index决定了他在gpos_facts_vector_at和gneg_facts_vector_at的情况，从而可以拿到min fact的值
 	 */
-	std::cout << "positive:\n";
+	// std::cout << "positive:\n";
 	for ( i = gbit_initial_state->positive->indices; i; i = i->next ) {
 		if(COMPUTE_LABELS){// 如果需要label
 			tmp = get_init_labels(i->index, TRUE);
@@ -575,7 +575,7 @@ int  build_graph( int *min_time,
 		// dynamic_atoms[i->index]->print(std::cout, my_problem->domain().predicates(), my_problem->domain().functions(), my_problem->terms());
 		// std::cout << std::endl;
 	}
-	std::cout << "negative:\n";
+	// std::cout << "negative:\n";
 	for ( i = gbit_initial_state->negative->indices; i; i = i->next ) {
 		if(COMPUTE_LABELS){
 			tmp = get_init_labels(i->index, FALSE);
@@ -608,12 +608,12 @@ int  build_graph( int *min_time,
 			initialStateCorrelation(initialBDD, b_initial_state);
 	}
 
-	printf("SET INIT IN GRAPH\n");  fflush(stdout);
+	// printf("SET INIT IN GRAPH\n");  fflush(stdout);
 	if ( gcmd_line.display_info ) {
 		fprintf( OUT, "time: %3d, %5d facts and %7d exclusive pairs (%5d, %7d positives)\n",
 				time, gfacts_count, gexclusions_count, gprint_ftnum, gprint_exnum );
 	}
-	printf("time= %d, min_time = %d\n", time, min_time);
+	// printf("time= %d, min_time = %d\n", time, min_time);
 	// 下面这块代码没有进入，min_time = time = 0
 	for (; time < *min_time; time++)
 	{
@@ -641,7 +641,7 @@ int  build_graph( int *min_time,
 	}
 
 	for( ; time < IPP_MAX_PLAN; time++ ) {
-		std::cout << "time = " << time << std::endl;
+		// std::cout << "time = " << time << std::endl;
 		reached_goals = are_there_non_exclusive( time, gbit_goal_state->positive, gbit_goal_state->negative );// 当前目标当当前层满足，同时没有mutex
 
 		if ( reached_goals ) {
@@ -786,7 +786,7 @@ void update_actions_effects_facts(int time){
 
 
 void un_update_actions_effects_facts(int t){
-	std::cout << "undo updates at time: " << time << std::endl;
+	// std::cout << "undo updates at time: " << time << std::endl;
 	for(int time = 0; t >= time; time++){
 		for( OpNode *i1 = gall_ops_pointer; i1; i1=i1->next ){
 
@@ -3372,7 +3372,7 @@ void print_mutex_facts(int time){
 
 void build_graph_evolution_step( void )
 {
-	printf(".");fflush(stdout);
+	// printf(".");fflush(stdout);
 	static int time = 0;// 仅第一次调用为0
 	int facts_count = gfacts_count, exclusions_count = gexclusions_count;
 	BitOperator *o, *prev, *tmp;

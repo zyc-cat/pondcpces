@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
-SUBDIRS = ppddl search heuristics lug cudd simulator rddlclient validate
+SUBDIRS = ppddl search heuristics lug cudd simulator rddlclient
 # create three executable program
-bin_PROGRAMS = pond ppddl2st lug2txt pondbeta simptest counter
+bin_PROGRAMS = pond ppddl2st lug2txt pondbeta counter
 
 #--------------------------------------------------------------
 # The first one target
@@ -74,32 +74,15 @@ pondbeta_LDADD = ppddl/libppddl.la search/libsearch.la heuristics/libheuristics.
 pondbeta_LDFLAGS = -no-undefined --disable-shared -L/usr/local/lib 
 
 #--------------------------------------------------------------
-# The test target
-
-simptest_SOURCES = test.cc globals.cc globals.h
-
-INCLUDES =  -I. -I@top_srcdir@/src/ -I@top_srcdir@/src/cudd -I@top_srcdir@/src/ppddl \
-		-I@top_srcdir@/src/heuristics -I@top_srcdir@/src/lug -I@top_srcdir@/src/search -I/home/labrea6/bryce/include
-
-# define the dynamic link
-simptest_LDADD = ppddl/libppddl.la search/libsearch.la heuristics/libheuristics.la lug/liblug.la \
-             cudd/libdd.la simulator/libsimulator.la ${CUDD_HOME}/cudd/libcudd.a \
-             ${CUDD_HOME}/dddmp/libdddmp.a ${CUDD_HOME}/epd/libepd.a ${CUDD_HOME}/mtr/libmtr.a \
-             ${CUDD_HOME}/st/libst.a ${CUDD_HOME}/util/libutil.a 
- 
-simptest_LDFLAGS = -no-undefined --disable-shared -L/usr/local/lib 
-
-#--------------------------------------------------------------
 # The counter target
 
 counter_SOURCES = main_counter.cc globals.cc globals.h
 
-INCLUDES =  -I. -I@top_srcdir@/src/ -I@top_srcdir@/src/validate -I@top_srcdir@/src/cudd  \
-            -I@top_srcdir@/src/ppddl -I@top_srcdir@/src/heuristics -I@top_srcdir@/src/lug \
-            -I@top_srcdir@/src/search -I/home/labrea6/bryce/include
+INCLUDES =  -I. -I@top_srcdir@/src/ -I@top_srcdir@/src/cudd  -I@top_srcdir@/src/ppddl \
+             -I@top_srcdir@/src/heuristics -I@top_srcdir@/src/lug -I@top_srcdir@/src/search -I/home/labrea6/bryce/include
 
 # define the dynamic link
-counter_LDADD = validate/libvalidate.la ppddl/libppddl.la search/libsearch.la heuristics/libheuristics.la \
+counter_LDADD = ppddl/libppddl.la search/libsearch.la heuristics/libheuristics.la \
              lug/liblug.la cudd/libdd.la simulator/libsimulator.la ${CUDD_HOME}/cudd/libcudd.a \
              ${CUDD_HOME}/dddmp/libdddmp.a ${CUDD_HOME}/epd/libepd.a ${CUDD_HOME}/mtr/libmtr.a \
              ${CUDD_HOME}/st/libst.a ${CUDD_HOME}/util/libutil.a

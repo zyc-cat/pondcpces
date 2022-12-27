@@ -49,6 +49,9 @@ DdNode* regress(alt_action*, DdNode*);
 
 DdNode* progress(DdNode*image, DdNode* parent);// 将动作理论和状态的BDD进行合取，遗忘，替换
 DdNode* progress(dbn*image, DdNode* parent);// not used, main中solve_problem->collectInit->progress
+int definability_extract(const Action *act);// 可定义性提取
+DdNode *definability_progress(DdNode *parent, const Action *a);//条件可定义性
+void preprocessCubeUnit();// 设置unit cube
 void update_leaf_h_values();// not used
 void backup_graph();// not used
 

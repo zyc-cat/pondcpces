@@ -1090,7 +1090,7 @@ void createInitLayer(DdNode* init){
 	}
 	b_initial_state = init;
 	initialBDD = init;
-	printf("tmp bdd is\n");
+	// printf("tmp bdd is\n");
 	// printBDD(tmp);
 	// Cudd_Ref(b_initial_state);
 	//Cudd_Ref(initialBDD);
@@ -1160,10 +1160,10 @@ void createInitLayer(DdNode* init){
 
 	if(PF_LUG && LUG_FOR != SPACE)
 		Cudd_RecursiveDeref(manager, c);
-	print_BitVector(gbit_initial_state->positive->vector,gft_vector_length);
-	print_BitVector(gbit_initial_state->negative->vector,gft_vector_length);
-	print_BitVector(gbit_goal_state->positive->vector,gft_vector_length);
-	print_BitVector(gbit_goal_state->negative->vector,gft_vector_length);
+	// print_BitVector(gbit_initial_state->positive->vector,gft_vector_length);
+	// print_BitVector(gbit_initial_state->negative->vector,gft_vector_length);
+	// print_BitVector(gbit_goal_state->positive->vector,gft_vector_length);
+	// print_BitVector(gbit_goal_state->negative->vector,gft_vector_length);
 
 }
 
@@ -2651,7 +2651,7 @@ double build_forward_get_h(DdNode* init,
 		// cout << "get rp for " <<  endl;
 		// printBDD(b_initial_state);
 
-		printf("reached_goals = %d\n",reached_goals);
+		// printf("reached_goals = %d\n",reached_goals);
 		if(!reached_goals && LUG_FOR == NODE){
 			assert(0);
 			cout << "goals not reached" <<endl;
@@ -2747,7 +2747,7 @@ double build_forward_get_h(DdNode* init,
 				else
 					j = getLabelLevel((*i)->dd, &worldsAtLevels, parent);
 
-				cout << "lev = " << j <<endl;
+				// cout << "lev = " << j <<endl;
 				if(j > 0)
 					h =getLabelRPHeuristic((*i), j, &worldsAtLevels);// getRPHeuristic(j);
 				else
@@ -3416,6 +3416,7 @@ double getCardinality(DdNode* d){
 			return_val = Cudd_CountMinterm(manager, t, 2*num_alt_facts);
 		}
 		else{
+			assert(0);
 			EpDouble *epd = EpdAlloc();
 			Cudd_EpdCountMinterm(manager, d, 2*num_alt_facts , epd);
 			double v;
@@ -3424,7 +3425,6 @@ double getCardinality(DdNode* d){
 			return_val =((double)e)*log((double)10.0)+(double)log(v);
 			EpdFree(epd);
 		}
-		//   Cudd_RecursiveDeref(manager, p);
 		Cudd_RecursiveDeref(manager, t);
 	}
 	if(0 && (return_val > DBL_MAX || !useCuddCard)){
@@ -4026,11 +4026,11 @@ void getHeuristic(list<StateNode*>* states,
 
 	int gotAppl;
 	int lugHeur = 0;
-	if(states)
-	       cout << "|states|= " << states->size() <<endl;
-	else
-	       cout << "|states|=  NULL"<<endl;
-	cout << "NUM = " << NUMBER_OF_MGS <<endl;
+	// if(states)
+	//        cout << "|states|= " << states->size() <<endl;
+	// else
+	//        cout << "|states|=  NULL"<<endl;
+	// cout << "NUM = " << NUMBER_OF_MGS <<endl;
 
 	if(LUG_FOR == SPACE)// set the global config
 		cout << "ppHI" <<endl;
@@ -4039,7 +4039,7 @@ void getHeuristic(list<StateNode*>* states,
 	 * NONE，根据最小的reward最为目标的h
 	 */
 	if (HEURISTYPE == NONE && states){
-		cout << "|states| = " << states->size()<<endl;
+		// cout << "|states| = " << states->size()<<endl;
 		for(list<StateNode*>::iterator i = states->begin();
 				i != states->end(); i++){
 			(*i)->h = min(total_goal_reward, 0.0);//(*i)->h = 0.0;
@@ -4098,7 +4098,7 @@ void getHeuristic(list<StateNode*>* states,
 
 
 			//build lug for all states in list of states
-			cout << "|states| = " << states->size() << endl;
+			// cout << "|states| = " << states->size() << endl;
 			for(list<StateNode*>::iterator i = states->begin();
 					i != states->end(); i++){
 

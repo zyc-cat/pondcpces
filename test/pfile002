@@ -1,5 +1,5 @@
-(define (problem btc2)
-(:domain btc)
+(define (problem bt2)
+(:domain bt)
 (:requirements :strips :equality :typing :conditional-effects :disjunctive-preconditions)
 (:objects b0 - bomb
 p0 p1 - package

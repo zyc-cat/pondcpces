@@ -14,7 +14,8 @@
 double transform_reward_to_probability(double reward);
 double transform_probability_to_reward(double pr);
 DdNode* groundActionDD(const Action& action);
-dbn* action_dbn(const Action& action);
+DdNode* getObservationDD(const Action &action);
+dbn *action_dbn(const Action &action);
 DdNode* groundEventDD(const Action& action);
 void bdd_goal_cnf(std::list<DdNode*>* goal_cnf);
 

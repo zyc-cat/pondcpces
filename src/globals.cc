@@ -10,8 +10,8 @@ globals.cc -- All the main global definitions. */
 #include "float.h"
 
 int allowed_time =-1;//10000000;
-
-// using node to represente the state variable 
+int debugCnt = 0;
+// using node to represente the state variable
 DdNode ** current_state_vars;// 当前状态变量列表
 DdNode ** next_state_vars;// 后继状态变量列表
 DdNode ** aux_state_vars;// 辅助状态变量
@@ -167,7 +167,9 @@ std::map<const Action*, std::pair<DdNode*, DdNode*>* > event_affects;
 std::map<const Action*, DdNode*> event_rewards;
 /* exhaustive conditional effects, ala SGP -- dan */
 std::map<const Action*, OutcomeSet*> event_outcomes;
-
+/*conditional definability, euqiv BDD*/
+std::map<int, std::vector<DdNode*>* > equivBDD;
+std::map<int,DdNode *> unit_cube;
 
 #endif
 
@@ -176,6 +178,9 @@ double NUMBER_OF_MGS = 0.0;
 //levels to extract LUG RPs, default all worlds
 int LUG_LEVEL_WORLDS = 0;
 
+/**
+ * zyc12.27
+*/
 std::vector<const Action*> candidateplan;
 DdNode* counterexample;
 std::list<DdNode *> init_states;

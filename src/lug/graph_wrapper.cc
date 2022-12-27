@@ -871,7 +871,7 @@ int isOneOf(FtNode* a, FtNode* b){
 
 
 void pickKRandomWorlds(DdNode* dd, int k, list<DdNode*>* worlds){
-	 cout << "picking " << k << " random worlds" << endl;
+	//  cout << "picking " << k << " random worlds" << endl;
 	list<DdNode*> cubes;
 	list<DdNode*>::iterator c;
 	DdNode *cube;
@@ -890,7 +890,7 @@ void pickKRandomWorlds(DdNode* dd, int k, list<DdNode*>* worlds){
 		c = cubes.begin();
 		for(int j = 0; j < i; j++)
 			c++;
-		printBDD(*c);
+		// printBDD(*c);
 		worlds->push_back(*c);
 		cubes.remove(*c);
 	}
@@ -898,7 +898,7 @@ void pickKRandomWorlds(DdNode* dd, int k, list<DdNode*>* worlds){
 	for(c = cubes.begin(); c != cubes.end(); c++)
 		Cudd_RecursiveDeref(manager, *c);
 
-	 cout << "done picking worlds."<<endl;
+	//  cout << "done picking worlds."<<endl;
 
 }
 
@@ -953,14 +953,14 @@ int build_k_planning_graphs(DdNode* init, DdNode* goal, int& k) {
 	(int)ceil(num_cubes*NUMBER_OF_MGS)) : //build proporation
 	NUMBER_OF_MGS);  //build this number
 
-	std::cout << "build_num: " << build_num << endl;
+	// std::cout << "build_num: " << build_num << endl;
 
 	pickKRandomWorlds(init, build_num, &cubes);
 
 	gft_vector_length =  ( ( int ) num_alt_facts / gcword_size )+1;
 
 
-	 cout << "|cubes| = " << cubes.size() <<endl;
+	//  cout << "|cubes| = " << cubes.size() <<endl;
 
 	num_graphs = 0;
 	// 考虑为这些初始状态计算planning graph
@@ -974,8 +974,8 @@ int build_k_planning_graphs(DdNode* init, DdNode* goal, int& k) {
 		cubes.remove(cube);
 
 
-		cout << "build mg " << num_graphs << " of " << build_num <<endl;
-		printBDD(cube);
+		// cout << "build mg " << num_graphs << " of " << build_num <<endl;
+		// printBDD(cube);
 
 		levs = 0;
 		// MoMo007 2022.09.05 修复build_planning_graph
@@ -999,7 +999,7 @@ int build_k_planning_graphs(DdNode* init, DdNode* goal, int& k) {
 			k_graphs[num_graphs]->neg_facts_vector_at[j] =
 					copy_bit_vector(gneg_facts_vector_at[j], gft_vector_length);
 		}
-		std::cout << "######outside#############\n";
+		// std::cout << "######outside#############\n";
 		// 修复getlevel
 		// 考虑每一个fact，计算该fact所在的最小层数。还差一个接口,getlevel，获取命题为true或false的最小层。
 		for(int l = 0; l < num_alt_facts; l++) {
@@ -1104,7 +1104,7 @@ int build_planning_graph(DdNode* init, DdNode* goal, int& levs) {
 	// 类是操作对Goal进行
 	support = Cudd_Support(manager, goal);
 	Cudd_Ref(support);
-	printBDD(goal);
+	// printBDD(goal);
 	for(int i = 0; i < num_alt_facts; i++){
 		// dynamic_atoms[i]->print(cout, my_problem->domain().predicates(),my_problem->domain().functions(), my_problem->terms());
 		// printBDD(Cudd_bddIthVar(manager, i*2));
@@ -1183,8 +1183,8 @@ int build_planning_graph(DdNode* init, DdNode* goal, int& levs) {
 		strMutex = "MS_STATIC\n";
 		break;
 	}
-	cout << "MUX SCh = " << strMutex;
-	cout << "allow level off:" << ALLOW_LEVEL_OFF << endl;
+	// cout << "MUX SCh = " << strMutex;
+	// cout << "allow level off:" << ALLOW_LEVEL_OFF << endl;
 	// 根据 init, goal, opt的 BitVector进行构造graph
 	// 此时BitOpVector还有点bug，关于effect的编码
 	int reached_goals =  build_graph(&j, num_alt_facts, ALLOW_LEVEL_OFF, MUTEX_SCHEME );
@@ -2523,8 +2523,8 @@ DdNode* maskNDLabels(DdNode* lab){
 	//for abstracting init events
 	DdNode *cubedd = Cudd_addComputeCube(manager, cube, 0, num_alt_facts);
 
-	printBDD(lab);
-	printBDD(cubedd);
+	// printBDD(lab);
+	// printBDD(cubedd);
 	Cudd_Ref(cubedd);
 	delete [] cube;
 
@@ -2548,7 +2548,7 @@ DdNode* maskNDLabels(DdNode* lab){
 
 
 
-	printBDD(mask);
+	// printBDD(mask);
 
 	return mask;
 }

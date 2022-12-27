@@ -714,8 +714,8 @@ int main(int argc, char *argv[])
 			     }
 			// 初始化规划问题，分配BDD操作
 			solve_problem(*my_problem, 1.0, 0.0);
-			/** 
-			 * momo 007 2022.05.26 
+			/**
+			 * momo 007 2022.05.26
 			 * not used */
 			// if (RBPF_PROGRESSION)
 			// {
@@ -740,7 +740,7 @@ int main(int argc, char *argv[])
 			// 	delete[] variables;
 			// }
 
-			printBDD(b_initial_state);
+			// printBDD(b_initial_state);
 			cout << "Grounding/Instantiation Time: " << ((float)(clock() - groundingStartTime) / CLOCKS_PER_SEC) << endl;
 			cout << "==================================\n";
 			
@@ -837,7 +837,51 @@ int main(int argc, char *argv[])
 			std::cout << "using EHC() algorithm\n";
 			search = new EHC();
 		}
-			
+		int sat = 0;
+		int total = 0;
+		for (ActionList::const_iterator ai = my_problem->actions().begin();
+			 ai != my_problem->actions().end(); ai++)
+		{
+			std::cout << (*ai)->id() << std::endl;
+			if(definability_extract(*ai)==1)
+			{
+				sat++;
+			}
+			total++;
+		}
+		std::cout << "sat: " << sat << " ,total:" << total << endl;
+		// assert(0);
+		preprocessCubeUnit();
+		// std::cout << "init state BDD:\n";
+		// DdNode* v0,*v1,*v2,*temp, *s0;
+		// v0 = formula_bdd(*dynamic_atoms[0], false);
+		// v1 = Cudd_Not(formula_bdd(*dynamic_atoms[1], false));
+		// v2 = Cudd_Not(formula_bdd(*dynamic_atoms[2], false));
+		// temp = Cudd_bddAnd(manager, v0, v1);
+		// Cudd_Ref(temp);
+		
+		// temp = Cudd_bddAnd(manager, s0, v2);
+		// Cudd_Ref(temp);
+		// Cudd_RecursiveDeref(manager, s0);
+		// s0 = temp;
+		// std::cout << "Init state BDD\n" << std::flush;
+		// s0 = b_initial_state;
+		// printBDD(s0);
+		// for (ActionList::const_iterator ai = my_problem->actions().begin();
+		// 	 ai != my_problem->actions().end(); ai++)
+		// {
+			// DdNode *T = groundActionDD(**ai);
+			// std::cout << "Init state BDD\n" << std::flush;
+			// printBDD(T);
+			// (*ai)->print(std::cout, my_problem->terms());
+			// DdNode *successor = Cudd_bddAndAbstract(manager, T, s0, current_state_cube);
+			// Cudd_Ref(successor);
+			// successor = Cudd_bddVarMap(manager,successor);
+			// Cudd_Ref(successor);
+			// printBDD(successor);
+		// 	DdNode* successor = definability_progress(s0, *ai);
+		// 	printBDD(successor);
+		// }
 
 		// 初始化动作个数，状态和目标状态
 		search->init(num_alt_acts, b_initial_state, b_goal_state);
@@ -850,7 +894,7 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			std::cout << 'call search()\n';
+			std::cout << "call search()\n";
 			search->search();
 		}
 			
