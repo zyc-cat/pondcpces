@@ -1,6 +1,3 @@
-/**
- * zyc12.27
-*/
 #include <string.h>
 #include <iostream>
 #include <fstream>
@@ -138,7 +135,7 @@ int main(int argc, char *argv[])
 			for (int i = 3; i < argc; i++)
 			{
 				if (strcmp(argv[i], "term") == 0)
-				{ // 查找term的参数
+				{
 					if (i + 1 < argc && argv[i + 1][0] != '-')
 					{
 						search_goal_threshold = atof(argv[++i]);
@@ -304,17 +301,15 @@ int main(int argc, char *argv[])
 		try
 		{
 			clock_t groundingStartTime = clock();
-			// 获取problem
 			my_problem = (*(Problem::begin())).second;
-			// zyc11.14: 此时的my_problem传递给solve_problem的应该是一个可能的初始状态(collectInit)
 			solve_problem(*my_problem, 1.0, 0.0);  
-			printBDD(b_initial_state);   // 当前初始状态是一个可能的初始状态
+			printBDD(b_initial_state);
 			cout << "Grounding/Instantiation Time: " << ((float)(clock() - groundingStartTime) / CLOCKS_PER_SEC) << endl;
 			cout << "==================================\n";
-			// 	
+
 			if ((*my_problem).goal_cnf())
 				bdd_goal_cnf(&goal_cnf);
-			// 非确定性
+
 			if (my_problem->domain().requirements.non_deterministic)
 			{
 				std::cout << "nondet goal\n";
@@ -345,7 +340,7 @@ int main(int argc, char *argv[])
 		cout << "#EVENTS = " << event_preconds.size() << endl;
 		cout << "#PROPOSITIONS = " << num_alt_facts << endl;
 		goal_samples = Cudd_ReadLogicZero(manager);
-		// 这里的kGraph用于后续的启发式
+
 		if (HEURISTYPE == SLUGRP ||
 			HEURISTYPE == LUGRP ||
 			HEURISTYPE == LUGLEVEL ||
@@ -356,7 +351,6 @@ int main(int argc, char *argv[])
 			HEURISTYPE == HRPUNION ||
 			HEURISTYPE == CORRRP)
 		{
-			// MG heuristic
 			if (HEURISTYPE == HRPSUM ||
 				HEURISTYPE == HRPMAX ||
 				HEURISTYPE == HRPUNION ||
@@ -372,7 +366,6 @@ int main(int argc, char *argv[])
 
 				k_graphs = new kGraphInfo *[K_GRAPH_MAX];
 			}
-			// 初始化bit operator
 			gnum_cond_effects = 0;
 			gnum_cond_effects_pre = 0;
 			gbit_operators = NULL;
@@ -380,11 +373,11 @@ int main(int argc, char *argv[])
 			gnum_bit_operators = 0;
 			gnum_relevant_facts = 0;
 
-			if (!USE_CARD_GRP)// 默认执行
+			if (!USE_CARD_GRP)
 				initLUG(&action_preconds, b_goal_state);
 		}
 
-		if (step_search != NULL)//如果参数使用了step_search的子类
+		if (step_search != NULL)
 		{
 			if (search == NULL)
 				search = step_search;
@@ -392,40 +385,37 @@ int main(int argc, char *argv[])
 				delete step_search;
 			step_search = NULL;
 		}
-		if (search == NULL)// 没有指定搜索算法，则默认强制爬山算法
+		if (search == NULL)
 		{
 			std::cout << "using EHC() algorithm\n";
 			search = new EHC();
 		}
 
-		search->init(num_alt_acts, b_initial_state, b_goal_state);  // b_initial_state为单个初始状态
+		search->init(num_alt_acts, b_initial_state, b_goal_state); 
 		cout << "初始化candidateplan" << endl;
-		search->search();  // -> 获取到针对选取单个初始状态的candidateplan
+		search->search(); 
 
 		int iteration = 0; // 循环次数
 		Planvalidate p;
-		std::cout << "开始采样" << std::endl;
-		// 调用函数initial_states,得到采样集合，并输出
+		std::cout << "初始化初始状态集合" << std::endl;
 		p.initial_states(my_problem, init_states);
-		std::cout << "初始状态集合打印完毕" << std::endl;
-		std::cout << "=============================" << std::endl;
-
-		// 从init_states中移除掉初始化时选择的初始状态
-		std::cout << "从init_states中移除掉初始化时选择的初始状态,并打印当前信念状态集合：" << std::endl;
+		std::cout << "----------------------------------------" << std::endl;
 		init_states.remove(b_initial_state);
+		/*
 		for(std::list<DdNode*>::iterator s_it = init_states.begin(); s_it != init_states.end();s_it++){
 			printBDD(*s_it);
 		}
+		*/
 
 		for (;;)
-		{  // 查找反例
+		{
 			++iteration;
 			std::cout << "进入规划和查找反例循环" << std::endl;
 			{ // 
-				std::cout << "开始查找反例" << std::endl;
+				std::cout << "查找反例" << std::endl;
 				if (!p.planvalidate(candidateplan, counterexample))
 				{
-					std::cout << "反例查找结束：" << std::endl;
+					std::cout << "反例查找全部结束" << std::endl;
 					std::cout << "输出规划相关信息" << std::endl;
 					for (int i = 0; i < candidateplan.size(); i++)
 					{
@@ -434,40 +424,47 @@ int main(int argc, char *argv[])
 					}
 					std::cout << "最终的规划长度为：" << candidateplan.size() << endl;
 					outputPlan();
-					break; // 结束for(;;)循环
+					break;
 				}
 			}
 
 			// 将候选规划清空，以免每次找到的规划叠加
 			candidateplan.clear(); 
 
+			/*
 			std::cout << "看是否能正确打印counterexample: " << std::endl;
 			printBDD(counterexample);
+			*/
+			std::cout << "合并反例和初始状态" <<std::endl;
 			b_initial_state = Cudd_bddOr(manager, counterexample, b_initial_state);
-			std::cout << "合并初始状态成功" <<std::endl;
-
+			
 			std::cout << "将反例从初始状态集合中移除" << std::endl;
 			init_states.remove(counterexample);
-			std::cout << "打印当前初始状态集合：" << std::endl;
+			std::cout << "\n" << std::endl;
+			/*
+			std::cout << "打印当前采样状态集合：" << std::endl;
+			std::cout << "-------------------------------------" << std::endl;
 			for(std::list<DdNode*>::iterator s_it = init_states.begin(); s_it != init_states.end();s_it++){
 				printBDD(*s_it);
 			}
+			std::cout << "============☝采样状态集合☝=============" << std::endl;
+			std::cout << "\n" << std::endl;
+			*/
 
-			// 将反例置为空，以免反例不清空从而使得planvalidate一直为true,从而造成无限循环
 			counterexample = NULL;
 
-			std::cout << "当前的初始信念状态:" << std::endl;
+			std::cout << "打印当前的初始状态:" << std::endl;
+			// std::cout << "-------------------------------------" << std::endl;
 			printBDD(b_initial_state);
-			std::cout << "当前的初始信念状态打印完毕" << std::endl;
+			// std::cout << "==============☝当前初始状态☝================" << std::endl;
 
-			{  // planning
-				// 初始化
+			{  
 				std::cout << "开始规划" << std::endl;
 				search->init(num_alt_acts, b_initial_state, b_goal_state);
 				cout << "starting search" << endl;
 				std::cout << "call search()\n";
 				search->search();  // 将规划结果传递给candidateplan
-				std::cout << "本次规划结束" << std::endl;
+				std::cout << "===============本次规划结束=================" << std::endl;
 
 				if (allowed_time > 0)
 				{
