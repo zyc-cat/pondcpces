@@ -8,8 +8,7 @@ class Planvalidate{
 public:
     Planvalidate();
 
-    bool planvalidate(std::vector<const Action*> &candplan, DdNode *&ce);
-    void initial_states(const Problem* problem, std::list<DdNode *> &is);  // 提取所有的初始状态集
+    bool planvalidate(DdNode *&ce);
 
 protected:
     StateNode *next;

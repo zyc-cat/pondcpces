@@ -302,8 +302,8 @@ int main(int argc, char *argv[])
 		{
 			clock_t groundingStartTime = clock();
 			my_problem = (*(Problem::begin())).second;
-			solve_problem(*my_problem, 1.0, 0.0);  
-			printBDD(b_initial_state);
+			solve_problem(*my_problem, 1.0, 0.0);	
+			printBDD(b_initial_state);	// 此时的b_initial_state是一个可能的初始状态
 			cout << "Grounding/Instantiation Time: " << ((float)(clock() - groundingStartTime) / CLOCKS_PER_SEC) << endl;
 			cout << "==================================\n";
 
@@ -397,25 +397,24 @@ int main(int argc, char *argv[])
 
 		int iteration = 0; // 循环次数
 		Planvalidate p;
-		std::cout << "初始化初始状态集合" << std::endl;
-		p.initial_states(my_problem, init_states);
-		std::cout << "----------------------------------------" << std::endl;
-		init_states.remove(b_initial_state);
-		/*
-		for(std::list<DdNode*>::iterator s_it = init_states.begin(); s_it != init_states.end();s_it++){
-			printBDD(*s_it);
-		}
-		*/
+		init_states = formula_bdd(my_problem->init_formula(),false);
+		Cudd_Ref(init_states);
+		DdNode *tmp = Cudd_bddAnd(manager, Cudd_Not(b_initial_state), init_states);
+		Cudd_Ref(tmp);
+		Cudd_RecursiveDeref(manager, init_states);
+		init_states = tmp;
+		std::cout << "移除初始化选定状态的init_states:" << std::endl;
+		printBDD(init_states);
 
 		for (;;)
 		{
 			++iteration;
 			std::cout << "进入规划和查找反例循环" << std::endl;
-			{ // 
+			{
 				std::cout << "查找反例" << std::endl;
-				if (!p.planvalidate(candidateplan, counterexample))
+				if (!p.planvalidate(counterexample))
 				{
-					std::cout << "反例查找全部结束" << std::endl;
+					std::cout << "未找到反例，查找结束" << std::endl;
 					std::cout << "输出规划相关信息" << std::endl;
 					for (int i = 0; i < candidateplan.size(); i++)
 					{
@@ -428,38 +427,33 @@ int main(int argc, char *argv[])
 				}
 			}
 
-			// 将候选规划清空，以免每次找到的规划叠加
+			// 候选规划清空，以免每次找到的规划叠加
 			candidateplan.clear(); 
 
-			/*
-			std::cout << "看是否能正确打印counterexample: " << std::endl;
-			printBDD(counterexample);
-			*/
-			std::cout << "合并反例和初始状态" <<std::endl;
-			b_initial_state = Cudd_bddOr(manager, counterexample, b_initial_state);
-			
-			std::cout << "将反例从初始状态集合中移除" << std::endl;
-			init_states.remove(counterexample);
-			std::cout << "\n" << std::endl;
-			/*
-			std::cout << "打印当前采样状态集合：" << std::endl;
-			std::cout << "-------------------------------------" << std::endl;
-			for(std::list<DdNode*>::iterator s_it = init_states.begin(); s_it != init_states.end();s_it++){
-				printBDD(*s_it);
-			}
-			std::cout << "============☝采样状态集合☝=============" << std::endl;
-			std::cout << "\n" << std::endl;
-			*/
+			std::cout << "合并反例和样本" <<std::endl;
+			Cudd_Ref(b_initial_state);
+			DdNode *tmp2 = Cudd_bddOr(manager, counterexample, b_initial_state);
+			Cudd_Ref(tmp2);
+			Cudd_RecursiveDeref(manager, b_initial_state);
+			b_initial_state = tmp2;
+			printBDD(b_initial_state);
 
+			std::cout << "将反例从init_states中移除" << std::endl;
+			Cudd_Ref(init_states);
+			DdNode *tmp1 = Cudd_bddAnd(manager, Cudd_Not(counterexample), init_states);
+			Cudd_Ref(tmp1);
+			Cudd_RecursiveDeref(manager, init_states);
+			init_states = tmp1;
+			printBDD(init_states);
+			std::cout << "\n" << std::endl;
+
+			// 清空反例
 			counterexample = NULL;
 
-			std::cout << "打印当前的初始状态:" << std::endl;
-			// std::cout << "-------------------------------------" << std::endl;
+			std::cout << "当前样本：" << std::endl;
 			printBDD(b_initial_state);
-			// std::cout << "==============☝当前初始状态☝================" << std::endl;
 
-			{  
-				std::cout << "开始规划" << std::endl;
+			{
 				search->init(num_alt_acts, b_initial_state, b_goal_state);
 				cout << "starting search" << endl;
 				std::cout << "call search()\n";
@@ -491,6 +485,7 @@ int main(int argc, char *argv[])
 		cout << "caught something: " << e.what() << endl;
 	}
 }
+
 
 void set_cubes()
 {

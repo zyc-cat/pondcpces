@@ -178,12 +178,10 @@ double NUMBER_OF_MGS = 0.0;
 //levels to extract LUG RPs, default all worlds
 int LUG_LEVEL_WORLDS = 0;
 
-/**
- * zyc12.27
-*/
+
 std::vector<const Action*> candidateplan;
 DdNode* counterexample;
-std::list<DdNode *> init_states;
+DdNode *init_states;
 
 DdNode* b_initial_state=0;
 DdNode* b_goal_state=0; // the bdd of the goal formula or goal rewawrd 
