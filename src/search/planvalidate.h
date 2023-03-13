@@ -10,6 +10,9 @@ public:
 
     bool planvalidate(DdNode *&ce);
 
+    // DdNode* regress(pair<const Action *const, DdNode *> *a, DdNode *parent);
+    // DdNode *regress(DdNode *image, DdNode *parent);
+
 protected:
     StateNode *next;
 };
