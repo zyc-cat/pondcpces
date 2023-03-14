@@ -85,18 +85,22 @@ bool Planvalidate::planvalidate(DdNode *&ce){
                 DdNode *tmp4 = Cudd_bddAndAbstract(manager, successor, t, successor_state_cube);
                 Cudd_Ref(tmp4);
                 sta = tmp4;
-                std::cout << "打印逆推时的当前变量" << std::endl;
-                printBDD(sta);   
+                // std::cout << "打印逆推时的当前变量" << std::endl;
+                // printBDD(sta);   
             }
-            ce = sta;
+            Cudd_Ref(init_states);
+            ce = Cudd_bddAnd(manager, sta, init_states);
+            Cudd_RecursiveDeref(manager, sta);
+            std::cout << "逆推后去除不满足初始状态部分得到的反例：" << std::endl;
+            printBDD(ce);
             return true;
         }
     }
     // 若执行完候选规划中的所有动作，检查最终状态是否满足目标
     if (bdd_entailed(manager, sta, b_goal_state))
     {
-        std::cout << "打印当前状态sta" << std::endl;
-        printBDD(sta);
+        // std::cout << "打印当前状态sta" << std::endl;
+        // printBDD(sta);
         std::cout << "最终状态满足目标, 当前规划有效" << std::endl;
         return false;
     }
@@ -118,14 +122,12 @@ bool Planvalidate::planvalidate(DdNode *&ce){
         for (std::vector<const Action *>::reverse_iterator a_it = reverse_action.rbegin(); a_it != reverse_action.rend();++a_it)
         {
             const Action *r_action = *a_it;
-            // DdNode *prec = action_preconds.find(*a_it)->second;
             // 获取动作的BDD
             DdNode *t = groundActionDD(*r_action);
 
             // （2）将不满足的部分转化成后继状态表示
             DdNode *successor = Cudd_bddVarMap(manager, sta);
             Cudd_Ref(successor);
-
 
             // 计算后继状态的cube
             DdNode **successor_state_vars = new DdNode *[num_alt_acts];
@@ -145,9 +147,10 @@ bool Planvalidate::planvalidate(DdNode *&ce){
             std::cout << "打印逆推时的当前变量" << std::endl;
             printBDD(sta); 
         }
-        
-        ce = sta;
-        std::cout << "打印反例：" << std::endl;
+        Cudd_Ref(init_states);
+        ce = Cudd_bddAnd(manager, sta, init_states);
+        Cudd_RecursiveDeref(manager, sta);
+        std::cout << "逆推后去除不满足初始状态部分得到的反例：" << std::endl;
         printBDD(ce);
         return true;
     } 
