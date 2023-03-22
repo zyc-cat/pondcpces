@@ -26,8 +26,20 @@ bool Planvalidate::planvalidate(DdNode *&ce){
     DdNode *sta = init_states;  // 初始化当前状态变量sta
     Cudd_Ref(sta);
     std::vector<const Action *> reverse_action; // 存放逆推时需要的动作(已经执行的动作)
+    // std::list<DdNode *> worlds; // 存放取出来的反例
 
-    // TODO: 不满足目标条件，逆推寻找反例
+    // 计算后继状态的cube
+    DdNode **successor_state_vars = new DdNode *[num_alt_acts];
+    for (int i = 0; i < num_alt_facts; i++)
+    {
+        successor_state_vars[i] = Cudd_bddIthVar(manager, 2 * i + 1);
+        Cudd_Ref(successor_state_vars[i]);
+        Cudd_bddSetPairIndex(manager, 2 * i, 2 * i + 1);
+    }
+    DdNode *successor_state_cube = Cudd_bddComputeCube(manager, successor_state_vars, 0, num_alt_acts);
+    Cudd_Ref(successor_state_cube);
+
+    // TODO: 因为反例大多是相似的，是否可以反推完后，取其中一个反例，加入到样本中，再继续寻找候选规划
 
     // 执行候选规划，
     for (std::vector<const Action *>::iterator act_it = candidateplan.begin(); act_it != candidateplan.end(); act_it++)
@@ -70,17 +82,6 @@ bool Planvalidate::planvalidate(DdNode *&ce){
                 DdNode *successor = Cudd_bddVarMap(manager, sta);
                 Cudd_Ref(successor);
 
-                // 计算后继状态的cube
-                DdNode **successor_state_vars = new DdNode *[num_alt_acts];
-                for (int i = 0; i < num_alt_facts; i++)
-                {
-                    successor_state_vars[i] = Cudd_bddIthVar(manager, 2 * i + 1);
-                    Cudd_Ref(successor_state_vars[i]);
-                    Cudd_bddSetPairIndex(manager, 2 * i, 2 * i + 1);
-                }
-                DdNode *successor_state_cube = Cudd_bddComputeCube(manager, successor_state_vars, 0, num_alt_acts);
-                Cudd_Ref(successor_state_cube);
-
                 // （3）根据后继状态表示以及动作前提条件BDD获取当前状态
                 DdNode *tmp4 = Cudd_bddAndAbstract(manager, successor, t, successor_state_cube);
                 Cudd_Ref(tmp4);
@@ -88,11 +89,36 @@ bool Planvalidate::planvalidate(DdNode *&ce){
                 // std::cout << "打印逆推时的当前变量" << std::endl;
                 // printBDD(sta);   
             }
+/*
+            Cudd_Ref(init_states);
+            DdNode *tmp5 = Cudd_bddAnd(manager, sta, init_states);
+            Cudd_RecursiveDeref(manager, sta);
+            std::cout << "逆推后去除不满足初始状态部分得到的反例：" << std::endl;
+            printBDD(tmp5);
+            Cudd_Ref(tmp5);
+            // 从tmp5中取出来一个状态
+            pickKRandomWorlds(tmp5, 1, &worlds);
+            Cudd_RecursiveDeref(manager,tmp5);
+            DdNode *tmp6 = worlds.front();
+            Cudd_Ref(tmp6);
+            ce = tmp6;
+            Cudd_Ref(ce);
+            Cudd_RecursiveDeref(manager, tmp6);
+            std::cout << "随机取的一个反例" << std::endl;
+            printBDD(ce);
+*/
             Cudd_Ref(init_states);
             ce = Cudd_bddAnd(manager, sta, init_states);
             Cudd_RecursiveDeref(manager, sta);
             std::cout << "逆推后去除不满足初始状态部分得到的反例：" << std::endl;
             printBDD(ce);
+            // 为什么逆推为ce得到false
+            if (ce == Cudd_ReadLogicZero(manager))
+            {
+                printBDD(ce);
+                return false;
+            }
+
             return true;
         }
     }
@@ -106,7 +132,7 @@ bool Planvalidate::planvalidate(DdNode *&ce){
     }
     else
     {
-        // TODO: 对不满足目标状态的状态进行逆推
+        // TODO: 对不满足目标的状态进行逆推
         std::cout << "最终状态不满足目标，逆推寻找反例：" << std::endl;
         // (1) 获取不满足的部分,这里是不满足目标状态的那一部分状态
         DdNode *stav = Cudd_bddAnd(manager, sta, b_goal_state);
@@ -129,17 +155,6 @@ bool Planvalidate::planvalidate(DdNode *&ce){
             DdNode *successor = Cudd_bddVarMap(manager, sta);
             Cudd_Ref(successor);
 
-            // 计算后继状态的cube
-            DdNode **successor_state_vars = new DdNode *[num_alt_acts];
-            for (int i = 0; i < num_alt_facts; i++)
-            {
-                successor_state_vars[i] = Cudd_bddIthVar(manager, 2 * i + 1);
-                Cudd_Ref(successor_state_vars[i]);
-                Cudd_bddSetPairIndex(manager, 2 * i, 2 * i + 1);
-            }
-            DdNode *successor_state_cube = Cudd_bddComputeCube(manager, successor_state_vars, 0, num_alt_acts);
-            Cudd_Ref(successor_state_cube);
-
             //（3）根据后继状态表示以及动作BDD获取当前状态
             DdNode *tmp4 = Cudd_bddAndAbstract(manager, successor, t, successor_state_cube);
             Cudd_Ref(tmp4);
@@ -152,6 +167,31 @@ bool Planvalidate::planvalidate(DdNode *&ce){
         Cudd_RecursiveDeref(manager, sta);
         std::cout << "逆推后去除不满足初始状态部分得到的反例：" << std::endl;
         printBDD(ce);
+        // 为什么逆推为ce得到false
+        if (ce == Cudd_ReadLogicZero(manager))
+        {
+            printBDD(ce);
+            return false;
+        }
+
+/*
+        Cudd_Ref(init_states);
+        DdNode *tmp7 = Cudd_bddAnd(manager, sta, init_states);
+        Cudd_RecursiveDeref(manager, sta);
+        std::cout << "逆推后去除不满足初始状态部分得到的反例：" << std::endl;
+        printBDD(tmp7);
+        Cudd_Ref(tmp7);
+        // 从tmp5中取出来一个状态
+        pickKRandomWorlds(tmp7, 1, &worlds);
+        Cudd_RecursiveDeref(manager,tmp7);
+        DdNode *tmp8 = worlds.front();
+        Cudd_Ref(tmp8);
+        ce = tmp8;
+        Cudd_Ref(ce);
+        Cudd_RecursiveDeref(manager, tmp8);
+        std::cout << "随机取的一个反例" << std::endl;
+        printBDD(ce);
+*/
         return true;
     } 
     if (NULL == ce)
