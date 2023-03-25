@@ -23,6 +23,7 @@ bool Planvalidate::planvalidate(DdNode *&ce){
         return false;
     }
 
+
     DdNode *curr = init_states; // 当前状态变量  
     Cudd_Ref(curr);
     std::vector<const Action *> reverse_action;
@@ -37,6 +38,7 @@ bool Planvalidate::planvalidate(DdNode *&ce){
     }
     DdNode *successor_state_cube = Cudd_bddComputeCube(manager, successor_state_vars, 0, num_alt_acts);
     Cudd_Ref(successor_state_cube);
+
 
     for (std::vector<const Action *>::iterator act_it = candidateplan.begin(); act_it != candidateplan.end(); act_it++)
     {
