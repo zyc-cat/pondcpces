@@ -399,7 +399,9 @@ int main(int argc, char *argv[])
 		Planvalidate p;
 		init_states = formula_bdd(my_problem->init_formula(),false);
 		Cudd_Ref(init_states);
+		Cudd_Ref(b_initial_state);
 		DdNode *tmp = Cudd_bddAnd(manager, Cudd_Not(b_initial_state), init_states);
+		Cudd_RecursiveDeref(manager, b_initial_state);
 		Cudd_Ref(tmp);
 		Cudd_RecursiveDeref(manager, init_states);
 		init_states = tmp;
@@ -410,7 +412,9 @@ int main(int argc, char *argv[])
 		{
 			++iteration;
 			std::cout << "进入规划和查找反例循环" << std::endl;
+			clock_t findCeStartTime = clock();
 			{
+				
 				std::cout << "查找反例" << std::endl;
 				if (!p.planvalidate(counterexample))
 				{
@@ -426,6 +430,7 @@ int main(int argc, char *argv[])
 					break;
 				}
 			}
+			cout << "findCe Time: " << ((float)(clock() - findCeStartTime) / CLOCKS_PER_SEC) << endl;
 
 			// 候选规划清空，以免每次找到的规划叠加
 			candidateplan.clear(); 
@@ -440,7 +445,9 @@ int main(int argc, char *argv[])
 
 			std::cout << "将反例从init_states中移除" << std::endl;
 			Cudd_Ref(init_states);
+			Cudd_Ref(counterexample);
 			DdNode *tmp1 = Cudd_bddAnd(manager, Cudd_Not(counterexample), init_states);
+			Cudd_RecursiveDeref(manager, counterexample);
 			Cudd_Ref(tmp1);
 			Cudd_RecursiveDeref(manager, init_states);
 			init_states = tmp1;
@@ -453,6 +460,8 @@ int main(int argc, char *argv[])
 			std::cout << "当前样本：" << std::endl;
 			printBDD(b_initial_state);
 
+			// 搜索规划
+			clock_t planningStartTime = clock();
 			{
 				search->init(num_alt_acts, b_initial_state, b_goal_state);
 				cout << "starting search" << endl;
@@ -475,8 +484,9 @@ int main(int argc, char *argv[])
 				{
 					cout << "The Problem is Unsolvable Or Some other error" << endl;
 					return 0;
-				}	
+				}
 			}
+			cout << "Planning Time: " << ((float)(clock() - planningStartTime) / CLOCKS_PER_SEC) << endl;
 		}
 		std::cout << "循环次数 = " << iteration << std::endl;
 	}

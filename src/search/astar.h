@@ -25,9 +25,6 @@ public:
 
 	void printBestPlan();
 
-	/**
-	 * zyc12.27
-	*/
 	void planlist(std::vector<const Action*> &candplan);
 
 protected:

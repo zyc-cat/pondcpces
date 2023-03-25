@@ -40,7 +40,7 @@
 #include "lao_wrapper.h"
 #include <float.h>
 #include "solve.h"
-#include "graph_wrapper.h"  // zyc12.27 -> pickKRandomWorlds
+#include "graph_wrapper.h"  // pickKRandomWorlds
 
 extern int gnum_cond_effects;
 /* Verbosity level. */
@@ -2783,9 +2783,6 @@ void collectInit(const Problem* problem){
 	std::cout << std::endl;
 
 	if(&problem->init_formula()){
-		/**
-		 * zyc12.27
-		*/
 		std::cout << "construct the bdd for init formula\n";
 		collect_init_state_variables(problem->init_formula()); // 公式中涉及到的状态变量即atom
 		DdNode* tmp1 = formula_bdd(problem->init_formula());// 根据初始状态公式创建BDD
@@ -2814,7 +2811,7 @@ void collectInit(const Problem* problem){
 		b_initial_state = tmp;  // zyc12.27, 此时的tmp是随机取的一个可能的初始状态
 		Cudd_Ref(b_initial_state);
 		Cudd_RecursiveDeref(manager, tmp);
-		printBDD(b_initial_state);  // zyc12.27
+		printBDD(b_initial_state);  
 		return;
 	}
 
