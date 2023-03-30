@@ -281,17 +281,17 @@ int main(int argc, char *argv[])
 		if (seed <= 1)
 			seed = time(NULL);
 		srand(seed);
-		cout << "Random Seed = " << seed << endl;
-		cout << "Verbosity: ";
+		std::cout << "Random Seed = " << seed << endl;
+		std::cout << "Verbosity: ";
 		verbosity = 0;
-		cout << " (" << verbosity << ")\n";
+		std::cout << " (" << verbosity << ")\n";
 		// 开始计时
 		gStartTime = clock();
 		randomGen = new randomGenerator(100000); // use a million random nums
 
 		// 读取domain和instance文件进行解析
 		if ((read_file(argv[1]) && (Problem::begin()) != (Problem::end())) || read_file(argv[2]))
-			cout << "done Parsing\n==================================" << endl;
+			std::cout << "done Parsing\n==================================" << endl;
 		else
 		{
 			cout << "Parse Error" << endl;
@@ -304,8 +304,8 @@ int main(int argc, char *argv[])
 			my_problem = (*(Problem::begin())).second;
 			solve_problem(*my_problem, 1.0, 0.0);	
 			printBDD(b_initial_state);	// 此时的b_initial_state是一个可能的初始状态
-			cout << "Grounding/Instantiation Time: " << ((float)(clock() - groundingStartTime) / CLOCKS_PER_SEC) << endl;
-			cout << "==================================\n";
+			std::cout << "Grounding/Instantiation Time: " << ((float)(clock() - groundingStartTime) / CLOCKS_PER_SEC) << endl;
+			std::cout << "==================================\n";
 
 			if ((*my_problem).goal_cnf())
 				bdd_goal_cnf(&goal_cnf);
@@ -336,9 +336,9 @@ int main(int argc, char *argv[])
 			exit(0);
 		}
 
-		cout << "#ACTIONS = " << num_alt_acts << endl;
-		cout << "#EVENTS = " << event_preconds.size() << endl;
-		cout << "#PROPOSITIONS = " << num_alt_facts << endl;
+		std::cout << "#ACTIONS = " << num_alt_acts << endl;
+		std::cout << "#EVENTS = " << event_preconds.size() << endl;
+		std::cout << "#PROPOSITIONS = " << num_alt_facts << endl;
 		goal_samples = Cudd_ReadLogicZero(manager);
 
 		if (HEURISTYPE == SLUGRP ||
@@ -392,12 +392,13 @@ int main(int argc, char *argv[])
 		}
 
 		search->init(num_alt_acts, b_initial_state, b_goal_state); 
-		cout << "初始化candidateplan" << endl;
+		std::cout << "初始化candidateplan" << endl;
 		search->search(); 
 
 		int iteration = 0; // 循环次数
 		Planvalidate p;
 		init_states = formula_bdd(my_problem->init_formula(),false);
+
 		Cudd_Ref(init_states);
 		Cudd_Ref(b_initial_state);
 		DdNode *tmp = Cudd_bddAnd(manager, Cudd_Not(b_initial_state), init_states);
@@ -408,13 +409,14 @@ int main(int argc, char *argv[])
 		std::cout << "移除初始化选定状态的init_states:" << std::endl;
 		printBDD(init_states);
 
+		clock_t findCeStartTime, findCeEndTime;
+		clock_t planningStartTime, planningEndTime;
 		for (;;)
 		{
 			++iteration;
 			std::cout << "进入规划和查找反例循环" << std::endl;
-			clock_t findCeStartTime = clock();
 			{
-				
+				findCeStartTime = clock();
 				std::cout << "查找反例" << std::endl;
 				if (!p.planvalidate(counterexample))
 				{
@@ -429,8 +431,9 @@ int main(int argc, char *argv[])
 					outputPlan();
 					break;
 				}
+				findCeEndTime = clock();
 			}
-			cout << "findCe Time: " << ((float)(clock() - findCeStartTime) / CLOCKS_PER_SEC) << endl;
+			
 
 			// 候选规划清空，以免每次找到的规划叠加
 			candidateplan.clear(); 
@@ -441,7 +444,7 @@ int main(int argc, char *argv[])
 			Cudd_Ref(tmp2);
 			Cudd_RecursiveDeref(manager, b_initial_state);
 			b_initial_state = tmp2;
-			printBDD(b_initial_state);
+			// printBDD(b_initial_state);
 
 			std::cout << "将反例从init_states中移除" << std::endl;
 			Cudd_Ref(init_states);
@@ -451,20 +454,21 @@ int main(int argc, char *argv[])
 			Cudd_Ref(tmp1);
 			Cudd_RecursiveDeref(manager, init_states);
 			init_states = tmp1;
+			std::cout << "当前init_states: " << std::endl;
 			printBDD(init_states);
 			std::cout << "\n" << std::endl;
 
 			// 清空反例
-			counterexample = NULL;
-
+			// counterexample = NULL;
+			
 			std::cout << "当前样本：" << std::endl;
 			printBDD(b_initial_state);
 
 			// 搜索规划
-			clock_t planningStartTime = clock();
+			planningStartTime = clock();
 			{
 				search->init(num_alt_acts, b_initial_state, b_goal_state);
-				cout << "starting search" << endl;
+				std::cout << "starting search" << endl;
 				std::cout << "call search()\n";
 				search->search();  // 将规划结果传递给candidateplan
 				std::cout << "===============本次规划结束=================" << std::endl;
@@ -482,14 +486,16 @@ int main(int argc, char *argv[])
 
 				if (candidateplan.empty())
 				{
-					cout << "The Problem is Unsolvable Or Some other error" << endl;
+					std::cout << "The Problem is Unsolvable Or Some other error" << endl;
 					return 0;
 				}
 			}
-			cout << "Planning Time: " << ((float)(clock() - planningStartTime) / CLOCKS_PER_SEC) << endl;
+			planningEndTime = clock();
 		}
 		std::cout << "循环次数 = " << iteration << std::endl;
-	}
+		std::cout << "反例时长 = " << ((double)(findCeEndTime - findCeStartTime) / (double)CLOCKS_PER_SEC) << " secs" << std::endl;
+		std::cout << "规划时长 = " << ((float)(planningEndTime - planningStartTime) / (float)CLOCKS_PER_SEC) << " secs" << std::endl;
+	}	
 	catch (const exception &e)
 	{
 		cout << "caught something: " << e.what() << endl;
