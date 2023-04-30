@@ -160,8 +160,9 @@ void initLUG(std::map<const Action*, DdNode*>* acts , DdNode* goal){
 		// 创建action的BitOperator
 		for(std::map<const Action*, DdNode*>::iterator a = acts->begin();
 				a != acts->end(); a++){
-
-			generate_BitOperators((*a).first);
+			// 007 here still need to check
+			if(!a->first->hasObservation())
+				generate_BitOperators((*a).first);
 		}
 #else
 		pos = Cudd_BddToAdd(manager, p);
@@ -4054,8 +4055,10 @@ void getHeuristic(list<StateNode*>* states,
 		//cout << "|states| = " << states->size()<<endl;
 		for(list<StateNode*>::iterator i = states->begin();
 				i != states->end(); i++){
+				// 注释掉输出
+				/*
 			     cout << "CARD" <<endl;
-			(*i)->h = getCardinality((*i)->dd);
+			(*i)->h = getCardinality((*i)->dd);*/
 
 			cout << (*i)->h << endl;
 		}
@@ -4373,7 +4376,8 @@ void getHeuristic(list<StateNode*>* states,
 		for(list<StateNode*>::iterator i = states->begin();
 				i != states->end(); i++){
 			(*i)->f = (*i)->g + (*i)->h;
-			cout << "f = " << (*i)->f << "(g=" << (*i)->g << ",h=" << (*i)->h << ")\n";
+			// 注释掉输出
+			// cout << "f = " << (*i)->f << "(g=" << (*i)->g << ",h=" << (*i)->h << ")\n";
 		}
 	}
 

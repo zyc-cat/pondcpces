@@ -452,8 +452,8 @@ int Monitor::start() {
   // sets up next state variables 
 #ifdef PPDDL_PARSER
 cout << "start"<<endl;
-   progress((std::pair<const Action* const, DdNode*>*)0,belief);
- 
+   progress(belief, (std::pair<const Action* const, DdNode*>*)0);
+
 #else
   progress((alt_action *)0,belief);
 #endif

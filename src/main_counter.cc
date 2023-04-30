@@ -126,7 +126,11 @@ int main(int argc, char *argv[])
 
 		if (argc < 3 || argv[1] == "--help")
 		{
-			cout << "PONDbeta Planner - Version 2.2\n";
+			cout << "Counter Planner - Version 2.2\n"
+				 << "Usage: counter <domain-name> <prob-name> [OPTIONS]" << endl
+				 << "OPTIONS:" << endl
+				 << "Search Algorithm:\n\t <default> \t\t : astar\n\t -s astar \t\t : A*\n"
+				 << "Heuristics:\n\t <default> \t\t : h = 0 <Breadth First Search>\n\t -h card  \t\t : cardinality \n\t -h sgrp \t\t : SG relaxed plan \n\t -h mgrpm \t\t : MG max relaxed plan\n\t -h mgrps \t\t : MG sum relaxed plan \n\t -h mgrpu \t\t : MG unioned relaxed plan \n\t -h lugrp \t\t : LUG relaxed plan" << endl;
 			return 0;
 		}
 
@@ -154,22 +158,22 @@ int main(int argc, char *argv[])
 						cout << "A* Search" << endl;
 						step_search = new AStar();
 					}
-					
-					else if (strcmp(argv[i], "aostar") == 0)
+				}
+				if (strcmp(argv[i], "-p") == 0)
+				{
+					++i;
+					if(strcmp(argv[i], "fog") == 0) // forgetting
 					{
-						cout << "AO* Search" << endl;
-						search = new LAOStar();
+						progMode = FORGETTING;
 					}
-				}
-
-				if (strcmp(argv[i], "-w") == 0)
-				{
-					GWEIGHT = atoi(argv[++i]);
-					cout << "HWEIGHT = " << GWEIGHT << endl;
-				}
-				if (strcmp(argv[i], "-i") == 0)
-				{
-					incremental_search = true;
+					else if(strcmp(argv[i], "part") == 0) // partition merge
+					{
+						progMode = PARTITION_MERGE;
+					}
+					else if(strcmp(argv[i], "def") == 0) // definability progress
+					{
+						progMode = DEFINABILITY;
+					}
 				}
 				if (strcmp(argv[i], "-h") == 0)
 				{
@@ -297,13 +301,16 @@ int main(int argc, char *argv[])
 			cout << "Parse Error" << endl;
 			exit(0);
 		}
-
+		clock_t groundingStartTime;
+		clock_t groundingEndTime;
 		try
 		{
-			clock_t groundingStartTime = clock();
+			// clock_t groundingStartTime = clock();
+			groundingStartTime = clock();
 			my_problem = (*(Problem::begin())).second;
 			solve_problem(*my_problem, 1.0, 0.0);	
-			printBDD(b_initial_state);	// 此时的b_initial_state是一个可能的初始状态
+			groundingEndTime = clock();
+			// printBDD(b_initial_state);	// 此时的b_initial_state是一个可能的初始状态
 			cout << "Grounding/Instantiation Time: " << ((float)(clock() - groundingStartTime) / CLOCKS_PER_SEC) << endl;
 			cout << "==================================\n";
 
@@ -336,9 +343,9 @@ int main(int argc, char *argv[])
 			exit(0);
 		}
 
-		cout << "#ACTIONS = " << num_alt_acts << endl;
-		cout << "#EVENTS = " << event_preconds.size() << endl;
-		cout << "#PROPOSITIONS = " << num_alt_facts << endl;
+		// cout << "#ACTIONS = " << num_alt_acts << endl;
+		// cout << "#EVENTS = " << event_preconds.size() << endl;
+		// cout << "#PROPOSITIONS = " << num_alt_facts << endl;
 		goal_samples = Cudd_ReadLogicZero(manager);
 
 		if (HEURISTYPE == SLUGRP ||
@@ -387,8 +394,10 @@ int main(int argc, char *argv[])
 		}
 		if (search == NULL)
 		{
-			std::cout << "using EHC() algorithm\n";
-			search = new EHC();
+			// std::cout << "using EHC() algorithm\n";
+			// search = new EHC();
+			cout << "A* Search" << endl;
+			search = new AStar();
 		}
 
 		search->init(num_alt_acts, b_initial_state, b_goal_state); 
@@ -405,45 +414,43 @@ int main(int argc, char *argv[])
 		Cudd_Ref(tmp);
 		Cudd_RecursiveDeref(manager, init_states);
 		init_states = tmp;
-		std::cout << "移除初始化选定状态的init_states:" << std::endl;
-		printBDD(init_states);
 
+		clock_t total_validate_time = 0;
+		clock_t total_plan_time = 0;
+		clock_t start_time = clock();
 		for (;;)
 		{
 			++iteration;
-			std::cout << "进入规划和查找反例循环" << std::endl;
-			clock_t findCeStartTime = clock();
 			{
 				
-				std::cout << "查找反例" << std::endl;
+				clock_t validate_start_time = clock();
+
 				if (!p.planvalidate(counterexample))
 				{
 					std::cout << "未找到反例，查找结束" << std::endl;
-					std::cout << "输出规划相关信息" << std::endl;
-					for (int i = 0; i < candidateplan.size(); i++)
-					{
-						candidateplan[i]->print(std::cout, my_problem->terms());
-						std::cout << "\n";
-					}
-					std::cout << "最终的规划长度为：" << candidateplan.size() << endl;
+					// std::cout << "输出规划相关信息" << std::endl;
+					// for (int i = 0; i < candidateplan.size(); i++)
+					// {
+					// 	candidateplan[i]->print(std::cout, my_problem->terms());
+					// 	std::cout << "\n";
+					// }
+					std::cout << "Length = " << candidateplan.size() << endl;
 					outputPlan();
 					break;
 				}
+				clock_t validate_end_time = clock();
+				total_validate_time += validate_end_time - validate_start_time;
 			}
-			cout << "findCe Time: " << ((float)(clock() - findCeStartTime) / CLOCKS_PER_SEC) << endl;
 
-			// 候选规划清空，以免每次找到的规划叠加
 			candidateplan.clear(); 
 
-			std::cout << "合并反例和样本" <<std::endl;
 			Cudd_Ref(b_initial_state);
 			DdNode *tmp2 = Cudd_bddOr(manager, counterexample, b_initial_state);
 			Cudd_Ref(tmp2);
 			Cudd_RecursiveDeref(manager, b_initial_state);
 			b_initial_state = tmp2;
-			printBDD(b_initial_state);
+			// printBDD(b_initial_state);
 
-			std::cout << "将反例从init_states中移除" << std::endl;
 			Cudd_Ref(init_states);
 			Cudd_Ref(counterexample);
 			DdNode *tmp1 = Cudd_bddAnd(manager, Cudd_Not(counterexample), init_states);
@@ -451,24 +458,20 @@ int main(int argc, char *argv[])
 			Cudd_Ref(tmp1);
 			Cudd_RecursiveDeref(manager, init_states);
 			init_states = tmp1;
-			printBDD(init_states);
-			std::cout << "\n" << std::endl;
 
-			// 清空反例
-			counterexample = NULL;
-
-			std::cout << "当前样本：" << std::endl;
-			printBDD(b_initial_state);
+			// std::cout << "当前样本：" << std::endl;
+			// printBDD(b_initial_state);
 
 			// 搜索规划
-			clock_t planningStartTime = clock();
+			clock_t plan_start_time = clock();
 			{
 				search->init(num_alt_acts, b_initial_state, b_goal_state);
 				cout << "starting search" << endl;
 				std::cout << "call search()\n";
 				search->search();  // 将规划结果传递给candidateplan
 				std::cout << "===============本次规划结束=================" << std::endl;
-
+				clock_t plan_end_time = clock();
+        		total_plan_time += plan_end_time - plan_start_time;
 				if (allowed_time > 0)
 				{
 					// disable the sender
@@ -486,9 +489,15 @@ int main(int argc, char *argv[])
 					return 0;
 				}
 			}
-			cout << "Planning Time: " << ((float)(clock() - planningStartTime) / CLOCKS_PER_SEC) << endl;
+			
 		}
-		std::cout << "循环次数 = " << iteration << std::endl;
+		// std::cout << "初始状态集合|S| = " << Cudd_DagSize(init_states)<< std::endl;
+		
+		std::cout << "反例 = " << ((float)total_validate_time / CLOCKS_PER_SEC) << " sec" << std::endl;
+		std::cout << "规划 = " << ((float)total_plan_time / CLOCKS_PER_SEC) << " sec" << std::endl;
+		std::cout << "实例化 = " << ((float)(groundingEndTime - groundingStartTime) / CLOCKS_PER_SEC) << " sec" << endl;
+		std::cout << "样本大小 = " << Cudd_DagSize(b_initial_state)<< std::endl;
+		std::cout << "迭代次数 = " << iteration << std::endl;
 	}
 	catch (const exception &e)
 	{

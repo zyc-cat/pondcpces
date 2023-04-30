@@ -25,8 +25,7 @@ double computeGoalSatisfaction(DdNode*);// 判断是否蕴含goal，成立返回
 
 struct StateFormula;
 // 该动作更新接口，调用计算action的转换BDD，随后调用下面的progress(DdNode*image, DdNode* parent)接口
- DdNode* progress(std::pair<const Action* const, DdNode*>*, 
-		 DdNode* parent);
+ DdNode* progress(DdNode* parent, std::pair<const Action* const, DdNode*>*);
  DdNode* progress(DdNode* parent, const Action* a);
 //int split(std::map<const StateFormula*, DdNode*>,//std::pair<const Action* const, DdNode*>*, 
 int split(std::list<DdNode*>*,

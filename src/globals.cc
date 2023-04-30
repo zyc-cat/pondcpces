@@ -168,9 +168,16 @@ std::map<const Action*, DdNode*> event_rewards;
 /* exhaustive conditional effects, ala SGP -- dan */
 std::map<const Action*, OutcomeSet*> event_outcomes;
 /*conditional definability, euqiv BDD*/
+ProgMode progMode = FORGETTING; // use the forgetting based progression
 std::map<int, std::vector<DdNode*>* > equivBDD;
 std::map<int,DdNode *> unit_cube;
-
+std::map<const Action *, std::vector<int> > act_ndefp; // 每个动作不可定义的命题情况
+std::map<const Action *, std::map<int, DdNode*> > ndef_literalT;//literal组合的T情况。
+std::vector<int> good(4,0);
+std::map<int,int> g1ndefTeqMT;
+std::map<int,int> g1ndefTneqMT;
+int total_act = 0;
+int zero_act = 0;
 #endif
 
 //proportion of graphs to compute, if 1 then compute all

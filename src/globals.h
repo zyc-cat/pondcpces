@@ -260,13 +260,27 @@ extern std::map<const Action*, DdNode*> event_rewards;
  /* exhaustive conditional effects, ala SGP -- dan */
 extern std::map<const Action*, OutcomeSet*> event_outcomes;
 /*conditional definability, euqiv BDD*/
+enum ProgMode
+{
+   FORGETTING = 1,
+   PARTITION_MERGE = 2,
+   DEFINABILITY = 3,
+};
+extern ProgMode progMode;
 extern std::map<int, std::vector<DdNode*>* > equivBDD;
 extern std::map<int,DdNode *> unit_cube;
+extern std::map<const Action *, std::vector<int> > act_ndefp; // 每个动作不可定义的命题情况
+extern std::map<const Action *, std::map<int, DdNode *> > ndef_literalT;//literal组合的T情况。
+extern std::vector<int> good;
+extern std::map<int,int> g1ndefTeqMT;
+extern std::map<int,int> g1ndefTneqMT;
+extern int total_act;
+extern int zero_act;
 /**
  * A set of state transitions.
  * 一个transitionSet包括了con(e)的BDD和修改的atom
  */
- // 存储多个状态转换的集合
+// 存储多个状态转换的集合
 struct TransitionSetList;
 // 记录转换关系，即前提条件和相应的相关
 struct TransitionSet {

@@ -45,11 +45,8 @@ bool AStar::step(){
 			// printf("goal BDD is :");
 			// printBDD(next->dd);
 			cout << "Found branch!\n";
-			/**
-			 * zyc12.27
-			*/
 			// printBestPlan();//输出最佳方案
-			planlist(candidateplan);
+			planlist(candidateplan);	// zyc 存储规划序列到candidateplan中
 			std::cout << "successfully found candidateplan" << std::endl;
 		}
 
@@ -61,10 +58,6 @@ bool AStar::step(){
 	// 添加所有满足当前状态动作到ActionNodeList中，核心，实现了状态结点
 	// 这个接口有bug，展示重写，用简单版本
 	// next->addAllActions();// 仅根据名字判断，不同参数会没有添加
-	// std::cout << "end addAllaction\n";
-	// 考虑每个动作结点
-	// std::cout << "nextAction->size() = " << next->NextActions->size() << std::endl;
-
 	/**
 	 * momo007 2022.06.10
 	 */
@@ -93,33 +86,50 @@ bool AStar::step(){
 	for (ActionNodeList::iterator act_it = next->NextActions->begin(); act_it != next->NextActions->end(); act_it++)
 	{
 		ActionNode *action = *act_it;
-		DdNode *preBdd = action_preconds.find(action->act)->second;
 		// 计算得到后继状态结点
 		debugCnt++;
 		// std::cout << "######:" << debugCnt << std::endl;
-		// action->act->print(std::cout, my_problem->terms());
-		pair<const Action *const, DdNode *> act_pair(action->act, preBdd); // 动作及其前提条件pair
-		DdNode *successor = progress(&act_pair, next->dd);// 计算后继状态
-		// DdNode *successor = progress(next->dd, action->act);
-		/**
-		 * zyc12.27
-		*/
-		// DdNode *successor1 = definability_progress(next->dd, action->act);
-		// if(successor1 != successor)
+		DdNode *successor;
+		switch (progMode)
+		{
+		case FORGETTING:
+		{
+			DdNode *preBdd = action_preconds.find(action->act)->second;
+			pair<const Action *const, DdNode *> act_pair(action->act, preBdd); // 动作及其前提条件pair
+			successor = progress(next->dd, &act_pair);						   // method1 fogetting progress
+			break;
+		}
+		case PARTITION_MERGE:
+			successor = progress(next->dd, action->act); // method 2 partition progress
+			break;
+		case DEFINABILITY:
+			successor = definability_progress(next->dd, action->act); // method3 definability progress
+			break;
+		}
+		// if (act_ndefp.find(action->act) != act_ndefp.end())
 		// {
-		// 	printBDD(next->dd);
-		// 	action->act->print(std::cout, my_problem->terms());
-		// 	printBDD(successor);
-		// 	printBDD(successor1);
-		// 	assert(false);
+		// 	if(act_ndefp[action->act].size()>1)
+		// 	{
+		// 		if (successor == successor1)
+		// 			good[2]++;
+		// 		else
+		// 		{
+		// 			good[3]++, printBDD(next->dd), printBDD(successor), printBDD(successor1), assert(0);
+		// 		}
+		// 	}
+		// 	else
+		// 	{
+		// 		action->act->print(std::cout, my_problem->terms());
+		// 		cout <<  "&&"  << endl << flush;
+		// 		assert(successor == successor1);
+		// 		good[1]++;
+		// 	}
 		// }
-
-		// Cudd_Ref(successor);
-		// std::cout << "std::\n";
-		// printBDD(successor);
-		// std::cout << "new::\n";
-		// printBDD(successor2);
-		// assert(0);
+		// else
+		// {
+		// 	assert(successor1 == successor);
+		// 	good[0]++;
+		// }
 		// 后继状态为空
 		// momo007 修复该bug
 		if(bdd_is_zero(manager,successor))
@@ -198,39 +208,6 @@ bool AStar::step(){
 				open.insert(child);
 		}
 	}
-
-	// for (ActionNodeList::iterator act_it = next->NextActions->begin(); act_it != next->NextActions->end(); act_it++)
-	// {
-	// 	ActionNode *action = *act_it;
-		// StateNode* child = action->newSample();//得到新的后继状态结点
-	// 	assert(child != NULL);
-	// 	double new_g = next->g + action->Cost;// A* Heuristic
-	// 	set<StateNode *, StateComparator>::iterator child_it = open.find(child);
-	// 	bool inFringe = (child_it != open.end());// 之前遇到过该状态
-	// 	bool isClosed = (closed.count(child) > 0);// 已经搜索过了
-	// 	bool cheaper = (new_g < child->g);// 是否比之前到达该child更便宜
-	// 	// 仅考虑没有被访问的情况
-	// 	// 之前没有加入open or 之前加入oepn但现在的路径更便宜，则需要更新
-	// 	if(!isClosed && (!inFringe || (inFringe && cheaper))){
-	// 		child->BestPrevAction = action;
-
-	// 		if(inFringe)// 删除open的节点
-	// 			open.erase(child_it);
-
-	// 		child->g = new_g;
-	// 		child->f = child->g + gWeight * child->h;
-
-	// 		child->prReached = next->prReached * 1.0;//dist->Prob;		// HACK
-	// 		child->horizon = next->horizon + 1;
-	// 		child->randPriority = rand();
-
-	// 		if(inFringe)
-	// 			open.insert(child_it, child);
-	// 		else
-	// 			open.insert(child);
-	// 	}
-	// }
-	
 	// 从open中取出最佳节点
 	next = *open.begin();
 	// setBestAct(next);// 在前面的逻辑中更新了，不需要调用该接口

@@ -1017,7 +1017,7 @@ StateNode* ActionNode::newSample(list<map<const pEffect*, DdNode*>*>* observatio
 		return NULL;
 	}
 	pair<const Action *const, DdNode *> act_pair(act, fr->second);// 动作及其前提条件pair
-	DdNode *causativeSuccessor = progress(&act_pair, PrevState->dd);
+	DdNode *causativeSuccessor = progress(PrevState->dd, &act_pair);
 	Cudd_Ref(causativeSuccessor);
 
 	int num_successors = 0;

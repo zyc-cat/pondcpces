@@ -239,7 +239,7 @@ void Search::init(int num_acts, DdNode *b_initial_state, DdNode *b_goal_state)
 		{
 			std::cout << "!DEFERRED EVALUATION\n";
 			getHeuristic(&states, Start, 0);
-			cout << "H(I) = " << Start->h << endl;
+			// cout << "H(I) = " << Start->h << endl; // 注释掉输出
 		}
 	}
 

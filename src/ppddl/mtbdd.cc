@@ -506,7 +506,6 @@ DdNode* formula_bdd(const StateFormula& formula, bool primed = false) {
 		 * The formula is either TRUE or FALSE, so the BDD is either
 		 * constant 1 or 0.
 		 */
-		std::cout << "const 1 or 0" << std::endl;
 		DdNode* ddf = (formula.tautology() ?
 				Cudd_ReadOne(dd_man) : Cudd_ReadLogicZero(dd_man));//here we use the logic zero
 		Cudd_Ref(ddf);
@@ -522,8 +521,11 @@ DdNode* formula_bdd(const StateFormula& formula, bool primed = false) {
 		 * primed代表状态变量加了'，即后即状态变量。
 		 */
 		// std::cout << "atom = " << state_variables[af] << std::endl;
-		if(dynamic_atoms.find((state_variables[af])) == dynamic_atoms.end())
-			return Cudd_ReadOne(manager);// 该变量不是dynamic,忽略,直接返回true.
+		if(dynamic_atoms.find((state_variables[af])) == dynamic_atoms.end()){
+			DdNode *ddf = Cudd_ReadOne(manager);
+			Cudd_Ref(ddf);
+			return ddf;// 该变量不是dynamic,忽略,直接返回true.
+		}
 
 		// 假设状态变量有[a,b,c,d]后即状态[a',b',c',d']排放位置为：[a,a',b,b',c,c',d,d']
 		// 当前atom是状态变量，获取他的位置，然后状态BDD，并返回该Node
@@ -630,9 +632,9 @@ DdNode* formula_bdd(const StateFormula& formula, bool primed = false) {
 			}
 		}
 
-		ddx = Cudd_ReadLogicZero(dd_man);
+		ddx = Cudd_ReadLogicZero(dd_man);// the conjuncts that only one literal is true
 		Cudd_Ref(ddx);
-		ddn = Cudd_ReadOne(dd_man);
+		ddn = Cudd_ReadOne(dd_man);// the conjuncts that all literal is false
 		Cudd_Ref(ddn);
 		// 考虑公式的每一个disjunct,利用ITE实现互斥的关系，最后ddx存储oneof情况下的全部disjunct
 		for (size_t i = 0; i < odf->size(); i++) {
@@ -2210,6 +2212,8 @@ std::pair<DdNode*, DdNode*> action_mtbdds(const Action& action,
 	 * all transition sets for each outcome have mutually exclusive
 	 * conditions.
 	 */
+	// 注释掉输出
+	/*
 	std::cout << "####### start action mtbdds######\n";
 	action.print(std::cout, problem.terms());
 	std::cout << std::endl;
@@ -2217,6 +2221,7 @@ std::pair<DdNode*, DdNode*> action_mtbdds(const Action& action,
 	std::cout << std::endl;
 	action.effect().print(std::cout, problem.domain().predicates(), problem.domain().functions(), problem.terms());
 	std::cout << std::endl;
+	*/
 
 	//printBDD(ddng);
 
@@ -2513,7 +2518,8 @@ std::pair<DdNode*, DdNode*> action_mtbdds(const Action& action,
 	// 	Cudd_Ref(ddP);
 	// 	Cudd_RecursiveDeref(manager, nd);
 	// }
-	std::cout << "####### end action mtbdds######\n";
+	// 注释掉输出
+	// std::cout << "####### end action mtbdds######\n";
 	return std::make_pair(ddD, ddR);
 }
 
@@ -2773,18 +2779,16 @@ void collectInit(const Problem* problem){
 	/*
 	 * Construct an ADD representing initial states.
 	 */
-	/**
-	 * zyc12.27
-	*/
-	std::list<DdNode *> worlds;
+	std::list<DdNode *> worlds;	// zyc 初始化时存放初始状态
 	problem->init_formula().print(std::cout, problem->domain().predicates(),
-								  problem->domain().functions(),
-								  problem->terms());
+			problem->domain().functions(),
+			problem->terms());
 	std::cout << std::endl;
 
 	if(&problem->init_formula()){
-		std::cout << "construct the bdd for init formula\n";
+		// std::cout << "construct the bdd for init formula\n";
 		collect_init_state_variables(problem->init_formula()); // 公式中涉及到的状态变量即atom
+		// zyc 提取一个可能的初始状态
 		DdNode* tmp1 = formula_bdd(problem->init_formula());// 根据初始状态公式创建BDD
 		pickKRandomWorlds(tmp1, 1, &worlds);
 		DdNode *tmp = worlds.front();
@@ -2807,11 +2811,11 @@ void collectInit(const Problem* problem){
 				}
 			}
 		}
-		// 记录初始状态集合，这里为何需要合取所有状态变量的否定？
-		b_initial_state = tmp;  // zyc12.27, 此时的tmp是随机取的一个可能的初始状态
+		// zyc 初始化样本(b_initial_state)完毕，为一个可能的初始状态
+		b_initial_state = tmp;
 		Cudd_Ref(b_initial_state);
 		Cudd_RecursiveDeref(manager, tmp);
-		printBDD(b_initial_state);  
+		// printBDD(b_initial_state);
 		return;
 	}
 
