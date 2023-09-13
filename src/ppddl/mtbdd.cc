@@ -2792,7 +2792,7 @@ void collectInit(const Problem* problem){
 		Cudd_Ref(tmp1);
 		DdNode* tmp = pickKRandomWorlds(tmp1, 1);
 		Cudd_Ref(tmp);
-		Cudd_RecursiveDeref(tmp1);
+		Cudd_RecursiveDeref(manager,tmp1);
 		for(int i = 0; i < num_alt_facts; i++){//考虑每个状态变量
 			const Atom *a = (*(dynamic_atoms.find(i))).second;// 查看该状态变量的atom
 			if(init_variables.find(a) == init_variables.end()){// 查找该公式是否涉及该状态变量
