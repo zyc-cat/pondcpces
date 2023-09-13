@@ -25,7 +25,7 @@ bool Planvalidate::planvalidate(DdNode *&ce){
     }
 
 
-    DdNode *curr = init_states; // 当前状态变量  
+    DdNode *curr = init_states; // 当前状态
     Cudd_Ref(curr);
     std::vector<const Action *> reverse_action;
 
@@ -50,8 +50,8 @@ bool Planvalidate::planvalidate(DdNode *&ce){
             DdNode *stav = Cudd_bddAnd(manager, curr, preBdd);
             Cudd_Ref(stav);
             DdNode *tmp1 = Cudd_bddAnd(manager, Cudd_Not(stav), curr);
-            Cudd_RecursiveDeref(manager, stav);
             Cudd_Ref(tmp1);
+            Cudd_RecursiveDeref(manager, stav);
             Cudd_RecursiveDeref(manager, curr);
             curr = tmp1; 
             
@@ -76,7 +76,8 @@ bool Planvalidate::planvalidate(DdNode *&ce){
             }
 
             ce = Cudd_bddAnd(manager, curr, init_states);
-
+            Cudd_Ref(ce);
+            Cudd_RecursiveDeref(manager, curr);
             if (ce == Cudd_ReadLogicZero(manager))
             {
                 std::cout << "=====================" << std::endl;
@@ -94,6 +95,7 @@ bool Planvalidate::planvalidate(DdNode *&ce){
     // 若执行完候选规划中的所有动作，检查最终状态是否满足目标
     if (bdd_entailed(manager, curr, b_goal_state))
     {
+        Cudd_RecursiveDeref(manager, curr);
         std::cout << "最终状态满足目标, 当前规划有效" << std::endl;
         return false;
     }
@@ -104,8 +106,8 @@ bool Planvalidate::planvalidate(DdNode *&ce){
         DdNode *stav = Cudd_bddAnd(manager, curr, b_goal_state);
         Cudd_Ref(stav);
         DdNode *tmp3 = Cudd_bddAnd(manager, Cudd_Not(stav), curr);
-        Cudd_RecursiveDeref(manager,stav);
         Cudd_Ref(tmp3);
+        Cudd_RecursiveDeref(manager,stav);
         Cudd_RecursiveDeref(manager, curr);
         curr = tmp3;
 
@@ -121,6 +123,7 @@ bool Planvalidate::planvalidate(DdNode *&ce){
 
             //（3）根据后继状态表示以及动作BDD获取当前状态
             DdNode *tmp4 = Cudd_bddAndAbstract(manager, successor, t, next_state_cube);
+            Cudd_Ref(tmp4);
             Cudd_RecursiveDeref(manager, curr);
             curr = tmp4;
             Cudd_RecursiveDeref(manager, t);
@@ -128,7 +131,8 @@ bool Planvalidate::planvalidate(DdNode *&ce){
         }
 
         ce = Cudd_bddAnd(manager, curr, init_states);
-
+        Cudd_Ref(ce);
+        Cudd_RecursiveDeref(manager, curr);
         if (ce == Cudd_ReadLogicZero(manager))
         {
             std::cout << "=====================" << std::endl;

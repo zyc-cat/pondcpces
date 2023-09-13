@@ -2779,7 +2779,6 @@ void collectInit(const Problem* problem){
 	/*
 	 * Construct an ADD representing initial states.
 	 */
-	std::list<DdNode *> worlds;	// zyc 初始化时存放初始状态
 	problem->init_formula().print(std::cout, problem->domain().predicates(),
 			problem->domain().functions(),
 			problem->terms());
@@ -2790,10 +2789,10 @@ void collectInit(const Problem* problem){
 		collect_init_state_variables(problem->init_formula()); // 公式中涉及到的状态变量即atom
 		// zyc 提取一个可能的初始状态
 		DdNode* tmp1 = formula_bdd(problem->init_formula());// 根据初始状态公式创建BDD
-		pickKRandomWorlds(tmp1, 1, &worlds);
-		DdNode *tmp = worlds.front();
+		Cudd_Ref(tmp1);
+		DdNode* tmp = pickKRandomWorlds(tmp1, 1);
 		Cudd_Ref(tmp);
-		
+		Cudd_RecursiveDeref(tmp1);
 		for(int i = 0; i < num_alt_facts; i++){//考虑每个状态变量
 			const Atom *a = (*(dynamic_atoms.find(i))).second;// 查看该状态变量的atom
 			if(init_variables.find(a) == init_variables.end()){// 查找该公式是否涉及该状态变量
