@@ -595,9 +595,22 @@ bool AOStar::expand(StateNode* node)
         }
         else
         {
-            // pair<const Action *const, DdNode *> act_pair(act, preBdd);
-            // DdNode *successor = progress(&act_pair, node->dd);//根据当前状态和动作计算后继状态
-            DdNode *successor = progress(node->dd, act);
+            DdNode *successor;
+            switch (progMode)
+            {
+            case FORGETTING:
+            {
+                pair<const Action *const, DdNode *> act_pair(act, preBdd);
+                successor = progress(node->dd, &act_pair);//根据当前状态和动作计算后继状态
+                break;
+            }
+            case PARTITION_MERGE:
+                successor = progress(node->dd, act); // method 2 partition progress
+                break;
+            case DEFINABILITY:
+                successor = definability_progress(node->dd, act); // method3 definability progress
+                break;
+            }
             // 前面已经完成了Precondition测试
             if(bdd_is_zero(manager,successor))
             {

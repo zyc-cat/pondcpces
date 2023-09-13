@@ -19,7 +19,7 @@ public:
 	 * 更新当前节点及前驱节点都搜索完成，not used
 	 */
 	void commit();// 从next结点开始，向上传递给祖先结点更新solve情况
-	void cleanup();// 情况状态结点的最佳动作和解决情况
+	void cleanup();// 清除状态结点的最佳动作和解决情况
 
 	void setBestAct(StateNode* state);
 

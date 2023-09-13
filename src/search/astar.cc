@@ -186,7 +186,7 @@ bool AStar::step(){
 		bool isClosed = (closed.count(child) > 0);// 已经搜索过了
 		bool cheaper = (new_g < child->g);// 是否比之前到达该child更便宜
 		// 仅考虑没有被访问的情况
-		// 在open中还没用拓展。1.不在open 2在open更近但更近，更新preAction
+		// 在open中还没用拓展。1.不在open 2在open但更近，更新preAction
 		if(!isClosed && (!inFringe || (inFringe && cheaper))){
 			child->BestPrevAction = action;// 这里每个state的BestPreAction都设置了
 

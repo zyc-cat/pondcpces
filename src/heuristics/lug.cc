@@ -4055,10 +4055,8 @@ void getHeuristic(list<StateNode*>* states,
 		//cout << "|states| = " << states->size()<<endl;
 		for(list<StateNode*>::iterator i = states->begin();
 				i != states->end(); i++){
-				// 注释掉输出
-				/*
-			     cout << "CARD" <<endl;
-			(*i)->h = getCardinality((*i)->dd);*/
+			    //  cout << "CARD" <<endl;
+			(*i)->h = getCardinality((*i)->dd);
 
 			cout << (*i)->h << endl;
 		}

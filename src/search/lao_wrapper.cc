@@ -1511,12 +1511,16 @@ void getDdNodeFromEffect(const Action* act, const pEffect& effect)
 	const ProbabilisticEffect *pe = dynamic_cast<const ProbabilisticEffect *>(&effect);
 	if(pe != NULL)
 	{		
-		// getDdNodeFromEffect(act, pe->effect());
+		const SimpleEffect *t1 = dynamic_cast<const SimpleEffect*>(&pe->effect(0));
+		const SimpleEffect *t2 = dynamic_cast<const SimpleEffect *>(&pe->effect(1));
+		if (t1 == NULL || t2 == NULL)
+			throw Exception("No support this kind of unknown effect");
+		getDdNodeFromEffect(act, pe->effect(0));
 		return;
 	}
 	assert(0);
 }
-
+std::map<const Action *, DdNode**> composeVec;
 set<const Action *> ifDone;
 int definability_extract(const Action* act)
 {
@@ -1525,18 +1529,35 @@ int definability_extract(const Action* act)
 		return 1;
 	}
 	ifDone.insert(act);
+	getDdNodeFromEffect(act, act->effect());// 获取当前action影响的effect
 	if(groundActionDD(*act) == Cudd_ReadZero(manager) || groundActionDD(*act) == Cudd_ReadLogicZero(manager))
 	{
 		return -1;
 	}
+	DdNode **vec = new DdNode *[dynamic_atoms.size() * 2];
+	for (int i = 0; i < dynamic_atoms.size() * 2;++i)
+	{
+		vec[i] = Cudd_bddIthVar(manager, i);
+		Cudd_Ref(vec[i]);
+	}
 	DdNode *p, *np;
 	DdNode *snc, *wsc, *temp;
 	int act_shift = act->id() * num_alt_facts;
-	// getDdNodeFromEffect(act, act->effect());// 获取当前action影响的effect
 	DdNode *mTemp;
 	for (int i = 0; i < dynamic_atoms.size(); ++i)
 	{
 		p = formula_bdd(*dynamic_atoms[i],false);// 获取当前状态变量
+		if(act_affect_bdd[act].find(p) == act_affect_bdd[act].end())
+		{
+			vector<DdNode *> *tbdds = new vector<DdNode *>();
+			tbdds->push_back(Cudd_bddVarMap(manager, p));
+			Cudd_Ref(tbdds->back());
+			equivBDD[act_shift + i] = tbdds;
+			int index = state_variables[dynamic_atoms[i]] * 2;
+			vec[index] = Cudd_bddVarMap(manager, p);
+			Cudd_Ref(vec[index]);
+			continue;
+		}
 		np = Cudd_Not(p);
 		Cudd_Ref(np);
 		snc = Cudd_bddAndAbstract(manager, groundActionDD(*act), p, current_state_cube);
@@ -1551,6 +1572,9 @@ int definability_extract(const Action* act)
 			bdds->push_back(snc);
 			equivBDD[act_shift+i] = bdds;
 			Cudd_RecursiveDeref(manager, wsc);
+			int index = state_variables[dynamic_atoms[i]] * 2;
+			vec[index] = snc;
+			Cudd_Ref(vec[index]);
 		}
 		else
 		{
@@ -1567,7 +1591,7 @@ int definability_extract(const Action* act)
 		Cudd_RecursiveDeref(manager, p);
 		Cudd_RecursiveDeref(manager, np);
 	}
-
+	composeVec.insert(make_pair(act, vec));
 	DdNode *mT;
 	DdNode *lit, *tl;
 	int cnt, total;
@@ -1655,7 +1679,11 @@ DdNode *definability_progress(DdNode *parent, const Action *a)
 	bool flag = false;
 	// a->print(std::cout, my_problem->terms());
 	// 考虑每个state varibale, 进行替换
-	for (int i = 0; i < dynamic_atoms.size();++i)
+	temp = Cudd_bddVectorCompose(manager, result, composeVec[a]);
+	Cudd_Ref(temp);
+	// Cudd_RecursiveDeref(manager, result);
+	result = temp;
+	for (int i = 0; i < dynamic_atoms.size(); ++i)
 	{
 		// dynamic_atoms[i]->print(std::cout, my_problem->domain().predicates(), my_problem->domain().functions(), my_problem->terms());
 		if(equivBDD.find(act_shift+i) == equivBDD.end())
@@ -1667,6 +1695,7 @@ DdNode *definability_progress(DdNode *parent, const Action *a)
 		flag = true;
 		// cv[k] = formula_bdd(*dynamic_atoms[i], false);
 		// nv[k++] = formula_bdd(*dynamic_atoms[i],true);
+		/*
 		if (equivBDD[act_shift + i]->size() == 1)
 		{
 			// std::cout << "definability\n";
@@ -1685,6 +1714,7 @@ DdNode *definability_progress(DdNode *parent, const Action *a)
 			// dynamic_atoms[i]->print(std::cout, my_problem->domain().predicates(), my_problem->domain().functions(), my_problem->terms());
 			// printBDD(result);
 		}
+		*/
 		// else// this proposition is n-def
 		// {
 		// std::cout << "con-definability\n";
@@ -2726,11 +2756,11 @@ void outputPlan(){
 	pfout << "\t(:problem " << pname << ")" <<endl;
 	pfout << "(" << endl;
 
-	// cout << "NumStatesGenerated = " << state_count << endl;
+	cout << "NumStatesGenerated = " << state_count << endl;
 	cout << "ExpandNode = " << expandedNodes << endl;
-	// cout << "Heuristic type is:" << HEURISTYPE << endl;
-	// cout << "Domain actions num:" << act_num << endl;
-	// cout << "Doamin non-det act num:" << not_def_act << endl;
+	cout << "Heuristic type is:" << HEURISTYPE << endl;
+	cout << "Domain actions num:" << act_num << endl;
+	cout << "Doamin non-det act num:" << not_def_act << endl;
 	printf("Total User Time = %f secs\n", (float)((gEndTime - gStartTime) / (float)CLOCKS_PER_SEC));
 	// cout << "=0 sucess:" << good[0] << endl;
 	// cout << "=1 sucess:" << good[1] << endl;
