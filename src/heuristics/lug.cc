@@ -4058,7 +4058,7 @@ void getHeuristic(list<StateNode*>* states,
 			    //  cout << "CARD" <<endl;
 			(*i)->h = getCardinality((*i)->dd);
 
-			cout << (*i)->h << endl;
+			// cout << (*i)->h << endl;
 		}
 	}
 	/*************** Multiple graph Heuristics **************/

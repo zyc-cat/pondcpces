@@ -15,20 +15,60 @@ Planvalidate::Planvalidate(){}
  * 返回true，说明查找反例成功
  * 返回false，说明反例不存在
 */
+DdNode *Planvalidate::backwardToInitial(DdNode *curr, DdNode* remove)
+{
+    DdNode *tmp = Cudd_bddAnd(manager, Cudd_Not(remove), curr);
+    Cudd_Ref(tmp);
+    Cudd_RecursiveDeref(manager, curr);
+    curr = tmp; 
+    
+    std::cout << "当前状态变量不蕴涵当前动作前提条件，逆推寻找反例：" << std::endl;
+    for (std::vector<const Action *>::reverse_iterator a_it = reverse_action.rbegin(); a_it != reverse_action.rend();++a_it)
+    {
+        pair<const Action *const, DdNode *> act_pair(*a_it, action_preconds[*a_it]);
+        DdNode *successor = regression(curr, &act_pair);
+        Cudd_RecursiveDeref(manager, curr);
+        curr = successor;
+    }
+
+    DdNode* counter = Cudd_bddAnd(manager, curr, init_states);
+    Cudd_Ref(counter);
+    Cudd_RecursiveDeref(manager, curr);
+
+    if (counter == Cudd_ReadLogicZero(manager))
+    {
+        std::cout << "=====================" << std::endl;
+        std::cout << "反例为false" << std::endl;
+        std::cout << "=====================" << std::endl;
+        return Cudd_ReadLogicZero(manager);
+    }
+    else
+    {
+        int cardSize = getCardinality(counter);
+        std::cout << "找到反例:" << cardSize << std::endl;
+        if(cardSize > counterSize)
+        {
+            DdNode* t = pickKRandomWorlds(counter, counterSize);
+            Cudd_Ref(t);
+            Cudd_RecursiveDeref(manager, counter);
+            counter = t;
+        }
+        return counter;
+    }
+}
 bool Planvalidate::planvalidate(DdNode *&ce){
 
     if(init_states == Cudd_ReadLogicZero(manager))
     {
         std::cout << "===================================" << std::endl;
-        std::cout << "初始状态集合为空,反例不存在" << std::endl;
+        std::cout << "候选Sample状态集合为空,反例不存在" << std::endl;
         return false;
     }
 
 
     DdNode *curr = init_states; // 当前状态
     Cudd_Ref(curr);
-    std::vector<const Action *> reverse_action;
-
+    reverse_action.clear();
     for (std::vector<const Action *>::iterator act_it = candidateplan.begin(); act_it != candidateplan.end(); act_it++)
     {
         const Action *action = *act_it;
@@ -38,58 +78,15 @@ bool Planvalidate::planvalidate(DdNode *&ce){
         if (bdd_entailed(manager, curr, preBdd))
         {
             // cout << "当前状态变量蕴涵当前动作前提条件" << endl;
-            DdNode *successor = progress(curr, *act_it);
-            Cudd_Ref(successor);
+            pair<const Action *const, DdNode *> act_pair(*act_it, action_preconds[*act_it]);
+            DdNode *successor = progress(curr, &act_pair);
             Cudd_RecursiveDeref(manager, curr);
             curr = successor;
         }
         else
         {
-
-            //（1）获取不满足的那部分,这里是不满足当前动作的前提条件
-            DdNode *stav = Cudd_bddAnd(manager, curr, preBdd);
-            Cudd_Ref(stav);
-            DdNode *tmp1 = Cudd_bddAnd(manager, Cudd_Not(stav), curr);
-            Cudd_Ref(tmp1);
-            Cudd_RecursiveDeref(manager, stav);
-            Cudd_RecursiveDeref(manager, curr);
-            curr = tmp1; 
-            
-            std::cout << "当前状态变量不蕴涵当前动作前提条件，逆推寻找反例：" << std::endl;
-            for (std::vector<const Action *>::reverse_iterator a_it = reverse_action.rbegin(); a_it != reverse_action.rend();++a_it)
-            {
-                const Action *r_action = *a_it;
-                DdNode *t = groundActionDD(*r_action);
-                Cudd_Ref(t);
-
-                // （2）将不满足的部分转化成后继状态表示
-                DdNode *successor = Cudd_bddVarMap(manager, curr);
-                Cudd_Ref(successor);
-
-                // （3）根据后继状态表示以及动作前提条件BDD获取当前状态
-                DdNode *tmp4 = Cudd_bddAndAbstract(manager, successor, t, next_state_cube);
-                Cudd_Ref(tmp4);
-                Cudd_RecursiveDeref(manager, curr);
-                curr = tmp4;
-                Cudd_RecursiveDeref(manager, t);
-                Cudd_RecursiveDeref(manager, successor);
-            }
-
-            ce = Cudd_bddAnd(manager, curr, init_states);
-            Cudd_Ref(ce);
-            Cudd_RecursiveDeref(manager, curr);
-            if (ce == Cudd_ReadLogicZero(manager))
-            {
-                std::cout << "=====================" << std::endl;
-                std::cout << "反例为false" << std::endl;
-                std::cout << "=====================" << std::endl;
-                return false;
-            }else{
-                std::cout << "找到反例" << std::endl;
-                return true;
-            }
-
-            
+            ce = backwardToInitial(curr, preBdd);
+            return ce != Cudd_ReadLogicZero(manager);
         }
     }
     // 若执行完候选规划中的所有动作，检查最终状态是否满足目标
@@ -102,47 +99,7 @@ bool Planvalidate::planvalidate(DdNode *&ce){
     else
     {
         std::cout << "最终状态不满足目标，逆推寻找反例：" << std::endl;
-        // (1) 获取不满足的部分,这里是不满足目标状态的那一部分状态
-        DdNode *stav = Cudd_bddAnd(manager, curr, b_goal_state);
-        Cudd_Ref(stav);
-        DdNode *tmp3 = Cudd_bddAnd(manager, Cudd_Not(stav), curr);
-        Cudd_Ref(tmp3);
-        Cudd_RecursiveDeref(manager,stav);
-        Cudd_RecursiveDeref(manager, curr);
-        curr = tmp3;
-
-        for (std::vector<const Action *>::reverse_iterator a_it = reverse_action.rbegin(); a_it != reverse_action.rend();++a_it)
-        {
-            const Action *r_action = *a_it;
-            DdNode *t = groundActionDD(*r_action);
-            Cudd_Ref(t);
-
-            // （2）将不满足的部分转化成后继状态表示
-            DdNode *successor = Cudd_bddVarMap(manager, curr);
-            Cudd_Ref(successor);
-
-            //（3）根据后继状态表示以及动作BDD获取当前状态
-            DdNode *tmp4 = Cudd_bddAndAbstract(manager, successor, t, next_state_cube);
-            Cudd_Ref(tmp4);
-            Cudd_RecursiveDeref(manager, curr);
-            curr = tmp4;
-            Cudd_RecursiveDeref(manager, t);
-            Cudd_RecursiveDeref(manager, successor);
-        }
-
-        ce = Cudd_bddAnd(manager, curr, init_states);
-        Cudd_Ref(ce);
-        Cudd_RecursiveDeref(manager, curr);
-        if (ce == Cudd_ReadLogicZero(manager))
-        {
-            std::cout << "=====================" << std::endl;
-            std::cout << "反例为false" << std::endl;
-            std::cout << "=====================" << std::endl;
-            return false;
-        }else{
-            std::cout << "找到反例" << std::endl;
-            return true;
-        }
-        
+        ce = backwardToInitial(curr, b_goal_state);
+        return ce != Cudd_ReadLogicZero(manager);
     } 
 }

@@ -279,6 +279,12 @@ int main(int argc, char *argv[])
 						cout << "NOT USING LABELS ON PG" << endl;
 					}
 				}
+				if (strcmp(argv[i], "-c") == 0)
+				{
+					++i;
+					counterSize = atoi(argv[i]);
+					cout << "Counter Size is:" << argv[i] << endl;
+				}
 			}
 		}
 
@@ -406,11 +412,9 @@ int main(int argc, char *argv[])
 
 		int iteration = 0; // 循环次数
 		Planvalidate p;
-		init_states = formula_bdd(my_problem->init_formula(),false);
+		init_states = formula_bdd(my_problem->init_formula(),false);// Candidate sample
 		Cudd_Ref(init_states);
-		Cudd_Ref(b_initial_state);
 		DdNode *tmp = Cudd_bddAnd(manager, Cudd_Not(b_initial_state), init_states);
-		Cudd_RecursiveDeref(manager, b_initial_state);
 		Cudd_Ref(tmp);
 		Cudd_RecursiveDeref(manager, init_states);
 		init_states = tmp;
@@ -444,18 +448,15 @@ int main(int argc, char *argv[])
 
 			candidateplan.clear(); 
 
-			Cudd_Ref(b_initial_state);
 			DdNode *tmp2 = Cudd_bddOr(manager, counterexample, b_initial_state);
 			Cudd_Ref(tmp2);
 			Cudd_RecursiveDeref(manager, b_initial_state);
 			b_initial_state = tmp2;
 			// printBDD(b_initial_state);
 
-			Cudd_Ref(init_states);
-			Cudd_Ref(counterexample);
 			DdNode *tmp1 = Cudd_bddAnd(manager, Cudd_Not(counterexample), init_states);
-			Cudd_RecursiveDeref(manager, counterexample);
 			Cudd_Ref(tmp1);
+			Cudd_RecursiveDeref(manager, counterexample);// release the counter state
 			Cudd_RecursiveDeref(manager, init_states);
 			init_states = tmp1;
 

@@ -10,8 +10,11 @@ public:
 
     bool planvalidate(DdNode *&ce);
 
+    DdNode *backwardToInitial(DdNode *, DdNode*);
+
 protected:
     StateNode *next;
+    std::vector<const Action *> reverse_action;
 };
 
 #endif  // PLANVALIDATE_H
