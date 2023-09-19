@@ -2775,9 +2775,33 @@ void make_mutex(std::list<DdNode*>* preffect){
  * 2. formula_bdd，将初始状态formula转化为obdd，其中one-of disjunction没太理解
  * 3. 随后将每个状态变量的否定和区上第二部的obdd，为什么需要这一步操作？
  */
+
+DdNode* getCloseWorld(const Problem* problem)
+{
+	DdNode* closeVariables = Cudd_ReadOne(manager);
+	Cudd_Ref(closeVariables);
+	for (int i = 0; i < num_alt_facts; i++)
+	{													  //考虑每个状态变量
+		const Atom *a = (*(dynamic_atoms.find(i))).second;// 查看该状态变量的atom
+		if(init_variables.find(a) == init_variables.end()){// 查找该公式是否涉及该状态变量
+			// clsoed word，没有涉及的值置为0
+			DdNode* tmp1 = Cudd_bddAnd(manager, closeVariables, Cudd_Not(Cudd_bddIthVar(manager, 2*i)));
+			Cudd_Ref(tmp1);
+			Cudd_RecursiveDeref(manager, closeVariables);
+			closeVariables = tmp1;
+			if(bdd_is_zero(manager,closeVariables))
+			{
+				a->print(std::cout, problem->domain().predicates(), problem->domain().functions(), problem->terms());
+				abort();
+			}
+		}
+	}
+	return closeVariables;
+}
+
 void collectInit(const Problem* problem){
 	/*
-	 * Construct an ADD representing initial states.
+	 * Construct an BDD representing initial states.
 	 */
 	problem->init_formula().print(std::cout, problem->domain().predicates(),
 			problem->domain().functions(),
@@ -2788,32 +2812,32 @@ void collectInit(const Problem* problem){
 		// std::cout << "construct the bdd for init formula\n";
 		collect_init_state_variables(problem->init_formula()); // 公式中涉及到的状态变量即atom
 		// zyc 提取一个可能的初始状态
+		DdNode *closeWorld = getCloseWorld(problem);
+		Cudd_Ref(closeWorld);
+		DdNode* tmp;
 		DdNode* tmp1 = formula_bdd(problem->init_formula());// 根据初始状态公式创建BDD
 		Cudd_Ref(tmp1);
-		DdNode* tmp = pickKRandomWorlds(tmp1, 1);
-		Cudd_Ref(tmp);
-		Cudd_RecursiveDeref(manager,tmp1);
-		for(int i = 0; i < num_alt_facts; i++){//考虑每个状态变量
-			const Atom *a = (*(dynamic_atoms.find(i))).second;// 查看该状态变量的atom
-			if(init_variables.find(a) == init_variables.end()){// 查找该公式是否涉及该状态变量
-				// clsoed word，没有涉及的值置为0
-				DdNode* tmp1 = Cudd_bddAnd(manager, tmp, Cudd_Not(Cudd_bddIthVar(manager, 2*i)));
-				Cudd_Ref(tmp1);
-				Cudd_RecursiveDeref(manager, tmp);
-				tmp = tmp1;
-				Cudd_Ref(tmp);
-				Cudd_RecursiveDeref(manager, tmp1);
-				if(bdd_is_zero(manager,tmp))
-				{
-					a->print(std::cout, problem->domain().predicates(), problem->domain().functions(), problem->terms());
-					abort();
-				}
+		DdNode *tmp2;
+		while(true)
+		{
+			tmp = pickKRandomWorlds(tmp1, 1);
+			Cudd_Ref(tmp);
+
+			tmp2 = Cudd_bddAnd(manager, tmp, closeWorld);
+			Cudd_Ref(tmp2);
+			Cudd_RecursiveDeref(manager, tmp);
+			tmp = tmp2;
+			if(bdd_isnot_zero(manager, tmp))
+			{
+				break;
 			}
+			Cudd_RecursiveDeref(manager, tmp);
+			std::cout << "resample for initial state" << std::endl;
 		}
+		Cudd_RecursiveDeref(manager, closeWorld);
+		Cudd_RecursiveDeref(manager, tmp1);
 		// zyc 初始化样本(b_initial_state)完毕，为一个可能的初始状态
 		b_initial_state = tmp;
-		Cudd_Ref(b_initial_state);
-		Cudd_RecursiveDeref(manager, tmp);
 		// printBDD(b_initial_state);
 		return;
 	}

@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
 				{
 					++i;
 					counterSize = atoi(argv[i]);
-					cout << "Counter Size is:" << argv[i] << endl;
+					cout << "Counter Size is:" << counterSize << endl;
 				}
 			}
 		}
@@ -317,7 +317,7 @@ int main(int argc, char *argv[])
 			solve_problem(*my_problem, 1.0, 0.0);	
 			groundingEndTime = clock();
 			// printBDD(b_initial_state);	// 此时的b_initial_state是一个可能的初始状态
-			cout << "Grounding/Instantiation Time: " << ((float)(clock() - groundingStartTime) / CLOCKS_PER_SEC) << endl;
+			cout << "Grounding/Instantiation Time: " << ((float)groundingEndTime - groundingStartTime) / CLOCKS_PER_SEC << endl;
 			cout << "==================================\n";
 
 			if ((*my_problem).goal_cnf())
@@ -494,11 +494,12 @@ int main(int argc, char *argv[])
 		}
 		// std::cout << "初始状态集合|S| = " << Cudd_DagSize(init_states)<< std::endl;
 		
-		std::cout << "反例 = " << ((float)total_validate_time / CLOCKS_PER_SEC) << " sec" << std::endl;
-		std::cout << "规划 = " << ((float)total_plan_time / CLOCKS_PER_SEC) << " sec" << std::endl;
-		std::cout << "实例化 = " << ((float)(groundingEndTime - groundingStartTime) / CLOCKS_PER_SEC) << " sec" << endl;
-		std::cout << "样本大小 = " << Cudd_DagSize(b_initial_state)<< std::endl;
-		std::cout << "迭代次数 = " << iteration << std::endl;
+		std::cout << "Counter sample time = " << ((float)total_validate_time / CLOCKS_PER_SEC) << " sec" << std::endl;
+		std::cout << "Planning = " << ((float)total_plan_time / CLOCKS_PER_SEC) << " sec" << std::endl;
+		std::cout << "Initialization = " << ((float)(groundingEndTime - groundingStartTime) / CLOCKS_PER_SEC) << " sec" << endl;
+		std::cout << "Sample size = " << getCardinality(b_initial_state)<< std::endl;
+		std::cout << "Original size = " << getCardinality(formula_bdd(my_problem->init_formula(), false)) << endl;
+		std::cout << "Iteration times = " << iteration << std::endl;
 	}
 	catch (const exception &e)
 	{

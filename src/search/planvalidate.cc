@@ -49,6 +49,7 @@ DdNode *Planvalidate::backwardToInitial(DdNode *curr, DdNode* remove)
         if(cardSize > counterSize)
         {
             DdNode* t = pickKRandomWorlds(counter, counterSize);
+            cout << "Add Counter Sample Size:" << getCardinality(t) << endl;
             Cudd_Ref(t);
             Cudd_RecursiveDeref(manager, counter);
             counter = t;
@@ -102,4 +103,4 @@ bool Planvalidate::planvalidate(DdNode *&ce){
         ce = backwardToInitial(curr, b_goal_state);
         return ce != Cudd_ReadLogicZero(manager);
     } 
-}
+}   
