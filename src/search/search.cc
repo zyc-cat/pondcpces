@@ -50,20 +50,23 @@ void Search::init(int num_acts, DdNode *b_initial_state, DdNode *b_goal_state)
 	StateIndex = new StateHash();
 	LeafStates = new StateHash();
 	gNumActions = num_acts;
-
-	Goal = new StateNode();
-	Goal->h = 0;
-	Goal->f = 0;
-	Goal->g = 0;
-	Goal->goalSatisfaction = 1.0;
-	Goal->dd = b_goal_state;
-	Cudd_Ref(Goal->dd);
-	Goal->Terminal = 1;
-	Goal->meanFirstPassage = 0.0;
-	Goal->Solved = 1;
-	Goal->Expanded = 0;
-	Goal->StateNo = state_count++;
-	Goal->ExtendedGoalSatisfaction = 1.0;
+	// In CEHFS, only first initialization need to allocate memory.
+	if(Goal == NULL)
+	{
+		Goal = new StateNode();
+		Goal->h = 0;
+		Goal->f = 0;
+		Goal->g = 0;
+		Goal->goalSatisfaction = 1.0;
+		Goal->dd = b_goal_state;
+		Cudd_Ref(Goal->dd);
+		Goal->Terminal = 1;
+		Goal->meanFirstPassage = 0.0;
+		Goal->Solved = 1;
+		Goal->Expanded = 0;
+		Goal->StateNo = state_count++;
+		Goal->ExtendedGoalSatisfaction = 1.0;
+	}
 
 	if (type == MOLAO || type == MOASTAR)
 		Goal->moValueFunction->points.insert(new MOValueFunctionPoint(0.0, 0.0,

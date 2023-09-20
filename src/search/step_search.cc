@@ -54,25 +54,29 @@ void StepSearch::cleanup(){
 
 	StateNode* state;
 	StateNode* child;
+	// 清除BestAction和BestPrevaction
+	// 没有释放空间
 	while(!open.empty()){
 		state = open.front(); open.pop();
-		// 每个结点的best和solve制空。
-		if(state->Solved <= 0 && state->BestAction != NULL){
-			state->BestAction = NULL;
-			state->Solved = 0;
-		}
-
-		if(state->Expanded > 0){
-			for(ActionNodeList::iterator act_it = state->NextActions->begin(); act_it != state->NextActions->end(); act_it++){
-				for(StateDistribution* dist = (*act_it)->NextState; dist != NULL; dist = dist->Next){
-					child = dist->State;
-					if(closed.count(child) <= 0){
-						open.push(child);
-						closed.insert(child);
-					}
-				}
-			}
-		}
+		// 每个结点的best和solve制空
+		// if(state->Solved <= 0 && state->BestAction != NULL){
+		// 	state->BestAction = NULL;
+		// 	state->Solved = 0;
+		// }
+		// if(state->BestPrevAction != NULL){
+		// 	state->BestPrevAction = NULL;
+		// }
+		// if(state->Expanded > 0){
+		// 	for(ActionNodeList::iterator act_it = state->NextActions->begin(); act_it != state->NextActions->end(); act_it++){
+		// 		for(StateDistribution* dist = (*act_it)->NextState; dist != NULL; dist = dist->Next){
+		// 			child = dist->State;
+		// 			if(closed.count(child) <= 0){
+		// 				open.push(child);
+		// 				closed.insert(child);
+		// 			}
+		// 		}
+		// 	}
+		// }
 	}
 
 	start = NULL;

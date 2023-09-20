@@ -30,6 +30,8 @@ void AStar::setup(StateNode* start){
 	next->BestPrevAction = NULL; //最佳action值为空
 	next->NextActions = NULL;
 	open.insert(next); // 插入节点next
+	iteration++;
+	reusePrev = 0;
 }
 /**
  * 返回true，说明需要继续搜索
@@ -51,7 +53,7 @@ bool AStar::step(){
 		}
 
 		return false;// 返回false停止搜索
-	}
+	}	
 
 	open.erase(open.begin());
 	closed.insert(next);
@@ -81,6 +83,8 @@ bool AStar::step(){
 	}
 	// 拓展结点个数+1
 	expandedNodes++;
+	if(next->Expanded == 0) 
+		next->Expanded = iteration;
 	// std::cout << "######:" << expandedNodes << std::endl;
 	// 考虑每个动作，计算后继状态，同时链接起来
 	for (ActionNodeList::iterator act_it = next->NextActions->begin(); act_it != next->NextActions->end(); act_it++)
@@ -177,6 +181,12 @@ bool AStar::step(){
 		{
 			child = StateNode::generated[successor];
 			Cudd_RecursiveDeref(manager, successor);
+			reuseTime[iteration]++;
+			totalReuse++;
+			if(child->Expanded < iteration)
+			{
+				reusePrev++;
+			}
 		}
 
 		assert(child != NULL);
@@ -236,6 +246,9 @@ void AStar::cleanup(){
 	closed.clear();
 	open.clear();
 	next = NULL;
+	std::cout << "TotalReuse: " << totalReuse << std::endl;
+	std::cout << "reuseTime total in this iteration: " << reuseTime[iteration] << std::endl;
+	std::cout << "ReusePrev in this iteration: " << reusePrev << std::endl;
 }
 
 /**
