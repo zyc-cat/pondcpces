@@ -12,6 +12,8 @@ public:
 
     DdNode *backwardToInitial(DdNode *, DdNode*);
 
+    DdNode *getKSample(DdNode*);
+
 protected:
     StateNode *next;
     std::vector<const Action *> reverse_action;

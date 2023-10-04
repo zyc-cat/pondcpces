@@ -48,7 +48,9 @@ DdNode *Planvalidate::backwardToInitial(DdNode *curr, DdNode* remove)
         std::cout << "找到反例:" << cardSize << std::endl;
         if(cardSize > counterSize)
         {
-            DdNode* t = pickKRandomWorlds(counter, counterSize);
+            // DdNode* t = pickKRandomWorlds(counter, counterSize);
+            DdNode* t = getKSample(counter);
+            // printBDD(t);
             cout << "Add Counter Sample Size:" << getCardinality(t) << endl;
             Cudd_Ref(t);
             Cudd_RecursiveDeref(manager, counter);
@@ -56,6 +58,24 @@ DdNode *Planvalidate::backwardToInitial(DdNode *curr, DdNode* remove)
         }
         return counter;
     }
+}
+
+DdNode *Planvalidate::getKSample(DdNode* counter)
+{
+    DdNode **kbdd = Cudd_bddPickArbitraryMinterms(manager, counter, current_state_vars, num_alt_facts,counterSize);
+
+    DdNode *res = Cudd_ReadLogicZero(manager);
+    Cudd_Ref(res);
+    DdNode *temp;
+    for (int i = 0; i < counterSize; ++i)
+    {
+        temp = Cudd_bddOr(manager, kbdd[i], res);
+        Cudd_Ref(temp);
+        Cudd_RecursiveDeref(manager, res);
+        Cudd_RecursiveDeref(manager, kbdd[i]);
+        res = temp;
+    }
+    return temp;
 }
 bool Planvalidate::planvalidate(DdNode *&ce){
 
