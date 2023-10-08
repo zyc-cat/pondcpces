@@ -22,7 +22,7 @@ DdNode *Planvalidate::backwardToInitial(DdNode *curr, DdNode* remove)
     Cudd_RecursiveDeref(manager, curr);
     curr = tmp; 
     
-    std::cout << "当前状态变量不蕴涵当前动作前提条件，逆推寻找反例：" << std::endl;
+    std::cout << "The action precondition does not sat in current state, find counter sample" << std::endl;
     for (std::vector<const Action *>::reverse_iterator a_it = reverse_action.rbegin(); a_it != reverse_action.rend();++a_it)
     {
         pair<const Action *const, DdNode *> act_pair(*a_it, action_preconds[*a_it]);
@@ -38,14 +38,14 @@ DdNode *Planvalidate::backwardToInitial(DdNode *curr, DdNode* remove)
     if (counter == Cudd_ReadLogicZero(manager))
     {
         std::cout << "=====================" << std::endl;
-        std::cout << "反例为false" << std::endl;
+        std::cout << "Counter sample is false" << std::endl;
         std::cout << "=====================" << std::endl;
         return Cudd_ReadLogicZero(manager);
     }
     else
     {
         int cardSize = getCardinality(counter);
-        std::cout << "找到反例:" << cardSize << std::endl;
+        std::cout << "Get counter sample:" << cardSize << std::endl;
         if(cardSize > counterSize)
         {
             // DdNode* t = pickKRandomWorlds(counter, counterSize);
@@ -82,7 +82,7 @@ bool Planvalidate::planvalidate(DdNode *&ce){
     if(init_states == Cudd_ReadLogicZero(manager))
     {
         std::cout << "===================================" << std::endl;
-        std::cout << "候选Sample状态集合为空,反例不存在" << std::endl;
+        std::cout << "Candidate Sample state is empty, couter sample does not exist" << std::endl;
         return false;
     }
 
@@ -114,12 +114,12 @@ bool Planvalidate::planvalidate(DdNode *&ce){
     if (bdd_entailed(manager, curr, b_goal_state))
     {
         Cudd_RecursiveDeref(manager, curr);
-        std::cout << "最终状态满足目标, 当前规划有效" << std::endl;
+        std::cout << "The Goal is sat in Final state, valid plan" << std::endl;
         return false;
     }
     else
     {
-        std::cout << "最终状态不满足目标，逆推寻找反例：" << std::endl;
+        std::cout << "The Goal does not sat in Final state, find counter sample:" << std::endl;
         ce = backwardToInitial(curr, b_goal_state);
         return ce != Cudd_ReadLogicZero(manager);
     } 

@@ -431,7 +431,7 @@ int main(int argc, char *argv[])
 
 				if (!p.planvalidate(counterexample))
 				{
-					std::cout << "未找到反例，查找结束" << std::endl;
+					std::cout << "Empty counter, Searching is done" << std::endl;
 					// std::cout << "输出规划相关信息" << std::endl;
 					// for (int i = 0; i < candidateplan.size(); i++)
 					// {
@@ -470,7 +470,7 @@ int main(int argc, char *argv[])
 				cout << "starting search" << endl;
 				std::cout << "call search()\n";
 				search->search();  // 将规划结果传递给candidateplan
-				std::cout << "===============本次规划结束=================" << std::endl;
+				std::cout << "===============Current Iteration done=================" << std::endl;
 				clock_t plan_end_time = clock();
         		total_plan_time += plan_end_time - plan_start_time;
 				if (allowed_time > 0)
@@ -499,6 +499,7 @@ int main(int argc, char *argv[])
 		std::cout << "Initialization = " << ((float)(groundingEndTime - groundingStartTime) / CLOCKS_PER_SEC) << " sec" << endl;
 		std::cout << "Sample size = " << getCardinality(b_initial_state)<< std::endl;
 		std::cout << "Original size = " << getCardinality(formula_bdd(my_problem->init_formula(), false)) << endl;
+		std::cout << "Num of alt = " << num_alt_facts << endl;
 		std::cout << "Iteration times = " << iteration << std::endl;
 	}
 	catch (const exception &e)
