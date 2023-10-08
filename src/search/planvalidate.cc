@@ -19,21 +19,20 @@ DdNode *Planvalidate::backwardToInitial(DdNode *curr, DdNode* remove)
 {
     DdNode *tmp = Cudd_bddAnd(manager, Cudd_Not(remove), curr);
     Cudd_Ref(tmp);
-    Cudd_RecursiveDeref(manager, curr);
-    curr = tmp; 
     
     std::cout << "The action precondition does not sat in current state, find counter sample" << std::endl;
     for (std::vector<const Action *>::reverse_iterator a_it = reverse_action.rbegin(); a_it != reverse_action.rend();++a_it)
     {
         pair<const Action *const, DdNode *> act_pair(*a_it, action_preconds[*a_it]);
-        DdNode *successor = regression(curr, &act_pair);
-        Cudd_RecursiveDeref(manager, curr);
-        curr = successor;
+        DdNode *successor = regression(tmp, &act_pair);
+        Cudd_Ref(successor);
+        Cudd_RecursiveDeref(manager, tmp);
+        tmp = successor;
     }
 
-    DdNode* counter = Cudd_bddAnd(manager, curr, init_states);
+    DdNode* counter = Cudd_bddAnd(manager, tmp, init_states);
     Cudd_Ref(counter);
-    Cudd_RecursiveDeref(manager, curr);
+    Cudd_RecursiveDeref(manager, tmp);
 
     if (counter == Cudd_ReadLogicZero(manager))
     {
@@ -50,9 +49,9 @@ DdNode *Planvalidate::backwardToInitial(DdNode *curr, DdNode* remove)
         {
             // DdNode* t = pickKRandomWorlds(counter, counterSize);
             DdNode* t = getKSample(counter);
+            Cudd_Ref(t);
             // printBDD(t);
             cout << "Add Counter Sample Size:" << getCardinality(t) << endl;
-            Cudd_Ref(t);
             Cudd_RecursiveDeref(manager, counter);
             counter = t;
         }
@@ -72,7 +71,6 @@ DdNode *Planvalidate::getKSample(DdNode* counter)
         temp = Cudd_bddOr(manager, kbdd[i], res);
         Cudd_Ref(temp);
         Cudd_RecursiveDeref(manager, res);
-        Cudd_RecursiveDeref(manager, kbdd[i]);
         res = temp;
     }
     return temp;
@@ -101,6 +99,7 @@ bool Planvalidate::planvalidate(DdNode *&ce){
             // cout << "当前状态变量蕴涵当前动作前提条件" << endl;
             pair<const Action *const, DdNode *> act_pair(*act_it, action_preconds[*act_it]);
             DdNode *successor = progress(curr, &act_pair);
+            Cudd_Ref(successor);
             Cudd_RecursiveDeref(manager, curr);
             curr = successor;
         }
@@ -113,7 +112,6 @@ bool Planvalidate::planvalidate(DdNode *&ce){
     // 若执行完候选规划中的所有动作，检查最终状态是否满足目标
     if (bdd_entailed(manager, curr, b_goal_state))
     {
-        Cudd_RecursiveDeref(manager, curr);
         std::cout << "The Goal is sat in Final state, valid plan" << std::endl;
         return false;
     }

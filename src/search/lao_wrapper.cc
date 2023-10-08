@@ -1847,14 +1847,31 @@ DdNode *definability_progress(DdNode *parent, const Action *a)
 	return result;
 }
 DdNode* regression(DdNode* transition, DdNode* pre, DdNode* parent){
-	DdNode *tmp1,*tmp2,*result;
+	DdNode *tmp1,*tmp2, *tmp3,*result;
 	tmp1 = Cudd_bddVarMap(manager, parent);
 	Cudd_Ref(tmp1);
 
 	tmp2 = bdd_imply(manager, transition, tmp1);
 	Cudd_Ref(tmp2);
-	result = Cudd_bddAndAbstract(manager, tmp2, pre, next_state_cube);
+	tmp3 = Cudd_bddUnivAbstract(manager, tmp2, next_state_cube);
+	Cudd_Ref(tmp3);
+
+	result = Cudd_bddAnd(manager, tmp3, pre);
 	Cudd_Ref(result);
+	Cudd_RecursiveDeref(manager, tmp1);
+	Cudd_RecursiveDeref(manager, tmp2);
+	Cudd_RecursiveDeref(manager, tmp3);
+	return result;
+}
+DdNode* regression2(DdNode* transition, DdNode* pre, DdNode* parent){
+	DdNode *tmp1, *tmp2, *result;
+
+	tmp1 = Cudd_bddVarMap(manager, parent);
+	Cudd_Ref(tmp1);
+
+	tmp2 = Cudd_bddAndAbstract(manager, transition, tmp1, next_state_cube);
+	Cudd_Ref(result);
+
 	Cudd_RecursiveDeref(manager, tmp1);
 	Cudd_RecursiveDeref(manager, tmp2);
 	return result;
