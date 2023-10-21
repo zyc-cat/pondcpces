@@ -405,8 +405,9 @@ int main(int argc, char *argv[])
 			cout << "A* Search" << endl;
 			search = new AStar();
 		}
-
-		search->init(num_alt_acts, b_initial_state, b_goal_state); 
+		std::cout << "initial sampel BDD:";
+		printBDD(b_initial_state);
+		search->init(num_alt_acts, b_initial_state, b_goal_state);
 		cout << "初始化candidateplan" << endl;
 		search->search(); 
 
@@ -493,7 +494,7 @@ int main(int argc, char *argv[])
 			
 		}
 		// std::cout << "初始状态集合|S| = " << Cudd_DagSize(init_states)<< std::endl;
-		
+		std::cout << "Action nums:" << (Problem::begin())->second->actions().size() << endl;
 		std::cout << "Counter sample time = " << ((float)total_validate_time / CLOCKS_PER_SEC) << " sec" << std::endl;
 		std::cout << "Planning = " << ((float)total_plan_time / CLOCKS_PER_SEC) << " sec" << std::endl;
 		std::cout << "Initialization = " << ((float)(groundingEndTime - groundingStartTime) / CLOCKS_PER_SEC) << " sec" << endl;
@@ -501,6 +502,7 @@ int main(int argc, char *argv[])
 		std::cout << "Original size = " << getCardinality(formula_bdd(my_problem->init_formula(), false)) << endl;
 		std::cout << "Num of alt = " << num_alt_facts << endl;
 		std::cout << "Iteration times = " << iteration << std::endl;
+		std::cout << "Random sample times = " << p.getRandomSampleTime() << std::endl;
 	}
 	catch (const exception &e)
 	{

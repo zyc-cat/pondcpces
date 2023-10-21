@@ -27,8 +27,8 @@ void AStar::setup(StateNode* start){
 	open.key_comp().init(StateComparator::F_VAL);
 	next = start;
 	next->PrevActions = NULL;
-	next->BestPrevAction = NULL; //最佳action值为空
-	next->NextActions = NULL;
+	 next->BestPrevAction = NULL; //最佳action值为空
+	 next->NextActions = NULL;
 	open.insert(next); // 插入节点next
 	iteration++;
 	reusePrev = 0;
@@ -316,17 +316,17 @@ void AStar::planlist(std::vector<const Action*> &candplan){
 	int i = 0;
 	std::cout << "start to print plan\n"
 			  << std::flush;
-	while (next->dd != start->dd)
+	while (stateNode->dd != start->dd)
 	{
-		if(next->BestPrevAction == NULL)
+		if(stateNode->BestPrevAction == NULL)
 		{
 			std::cout << "Plan abstract error\n"
 					  << std::flush;
 			abort();
 		}
 		i++;
-		plan.push(next->BestPrevAction);
-		next = next->BestPrevAction->PrevState;
+		plan.push(stateNode->BestPrevAction);
+		stateNode = stateNode->BestPrevAction->PrevState;
 	}
 	// 将栈里的动作ActioNode转化到vector中的Action
 	while(!plan.empty())

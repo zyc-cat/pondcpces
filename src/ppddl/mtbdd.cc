@@ -2812,12 +2812,12 @@ void collectInit(const Problem* problem){
 		// std::cout << "construct the bdd for init formula\n";
 		collect_init_state_variables(problem->init_formula()); // 公式中涉及到的状态变量即atom
 		// zyc 提取一个可能的初始状态
-		DdNode *closeWorld = getCloseWorld(problem);
-		Cudd_Ref(closeWorld);
 		DdNode* tmp;
 		DdNode* tmp1 = formula_bdd(problem->init_formula());// 根据初始状态公式创建BDD
 		Cudd_Ref(tmp1);
 		DdNode *tmp2;
+		DdNode *closeWorld = getCloseWorld(problem);
+		Cudd_Ref(closeWorld);
 		while(true)
 		{
 			tmp = pickKRandomWorlds(tmp1, 1);

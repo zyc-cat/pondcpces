@@ -9,7 +9,7 @@
 
 using namespace std;
 
-Planvalidate::Planvalidate(){}
+Planvalidate::Planvalidate():random_sample_time(0) {}
 
 /**
  * 返回true，说明查找反例成功
@@ -19,16 +19,44 @@ DdNode *Planvalidate::backwardToInitial(DdNode *curr, DdNode* remove)
 {
     DdNode *tmp = Cudd_bddAnd(manager, Cudd_Not(remove), curr);
     Cudd_Ref(tmp);
-    
-    std::cout << "The action precondition does not sat in current state, find counter sample" << std::endl;
-    for (std::vector<const Action *>::reverse_iterator a_it = reverse_action.rbegin(); a_it != reverse_action.rend();++a_it)
+    for (std::vector<const Action *>::reverse_iterator a_it = reverse_action.rbegin(); a_it != reverse_action.rend(); ++a_it)
     {
+        // std::cout << "regression:";
         pair<const Action *const, DdNode *> act_pair(*a_it, action_preconds[*a_it]);
         DdNode *successor = regression(tmp, &act_pair);
         Cudd_Ref(successor);
+        /*if(successor == Cudd_ReadLogicZero(manager))
+        {
+             cout << "currrent:\n";
+             printBDD(tmp);
+             cout << "after regression\n";
+             printBDD(successor);
+             cout << "transition action:\n";
+             printBDD(groundActionDD(**a_it));
+             cout << flush << endl;
+             assert(false);
+        }*/
         Cudd_RecursiveDeref(manager, tmp);
         tmp = successor;
+        if(tmp == Cudd_ReadLogicZero(manager))
+        {
+            break;
+        }
     }
+    // DdNode *tmp2 = tmp;
+    // Cudd_Ref(tmp2);
+    // for (std::vector<const Action *>::iterator a_it = reverse_action.begin(); a_it != reverse_action.end(); ++a_it)
+    // {
+    //     pair<const Action *const, DdNode *> act_pair(*a_it, action_preconds[*a_it]);
+    //     if(bdd_entailed(manager, tmp2,  action_preconds[*a_it]) == 0)
+    //         assert(false);
+    //     DdNode *successor = progress(tmp2, &act_pair);
+    //     Cudd_Ref(successor);
+    //     Cudd_RecursiveDeref(manager, tmp2);
+    //     tmp2 = successor;
+    // }
+
+    // assert(tmp2 == Cudd_bddAnd(manager, Cudd_Not(remove), curr));
 
     DdNode* counter = Cudd_bddAnd(manager, tmp, init_states);
     Cudd_Ref(counter);
@@ -39,7 +67,9 @@ DdNode *Planvalidate::backwardToInitial(DdNode *curr, DdNode* remove)
         std::cout << "=====================" << std::endl;
         std::cout << "Counter sample is false" << std::endl;
         std::cout << "=====================" << std::endl;
-        return Cudd_ReadLogicZero(manager);
+        std::cout << "Random sample one:" << std::endl;
+        random_sample_time += 1;
+        return getKSample(init_states);
     }
     else
     {
@@ -84,7 +114,8 @@ bool Planvalidate::planvalidate(DdNode *&ce){
         return false;
     }
 
-
+    std::cout << "start validate:";
+    // printBDD(init_states);
     DdNode *curr = init_states; // 当前状态
     Cudd_Ref(curr);
     reverse_action.clear();
@@ -105,6 +136,7 @@ bool Planvalidate::planvalidate(DdNode *&ce){
         }
         else
         {
+            std::cout << "The action precondition does not sat in current state, find counter sample" << std::endl;
             ce = backwardToInitial(curr, preBdd);
             return ce != Cudd_ReadLogicZero(manager);
         }
@@ -121,4 +153,9 @@ bool Planvalidate::planvalidate(DdNode *&ce){
         ce = backwardToInitial(curr, b_goal_state);
         return ce != Cudd_ReadLogicZero(manager);
     } 
-}   
+}
+
+int Planvalidate::getRandomSampleTime()
+{
+    return this->random_sample_time;
+}

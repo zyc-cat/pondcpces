@@ -14,9 +14,12 @@ public:
 
     DdNode *getKSample(DdNode*);
 
+    int getRandomSampleTime();
+
 protected:
     StateNode *next;
     std::vector<const Action *> reverse_action;
+    int random_sample_time; // 随机采样的次数
 };
 
 #endif  // PLANVALIDATE_H

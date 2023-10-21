@@ -1864,21 +1864,19 @@ DdNode* regression(DdNode* transition, DdNode* pre, DdNode* parent){
 	return result;
 }
 DdNode* regression2(DdNode* transition, DdNode* pre, DdNode* parent){
-	DdNode *tmp1, *tmp2, *result;
+	DdNode *tmp1, *result;
 
 	tmp1 = Cudd_bddVarMap(manager, parent);
 	Cudd_Ref(tmp1);
 
-	tmp2 = Cudd_bddAndAbstract(manager, transition, tmp1, next_state_cube);
+	result = Cudd_bddAndAbstract(manager, transition, tmp1, next_state_cube);
 	Cudd_Ref(result);
 
 	Cudd_RecursiveDeref(manager, tmp1);
-	Cudd_RecursiveDeref(manager, tmp2);
 	return result;
 }
 DdNode* regression(DdNode* parent, pair<const Action* const, DdNode*>* a){
-	DdNode* result;
-	int i,j;
+	DdNode *result;
 	DdNode *t = groundActionDD(*(a->first));
 	Cudd_Ref(t);
 
@@ -1888,7 +1886,7 @@ DdNode* regression(DdNode* parent, pair<const Action* const, DdNode*>* a){
 		return Cudd_ReadLogicZero(manager);
 	}
 	// 使用action的BDD进行遗忘更新
-	result = regression(t, a->second, parent);
+	result = regression2(t, a->second, parent);
 	Cudd_RecursiveDeref(manager, t);
 	return result;
 }
