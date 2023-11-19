@@ -122,7 +122,6 @@ bool Planvalidate::planvalidate(DdNode *&ce){
     for (std::vector<const Action *>::iterator act_it = candidateplan.begin(); act_it != candidateplan.end(); act_it++)
     {
         const Action *action = *act_it;
-        reverse_action.push_back(action);
         DdNode *preBdd = action_preconds.find(*act_it)->second;
         Cudd_Ref(preBdd);
         if (bdd_entailed(manager, curr, preBdd))
