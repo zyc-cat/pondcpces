@@ -474,16 +474,6 @@ int main(int argc, char *argv[])
 				std::cout << "===============Current Iteration done=================" << std::endl;
 				clock_t plan_end_time = clock();
         		total_plan_time += plan_end_time - plan_start_time;
-				if (allowed_time > 0)
-				{
-					// disable the sender
-					timer.it_value.tv_sec = 0;
-					timer.it_value.tv_usec = 0;
-					setitimer(ITIMER_REAL, &timer, 0);
-
-					// before the receiver
-					signal(SIGALRM, SIG_DFL);
-				}
 
 				if (candidateplan.empty())
 				{
