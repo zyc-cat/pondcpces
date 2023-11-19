@@ -127,6 +127,7 @@ bool Planvalidate::planvalidate(DdNode *&ce){
         Cudd_Ref(preBdd);
         if (bdd_entailed(manager, curr, preBdd))
         {
+            reverse_action.push_back(action);
             // cout << "当前状态变量蕴涵当前动作前提条件" << endl;
             pair<const Action *const, DdNode *> act_pair(*act_it, action_preconds[*act_it]);
             DdNode *successor = progress(curr, &act_pair);
