@@ -40,7 +40,7 @@ DdNode *Planvalidate::backwardToInitial(DdNode *curr, DdNode* remove)
         tmp = successor;
         if(tmp == Cudd_ReadLogicZero(manager))
         {
-            break;
+            assert(0);
         }
     }
     // DdNode *tmp2 = tmp;
@@ -93,17 +93,18 @@ DdNode *Planvalidate::getKSample(DdNode* counter)
 {
     DdNode **kbdd = Cudd_bddPickArbitraryMinterms(manager, counter, current_state_vars, num_alt_facts,counterSize);
 
-    DdNode *res = Cudd_ReadLogicZero(manager);
+    DdNode *res = kbdd[0];
     Cudd_Ref(res);
     DdNode *temp;
-    for (int i = 0; i < counterSize; ++i)
+    for (int i = 1; i < counterSize; ++i)
     {
+        Cudd_Ref(kbdd[i]);
         temp = Cudd_bddOr(manager, kbdd[i], res);
         Cudd_Ref(temp);
         Cudd_RecursiveDeref(manager, res);
         res = temp;
     }
-    return temp;
+    return res;
 }
 bool Planvalidate::planvalidate(DdNode *&ce){
 
@@ -123,12 +124,11 @@ bool Planvalidate::planvalidate(DdNode *&ce){
     {
         const Action *action = *act_it;
         DdNode *preBdd = action_preconds.find(*act_it)->second;
-        Cudd_Ref(preBdd);
         if (bdd_entailed(manager, curr, preBdd))
         {
             reverse_action.push_back(action);
             // cout << "当前状态变量蕴涵当前动作前提条件" << endl;
-            pair<const Action *const, DdNode *> act_pair(*act_it, action_preconds[*act_it]);
+            pair<const Action *const, DdNode *> act_pair(*act_it, preBdd);
             DdNode *successor = progress(curr, &act_pair);
             Cudd_Ref(successor);
             Cudd_RecursiveDeref(manager, curr);
