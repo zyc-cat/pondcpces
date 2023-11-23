@@ -31,7 +31,6 @@ protected:
 	std::set<StateNode*> closed;
 	std::set<StateNode*, StateComparator> open;// 通过启发式函数进行排序
 	StateNode* next;// 下一个处理结点
-	bool first;
 	std::map<int, int> reuseTime;
 	int totalReuse = 0;
 	int reusePrev = 0;

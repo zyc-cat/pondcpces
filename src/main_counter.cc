@@ -22,6 +22,7 @@ using namespace std;
 #include "search.h"
 #include "online_search.h"
 #include "astar.h"
+#include "inc_astar.h"
 #include "ehc.h"
 #include "molao.h"
 #include "lao.h"
@@ -123,6 +124,7 @@ int main(int argc, char *argv[])
 		StepSearch *step_search = NULL;
 		int seed = 1;
 		bool incremental_search = false;
+		bool random_enable = false;
 
 		if (argc < 3 || argv[1] == "--help")
 		{
@@ -156,7 +158,7 @@ int main(int argc, char *argv[])
 					if (strcmp(argv[i], "astar") == 0)
 					{
 						cout << "A* Search" << endl;
-						step_search = new AStar();
+						step_search = new Incremental_AStar();
 					}
 				}
 				if (strcmp(argv[i], "-p") == 0)
@@ -285,12 +287,24 @@ int main(int argc, char *argv[])
 					counterSize = atoi(argv[i]);
 					cout << "Counter Size is:" << counterSize << endl;
 				}
+				if (strcmp(argv[i], "-r") == 0 )
+				{
+					random_enable = true;
+				}
 			}
 		}
 
+
 		if (seed <= 1)
 			seed = time(NULL);
-		srand(seed);
+		if(random_enable)
+		{
+			srand(seed);
+		}
+		else
+		{
+			srand(0);
+		}
 		cout << "Random Seed = " << seed << endl;
 		cout << "Verbosity: ";
 		verbosity = 0;
@@ -403,8 +417,9 @@ int main(int argc, char *argv[])
 			// std::cout << "using EHC() algorithm\n";
 			// search = new EHC();
 			cout << "A* Search" << endl;
-			search = new AStar();
+			search = new Incremental_AStar();
 		}
+		bool ifInc = true;
 		std::cout << "initial sampel BDD:";
 		printBDD(b_initial_state);
 		search->init(num_alt_acts, b_initial_state, b_goal_state);
@@ -433,12 +448,6 @@ int main(int argc, char *argv[])
 				if (!p.planvalidate(counterexample))
 				{
 					std::cout << "Empty counter, Searching is done" << std::endl;
-					// std::cout << "输出规划相关信息" << std::endl;
-					// for (int i = 0; i < candidateplan.size(); i++)
-					// {
-					// 	candidateplan[i]->print(std::cout, my_problem->terms());
-					// 	std::cout << "\n";
-					// }
 					std::cout << "Length = " << candidateplan.size() << endl;
 					outputPlan();
 					break;
@@ -453,7 +462,6 @@ int main(int argc, char *argv[])
 			Cudd_Ref(tmp2);
 			Cudd_RecursiveDeref(manager, b_initial_state);
 			b_initial_state = tmp2;
-			// printBDD(b_initial_state);
 
 			DdNode *tmp1 = Cudd_bddAnd(manager, Cudd_Not(counterexample), init_states);
 			Cudd_Ref(tmp1);
@@ -461,13 +469,14 @@ int main(int argc, char *argv[])
 			Cudd_RecursiveDeref(manager, init_states);
 			init_states = tmp1;
 
-			// std::cout << "当前样本：" << std::endl;
-			// printBDD(b_initial_state);
+			if(ifInc)
+			{
+				dynamic_cast<Incremental_AStar *>(search)->updateOpenAndClose(b_initial_state);
+			}
 
 			// 搜索规划
 			clock_t plan_start_time = clock();
 			{
-				search->init(num_alt_acts, b_initial_state, b_goal_state);
 				cout << "starting search" << endl;
 				std::cout << "call search()\n";
 				search->search();  // 将规划结果传递给candidateplan

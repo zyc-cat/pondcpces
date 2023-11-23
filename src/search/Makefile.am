@@ -2,7 +2,7 @@ lib_LTLIBRARIES = libsearch.la
 libsearch_la_SOURCES = alao_star.cc alao_star.h anytime_search.cc anytime_search.h \
 			astar.cc astar.h aostar.cc aostar.h astar_advance.cc astar_advance.h backup.cc backup.h \
 			ehc_dominance.cc ehc.h exph.cc exph.h graph.cc graph.h hop.cc hop.h \
-			hop_advance.cc hop_advance.h lao.cc lao.h lao_wrapper.cc lao_wrapper.h \
+			hop_advance.cc hop_advance.h inc_astar.h inc_astar.cc lao.cc lao.h lao_wrapper.cc lao_wrapper.h \
 			NSPolicy.cc NSPolicy.h online_search.cc online_search.h pchop.cc pchop.h \
 			pchop_advance.cc pchop_advance.h replan.cc replan.h \
 			sampled_search.cc sampled_search.h search.cc search.h solve.cc \

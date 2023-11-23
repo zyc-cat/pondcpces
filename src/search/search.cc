@@ -36,6 +36,7 @@ Search::Search(SearchType type)
 
 void Search::init(int num_acts, DdNode *b_initial_state, DdNode *b_goal_state)
 {
+	StateNode::generated.clear();
 	int state, action, nextStateSuccess, nextStateFail, numFields, terminal, start[6], i, numStates;
 	struct StateNode *stateNode;
 	struct ActionNode *actionNode;
@@ -245,7 +246,6 @@ void Search::init(int num_acts, DdNode *b_initial_state, DdNode *b_goal_state)
 			// cout << "H(I) = " << Start->h << endl; // 注释掉输出
 		}
 	}
-
 	StateNode::generated[Start->dd] = Start;
 	StateNode::generated[Goal->dd] = Goal;
 }
