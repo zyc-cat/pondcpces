@@ -189,8 +189,9 @@ int LUG_LEVEL_WORLDS = 0;
 std::vector<const Action*> candidateplan;
 DdNode* counterexample;
 DdNode *init_states;
-int counterSize = 1; // default counter size is 3
-DdNode* b_initial_state=0;
+int counterSize = 1; // default counter size is 1
+bool useTerm = true;
+DdNode *b_initial_state = 0;
 DdNode* b_goal_state=0; // the bdd of the goal formula or goal rewawrd 
 
 
@@ -286,7 +287,7 @@ int HELPFUL_ACTS=FALSE;
 // int PARALLEL2=FALSE;
 // int EXPAND_STATES = TRUE;
 int USESENSORS = TRUE;
-int GWEIGHT=5;
+int GWEIGHT=1;
 
 // int GLEVEL=0; 
 // long cutoff_time=1200;

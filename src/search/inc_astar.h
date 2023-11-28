@@ -14,14 +14,14 @@ class Incremental_AStar : public AStar{
 public:
     Incremental_AStar();
 
-	void setup(StateNode* start);
-	bool step();
-	void cleanup();
+	void setup(StateNode* start) override;
+	bool step() override;
+	void cleanup() override;
     void search() override;
     void updateOpenAndClose(DdNode *);
 
 protected:
-    void updateLists(StateNode* parent, StateNode* child, ActionNode* actNode);
+    void updateLists(StateNode* parent, StateNode* child, ActionNode* actNodema);
     // 上一轮迭代的情况
     std::set<StateNode *> pclosed; 
 	std::set<StateNode*, StateComparator> popen;

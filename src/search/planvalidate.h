@@ -14,6 +14,8 @@ public:
 
     DdNode *getKSample(DdNode*);
 
+    DdNode *getTerm(DdNode *);
+
     int getRandomSampleTime();
 
 protected:

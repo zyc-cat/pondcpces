@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 		int seed = 1;
 		bool incremental_search = false;
 		bool random_enable = false;
-
+		bool ifInc = false;
 		if (argc < 3 || argv[1] == "--help")
 		{
 			cout << "Counter Planner - Version 2.2\n"
@@ -158,6 +158,13 @@ int main(int argc, char *argv[])
 					if (strcmp(argv[i], "astar") == 0)
 					{
 						cout << "A* Search" << endl;
+						ifInc = false;
+						step_search = new AStar();
+					}
+					else if((strcmp(argv[i], "iastar") == 0))
+					{
+						cout << "Incremental A* Search" << endl;
+						ifInc = true;
 						step_search = new Incremental_AStar();
 					}
 				}
@@ -290,6 +297,19 @@ int main(int argc, char *argv[])
 				if (strcmp(argv[i], "-r") == 0 )
 				{
 					random_enable = true;
+					cout << "Enable incremental search" << counterSize << endl;
+				}
+				if (strcmp(argv[i], "-t") == 0 )
+				{
+					++i;
+					if (strcmp(argv[i], "term") == 0)
+					{
+						useTerm = true;
+					}
+					else if(strcmp(argv[i], "minterm") == 0) // partition merge
+					{
+						useTerm = false;
+					}
 				}
 			}
 		}
@@ -417,11 +437,10 @@ int main(int argc, char *argv[])
 			// std::cout << "using EHC() algorithm\n";
 			// search = new EHC();
 			cout << "A* Search" << endl;
-			search = new Incremental_AStar();
+			search = new AStar();
 		}
-		bool ifInc = true;
 		std::cout << "initial sampel BDD:";
-		printBDD(b_initial_state);
+		// printBDD(b_initial_state);
 		search->init(num_alt_acts, b_initial_state, b_goal_state);
 		cout << "初始化candidateplan" << endl;
 		search->search(); 
@@ -468,12 +487,14 @@ int main(int argc, char *argv[])
 			Cudd_RecursiveDeref(manager, counterexample);// release the counter state
 			Cudd_RecursiveDeref(manager, init_states);
 			init_states = tmp1;
-
 			if(ifInc)
 			{
 				dynamic_cast<Incremental_AStar *>(search)->updateOpenAndClose(b_initial_state);
 			}
-
+			else
+			{
+				search->init(num_alt_acts, b_initial_state, b_goal_state);
+			}
 			// 搜索规划
 			clock_t plan_start_time = clock();
 			{

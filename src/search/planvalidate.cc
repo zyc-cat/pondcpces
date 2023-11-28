@@ -69,16 +69,17 @@ DdNode *Planvalidate::backwardToInitial(DdNode *curr, DdNode* remove)
         std::cout << "=====================" << std::endl;
         std::cout << "Random sample one:" << std::endl;
         random_sample_time += 1;
-        return getKSample(init_states);
+
+        return useTerm ? getTerm(init_states) : getKSample(init_states);
     }
     else
     {
-        int cardSize = getCardinality(counter);
+        double cardSize = getCardinality(counter);
+        // printBDD(counter);
         std::cout << "Get counter sample:" << cardSize << std::endl;
         if(cardSize > counterSize)
         {
-            // DdNode* t = pickKRandomWorlds(counter, counterSize);
-            DdNode* t = getKSample(counter);
+            DdNode *t = useTerm ? getTerm(counter) : getKSample(counter);
             Cudd_Ref(t);
             // printBDD(t);
             cout << "Add Counter Sample Size:" << getCardinality(t) << endl;
@@ -158,4 +159,9 @@ bool Planvalidate::planvalidate(DdNode *&ce){
 int Planvalidate::getRandomSampleTime()
 {
     return this->random_sample_time;
+}
+
+DdNode* Planvalidate::getTerm(DdNode* root)
+{
+    return pickKRandomWorlds(root, counterSize);
 }

@@ -11,8 +11,6 @@
 #include <sstream>
 using namespace std;
 
-extern double gWeight;
-
 Incremental_AStar::Incremental_AStar():AStar(){
 }
 /**
@@ -115,6 +113,10 @@ bool Incremental_AStar::step(){
 			std::cout << "meet zero successor states\n";
 			continue;
 		}
+		if(successor == next->dd)
+		{
+			continue;
+		}
 		StateNode *child = NULL;
 		// child可能是open或close
 		bool isNew = (StateNode::generated.count(successor) == 0);
@@ -128,7 +130,13 @@ bool Incremental_AStar::step(){
 			{
 				reusePrev++;
 			}
-			updateLists(next, child, *act_it);
+			if(action->NextState == NULL)
+			{
+				action->NextState = new StateDistribution();
+				action->NextState->State = child;
+				action->NextState->Next = NULL;
+			}
+			updateLists(next, child, action);
 		}
 		// new node
 		if(child == NULL || open.find(child) == open.end() && closed.find(child)== closed.end())
@@ -225,7 +233,7 @@ void Incremental_AStar::updateOpenAndClose(DdNode* newStart)
     {
         StateNode *s = StateNode::generated[newStart];
         s->g = 0;
-		s->f = s->g + gWeight * s->h;
+		s->f = s->g + s->h;
 		open.insert(s);
 		popen.erase(s);
 		Start = s;
@@ -234,7 +242,10 @@ void Incremental_AStar::updateOpenAndClose(DdNode* newStart)
     {
         StateNode *s = StateNode::generated[newStart];
         s->g = 0;
-		s->f = s->g + gWeight * s->h;
+		s->f = s->g + s->h;
+		s->Expanded = iteration + 1;
+		closed.insert(s);
+		pclosed.erase(s);
 		for (ActionNodeList::iterator act_it = s->NextActions->begin(); act_it != s->NextActions->end(); act_it++)
 		{
 			if((*act_it)->NextState && (*act_it)->NextState->State)
@@ -248,7 +259,10 @@ void Incremental_AStar::updateOpenAndClose(DdNode* newStart)
 
 void Incremental_AStar::updateLists(StateNode* parent, StateNode* child, ActionNode* actNode)
 {
-	if(popen.find(child)!= popen.end())
+	// new iteration research the old node.
+	// if(parent->Expanded > child->Expanded)
+	// {
+	if (popen.find(child) != popen.end())
 	{
 		child->BestPrevAction = actNode;
 		child->g = parent->g + 1;
@@ -259,12 +273,28 @@ void Incremental_AStar::updateLists(StateNode* parent, StateNode* child, ActionN
 	else if(pclosed.find(child)!= pclosed.end())
 	{
 		child->BestPrevAction = actNode;
+		child->g = parent->g + 1;
+		child->f = child->g + child->h;
+		child->Expanded = parent->Expanded;
+
 		closed.insert(child);
 		pclosed.erase(child);
 		for (ActionNodeList::iterator act_it = child->NextActions->begin(); act_it != child->NextActions->end(); act_it++)
-        {
+		{
 			if((*act_it)->NextState && (*act_it)->NextState->State)
 				updateLists(child, (*act_it)->NextState->State, *act_it);
+		}
+	}
+	// }
+	else
+	{
+		if(open.find(child)!=open.end() && parent->g + 1 < child->g)
+		{
+			child->g = parent->g + 1;
+			child->f = child->f + child->g;
+			child->BestPrevAction = actNode;
+			open.erase(child);
+			open.insert(child);
 		}
 	}
 }

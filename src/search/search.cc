@@ -47,7 +47,7 @@ void Search::init(int num_acts, DdNode *b_initial_state, DdNode *b_goal_state)
 	StateNode::expandedStates = 0;
 
 	gWeight = GWEIGHT;
-	state_count = 0;
+	// state_count = 0;
 	StateIndex = new StateHash();
 	LeafStates = new StateHash();
 	gNumActions = num_acts;

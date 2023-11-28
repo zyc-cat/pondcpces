@@ -183,7 +183,7 @@ bool AStar::step(){
 			Cudd_RecursiveDeref(manager, successor);
 			reuseTime[iteration]++;
 			totalReuse++;
-			if(child->Expanded < iteration)
+			if(child->Expanded >0 && child->Expanded < iteration)
 			{
 				reusePrev++;
 			}
@@ -204,7 +204,7 @@ bool AStar::step(){
 				open.erase(child_it);
 			// 配置新的stateNode
 			child->g = new_g;
-			child->f = child->g + gWeight * child->h;
+			child->f = child->g + child->h;
 
 			child->prReached = next->prReached * 1.0;//dist->Prob;		// HACK
 			child->horizon = next->horizon + 1;
